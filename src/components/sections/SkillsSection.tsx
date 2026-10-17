@@ -55,18 +55,18 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       description="技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。"
     >
       {/* One category per column */}
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-10">
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-12">
         {categories.map((category, ci) => (
           <motion.div key={category} initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.3 + ci * 0.08)}>
-            <div className="flex items-baseline justify-between border-t-2 border-[#0A0A0A] pt-2 mb-3">
-              <span className="font-bebas text-[18px] tracking-[0.06em] text-[#0A0A0A]">{category}</span>
-              <span className="font-bebas text-[13px] text-black/40">({pad(grouped[category].length)})</span>
+            <div className="flex items-baseline justify-between border-t border-[#0A0A0A] pt-3 mb-2">
+              <span className="font-bebas text-[20px] leading-none tracking-[0.05em] text-[#0A0A0A]">{category}</span>
+              <span className="font-bebas text-[15px] leading-none text-black/40">({pad(grouped[category].length)})</span>
             </div>
             <ul>
               {grouped[category].map((skill, si) => (
-                <li key={skill.name} className="relative py-2.5 border-b border-black/10">
+                <li key={skill.name} className="relative py-3 short:py-2 border-b border-black/10">
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-lg font-bold tracking-[-0.01em] text-[#0A0A0A]">{skill.name}</span>
+                    <span className="text-[clamp(1rem,1.3vw,1.25rem)] font-bold text-[#0A0A0A]">{skill.name}</span>
                     <span className="font-bebas text-[15px] text-black/40 tabular-nums">{skill.level}</span>
                   </div>
                   {/* Proficiency hairline grows in once the section is ready */}

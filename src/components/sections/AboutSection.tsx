@@ -6,9 +6,9 @@ function StatCounter({ value, label, suffix, isReady }: { value: number; label: 
   const { ref, value: count } = useCountUp(value, 1.2, isReady);
 
   return (
-    <div className="border-t border-black/15 pt-3 pr-4">
-      <div className="font-bebas text-[13px] tracking-[0.1em] text-black/45">{label}</div>
-      <div className="mt-2 text-display text-[3.25rem] md:text-[4.5rem] md:short:text-[3.5rem] text-[#0A0A0A] tabular-nums">
+    <div className="border-t border-[#0A0A0A] pt-3 pr-6">
+      <div className="font-bebas text-[15px] tracking-[0.08em] text-black/45 leading-none">{label}</div>
+      <div className="mt-4 text-display text-[clamp(3rem,5.2vw,5rem)] short:text-[clamp(2.75rem,4vw,3.75rem)] text-[#0A0A0A] tabular-nums">
         <span ref={ref}>{count}</span>
         <span className="text-[#6CE5E8]">{suffix}</span>
       </div>
@@ -56,7 +56,7 @@ export default function AboutSection({ isReady = false }: AboutSectionProps) {
     >
       {/* Statement */}
       <motion.p
-        className="text-2xl md:text-3xl xl:text-[2.6rem] xl:short:text-[2rem] font-bold text-[#0A0A0A] leading-[1.25] tracking-[-0.01em] max-w-4xl"
+        className="text-[clamp(1.6rem,2.5vw,2.5rem)] short:text-[clamp(1.5rem,2vw,2rem)] font-bold text-[#0A0A0A] leading-[1.3] max-w-[24em]"
         initial={{ y: 15, opacity: 0 }}
         animate={showY}
         transition={t(0.3)}
@@ -65,33 +65,33 @@ export default function AboutSection({ isReady = false }: AboutSectionProps) {
       </motion.p>
 
       <motion.div
-        className="flex flex-wrap gap-x-5 gap-y-1 mt-6 font-bebas text-[17px] tracking-[0.06em] text-[#0A0A0A]"
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-6 font-bebas text-[20px] leading-none tracking-[0.05em] text-[#0A0A0A]"
         initial={{ y: 15, opacity: 0 }}
         animate={showY}
-        transition={t(0.38)}
+        transition={t(0.36)}
       >
         <span>FRONTEND 前端开发</span>
-        <span className="text-[#6CE5E8]">/</span>
+        <span className="w-1.5 h-1.5 bg-[#6CE5E8]" />
         <span>MOTION 动效设计</span>
-        <span className="text-[#6CE5E8]">/</span>
+        <span className="w-1.5 h-1.5 bg-[#6CE5E8]" />
         <span>BACKEND 后端开发</span>
       </motion.div>
 
-      {/* Key numbers — one per column */}
+      {/* Key numbers — 4 equal columns */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 mt-12 short:mt-8">
         {stats.map((stat, i) => (
-          <motion.div key={stat.label} initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.45 + i * 0.06)}>
+          <motion.div key={stat.label} initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.42 + i * 0.06)}>
             <StatCounter {...stat} isReady={isReady} />
           </motion.div>
         ))}
       </div>
 
       {/* Tech stack — boxed index list */}
-      <motion.div className="mt-12 short:mt-8 border-t border-black/15 pt-3" initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.7)}>
-        <div className="font-bebas text-[13px] tracking-[0.1em] text-black/45 mb-3">TECH STACK / 技术栈</div>
-        <ul className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-x-4 gap-y-2">
+      <motion.div className="mt-12 short:mt-8 border-t border-black/15 pt-3" initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.66)}>
+        <div className="font-bebas text-[15px] tracking-[0.08em] text-black/45 leading-none">TECH STACK / 技术栈</div>
+        <ul className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-x-6 gap-y-2.5 mt-4">
           {techStack.map((tech) => (
-            <li key={tech} className="group flex items-center gap-2 text-sm font-medium text-[#0A0A0A] whitespace-nowrap">
+            <li key={tech} className="group flex items-center gap-2.5 text-[15px] font-medium text-[#0A0A0A] whitespace-nowrap">
               <span className="w-[7px] h-[7px] border border-black/40 group-hover:bg-[#6CE5E8] group-hover:border-[#6CE5E8] transition-colors duration-300" />
               {tech}
             </li>

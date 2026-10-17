@@ -63,8 +63,8 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
             : 'bg-transparent'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="pl-(--mx) pr-(--mx) lg:pr-0">
+          <div className="flex items-center justify-between h-(--nav-h)">
             {/* Logo */}
             <button
               className="font-bold text-xl md:text-2xl transition-opacity hover:opacity-70"
@@ -77,7 +77,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
             </button>
 
             {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden md:flex items-center space-x-1 ml-auto md:mr-6 lg:mr-10">
               {sections.map((section) => (
                 <button
                   key={section.id}
@@ -103,7 +103,11 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
               ))}
             </div>
 
-            <div className="flex items-center gap-1">
+            <div
+              className={`flex items-center gap-1 lg:w-(--rail) lg:h-full lg:justify-center lg:border-l transition-colors duration-500 ${
+                isDark ? 'lg:border-white/10' : 'lg:border-black/10'
+              }`}
+            >
               {/* BGM Toggle */}
               <button
                 onClick={onBGMToggle}

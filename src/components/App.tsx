@@ -26,7 +26,7 @@ interface AppProps {
 
 // `watermark` is the typewriter word in the bottom band; `name` labels the right rail
 const SECTIONS = [
-  { id: 'home', name: 'HOMEPAGE', watermark: 'BAESORY', bg: '#0A0A0A', isDark: true },
+  { id: 'home', name: 'HOMEPAGE', watermark: '', bg: '#0A0A0A', isDark: true }, // hero types its own title
   { id: 'about', name: 'ABOUT', watermark: 'ABOUT', bg: '#FAFAFA', isDark: false },
   { id: 'projects', name: 'WORKS', watermark: 'WORKS', bg: '#0A0A0A', isDark: true },
   { id: 'skills', name: 'SKILLS', watermark: 'SKILLS', bg: '#FFFFFF', isDark: false },
@@ -97,7 +97,7 @@ function RightRail({ index, isDark }: { index: number; isDark: boolean }) {
   const ease = [0.22, 1, 0.36, 1] as const;
   return (
     <div
-      className={`fixed top-20 bottom-0 right-0 w-[160px] z-30 hidden lg:block border-l pointer-events-none transition-colors duration-500 ${
+      className={`fixed top-(--nav-h) bottom-0 right-0 w-(--rail) z-30 hidden lg:block border-l pointer-events-none transition-colors duration-500 ${
         isDark ? 'border-white/10' : 'border-black/10'
       }`}
     >
@@ -220,7 +220,6 @@ export default function App({ projects }: AppProps) {
           el.addEventListener('transitionend', () => {
             el.remove();
             setContentReady(true);
-            retypeWatermark(SECTIONS[activeIndexRef.current].watermark);
           }, { once: true });
         } else {
           setContentReady(true);
@@ -242,7 +241,7 @@ export default function App({ projects }: AppProps) {
     const toWatermark = SECTIONS[targetIndex].watermark;
 
     lockedRef.current = true;
-    typeToken.current++; // cancel a retype still running (e.g. the first BAESORY after the loader)
+    typeToken.current++; // cancel a phone-side retype that may still be running
     setTransitioning(true);
     wheelAccum.current = 0;
 
@@ -532,19 +531,16 @@ export default function App({ projects }: AppProps) {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         />
 
-        {/* Bottom band — hairline + the typewriter watermark (the design's centrepiece), bled off the canvas */}
-        <div
-          className={`fixed inset-x-0 bottom-0 h-(--band-h) ${isMobile ? 'z-3' : 'z-1'} pointer-events-none select-none overflow-hidden border-t transition-colors duration-500 ${
-            bgIsDark ? 'border-white/10' : 'border-black/10'
-          }`}
-        >
+        {/* Typewriter watermark — the design's centrepiece: half the viewport tall, behind the
+            content, starting on the page margin and bled off the bottom edge */}
+        <div className={`fixed inset-0 ${isMobile ? 'z-3' : 'z-1'} pointer-events-none select-none overflow-hidden`} aria-hidden="true">
           <motion.div
-            className="absolute left-6 md:left-16 lg:left-[108px] top-1.5 md:top-2 font-bebas text-[calc(var(--band-h)*1.45)] leading-[0.8] whitespace-nowrap"
+            className="absolute left-(--mx) -bottom-[0.11em] -ml-[0.03em] font-bebas text-[46vw] md:text-[min(46vh,30vw)] leading-[0.8] whitespace-nowrap"
             style={{ x: driftSmooth }}
             animate={{
               color: bgIsDark
-                ? (watermarkProminent ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)')
-                : (watermarkProminent ? 'rgba(0,0,0,0.18)' : 'rgba(0,0,0,0.07)')
+                ? (watermarkProminent ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.045)')
+                : (watermarkProminent ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.04)')
             }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
@@ -552,7 +548,7 @@ export default function App({ projects }: AppProps) {
             <AnimatePresence>
               {cursorVisible && (
                 <motion.span
-                  className="inline-block w-[0.05em] h-[0.62em] ml-[0.04em]"
+                  className="inline-block w-[0.045em] h-[0.66em] ml-[0.05em]"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -563,17 +559,25 @@ export default function App({ projects }: AppProps) {
               )}
             </AnimatePresence>
           </motion.div>
-
-          {/* AK-style scroll hint, centred in the band */}
-          {!isMobile && frameIndex < SECTIONS.length - 1 && (
-            <div className={`absolute left-1/2 -translate-x-1/2 bottom-4 flex flex-col items-center gap-1 transition-colors duration-500 ${bgIsDark ? 'text-white/40' : 'text-black/40'}`}>
-              <span className="font-bebas text-[11px] tracking-[0.2em]">SCROLL</span>
-              <svg width="18" height="8" viewBox="0 0 18 8" className="animate-bounce" aria-hidden="true">
-                <path d="M1 1l8 6 8-6" fill="none" stroke="currentColor" strokeWidth="1.5" />
-              </svg>
-            </div>
-          )}
         </div>
+
+        {/* Bottom hairline + AK-style scroll hint (desktop/tablet) */}
+        {!isMobile && (
+          <div
+            className={`fixed inset-x-0 bottom-0 h-(--band) z-1 pointer-events-none border-t transition-colors duration-500 ${
+              bgIsDark ? 'border-white/10' : 'border-black/10'
+            }`}
+          >
+            {frameIndex < SECTIONS.length - 1 && (
+              <div className={`absolute left-1/2 -translate-x-1/2 bottom-5 flex flex-col items-center gap-1.5 transition-colors duration-500 ${bgIsDark ? 'text-white/40' : 'text-black/40'}`}>
+                <span className="font-bebas text-[12px] leading-none tracking-[0.2em]">SCROLL</span>
+                <svg width="18" height="8" viewBox="0 0 18 8" className="animate-bounce" aria-hidden="true">
+                  <path d="M1 1l8 6 8-6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </div>
+            )}
+          </div>
+        )}
 
         <RightRail index={frameIndex} isDark={bgIsDark} />
 

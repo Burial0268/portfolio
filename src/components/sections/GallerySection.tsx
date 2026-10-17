@@ -75,24 +75,6 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
         onSelect: () => navigate(i),
       }))}
       description="Through the lens — 用镜头记录的风景与街头。"
-      aside={
-        <div className="mt-8 space-y-1 font-mono text-[10px] text-white/30">
-          <p>&copy; {new Date().getFullYear()} BURIAL0268 · BUILT WITH ASTRO</p>
-          <p className="flex flex-wrap gap-x-3">
-            <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-[#6CE5E8] transition-colors duration-300">
-              粤ICP备2022073442号-1
-            </a>
-            <a
-              href="https://beian.mps.gov.cn/#/query/webSearch?code=44162302000035"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-[#6CE5E8] transition-colors duration-300"
-            >
-              粤公网安备44162302000035号
-            </a>
-          </p>
-        </div>
-      }
     >
       <motion.div initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.25)}>
         {/* Image — directional clip-path wipe, swipe/drag to browse */}
@@ -137,7 +119,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
         </motion.div>
 
         {/* Caption row: number · title · meta · controls */}
-        <div className="flex items-end gap-5 mt-4">
+        <div className="flex items-end gap-6 mt-6 short:mt-4">
           <div className="overflow-hidden h-[3.6rem] md:h-[4.6rem] shrink-0">
             <AnimatePresence mode="wait">
               <motion.span
@@ -176,7 +158,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               onClick={handlePrev}
               disabled={index === 0}
               aria-label="Previous photo"
-              className="w-10 h-10 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
+              className="w-11 h-11 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               ‹
             </button>
@@ -184,7 +166,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               onClick={handleNext}
               disabled={index === photos.length - 1}
               aria-label="Next photo"
-              className="w-10 h-10 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
+              className="w-11 h-11 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               ›
             </button>
@@ -192,7 +174,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
         </div>
 
         {/* Segmented progress */}
-        <div className="flex gap-1.5 mt-4">
+        <div className="flex gap-1.5 mt-6 short:mt-4">
           {photos.map((photo, i) => (
             <span key={photo.src} className="relative flex-1 h-0.5 bg-white/15 overflow-hidden">
               <motion.span
@@ -203,6 +185,24 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               />
             </span>
           ))}
+        </div>
+
+        {/* Footer — under the image, on the content column */}
+        <div className="mt-6 short:mt-4 flex flex-wrap gap-x-6 gap-y-1 font-mono text-[10px] text-white/30">
+        <p>&copy; {new Date().getFullYear()} BURIAL0268 · BUILT WITH ASTRO</p>
+        <p className="flex flex-wrap gap-x-4">
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-[#6CE5E8] transition-colors duration-300">
+            粤ICP备2022073442号-1
+          </a>
+          <a
+            href="https://beian.mps.gov.cn/#/query/webSearch?code=44162302000035"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-[#6CE5E8] transition-colors duration-300"
+          >
+            粤公网安备44162302000035号
+          </a>
+        </p>
         </div>
       </motion.div>
     </SectionShell>

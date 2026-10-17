@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import HeroButtons from '../HeroButtons';
 import Marquee from '../effects/Marquee';
 
 const bannerTopItems = Array(8).fill('BURIAL0268\u00A0\u00A0\u00B7\u00A0\u00A0');
+const NAME = 'Baesory';
+const EASE = [0.22, 1, 0.36, 1] as const;
 
-// Swiss info grid under the name — numbered, hairline-ruled columns
+// Numbered info row under the name — same 12-column grid as the meta row
 const heroInfo = [
   { label: 'ROLE / 职能', value: '全栈开发工程师', sub: 'Full-stack Developer' },
   { label: 'FOCUS / 方向', value: '动效 · 交互', sub: 'Motion & Interaction' },
@@ -17,12 +19,6 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ isReady = true }: HeroSectionProps) {
-  const show = isReady ? { y: 0, opacity: 1 } : { y: 15, opacity: 0 };
-  const t = (delay: number) =>
-    isReady
-      ? { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] as const }
-      : { duration: 0.3, delay: 0 };
-
   // Boot sequence state — plays once on first mount
   const [booted, setBooted] = useState(false);
   const hasBooted = useRef(false);
@@ -35,28 +31,33 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
     }
   }, [isReady]);
 
+  // The landing title is the first typewriter moment: typed out, cursor blinks, then rests
+  const [typed, setTyped] = useState(0);
+  const [cursorOn, setCursorOn] = useState(false);
+  useEffect(() => {
+    if (!booted) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => setCursorOn(true), 250));
+    for (let i = 1; i <= NAME.length; i++) timers.push(setTimeout(() => setTyped(i), 450 + i * 95));
+    timers.push(setTimeout(() => setCursorOn(false), 450 + NAME.length * 95 + 2200));
+    return () => timers.forEach(clearTimeout);
+  }, [booted]);
+
+  const show = (delay: number) => ({
+    initial: { y: 14, opacity: 0 },
+    animate: booted ? { y: 0, opacity: 1 } : { y: 14, opacity: 0 },
+    transition: { duration: 0.6, delay, ease: EASE },
+  });
+
   return (
     <section id="home" className="relative min-h-dvh w-full overflow-clip flex flex-col">
-      {/* SVG Filters */}
+      {/* ── Texture: contours (shared #topo symbol) + grain + vignette ── */}
       <svg className="absolute w-0 h-0" aria-hidden="true">
         <filter id="hero-grain">
           <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" />
           <feColorMatrix type="saturate" values="0" />
         </filter>
       </svg>
-
-      {/* ── Texture layers ──────────────────────────────────── */}
-
-      {/* Subtle radial vignette */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          zIndex: 0,
-          background: 'radial-gradient(ellipse 80% 70% at 30% 50%, rgba(108,229,232,0.04) 0%, transparent 60%), radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.5) 100%)',
-        }}
-      />
-
-      {/* Topographic contour lines — same procedural map as the loader (shared #topo symbol) */}
       <motion.svg
         className="absolute inset-0 w-full h-full pointer-events-none text-[#6CE5E8]/[0.08]"
         style={{ zIndex: 1, animation: booted ? 'hud-flash 0.9s linear' : undefined }}
@@ -65,18 +66,17 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
         aria-hidden="true"
         initial={{ opacity: 0, scale: 1.06 }}
         animate={booted ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.06 }}
-        transition={{ opacity: { duration: 0.9 }, scale: { duration: 2.4, ease: [0.22, 1, 0.36, 1] } }}
+        transition={{ opacity: { duration: 0.9 }, scale: { duration: 2.4, ease: EASE } }}
       >
         <use href="#topo" />
       </motion.svg>
-
-      {/* Film grain overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: 2, filter: 'url(#hero-grain)', opacity: 0.06 }}
+        style={{ zIndex: 0, background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%)' }}
       />
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2, filter: 'url(#hero-grain)', opacity: 0.06 }} />
 
-      {/* ── Fixed color mask — AK-style tonal contrast block ─── */}
+      {/* ── Vertical BAESORY cutout block (signature) ── */}
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 3 }}>
         {/* Cyan mask with vertical "Baesory" text cutout */}
         <motion.div
@@ -107,232 +107,99 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
             <rect width="300" height="800" fill="#6CE5E8" fillOpacity="0.07" mask="url(#hero-cutout)" />
           </svg>
         </motion.div>
-
-        {/* Secondary outline block */}
-        <motion.div
-          className="absolute right-[22%] bottom-[14%] w-[80px] md:w-[140px] h-[80px] md:h-[140px] border border-[#6CE5E8]/10"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={booted ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
-          transition={{ duration: 0.8, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        />
-
-        {/* Diagonal accent line */}
-        <motion.div
-          className="absolute top-[20%] right-[15%] w-px h-[200px] md:h-[300px] bg-linear-to-b from-[#6CE5E8]/15 to-transparent origin-top hidden md:block"
-          style={{ transform: 'rotate(25deg)' }}
-          initial={{ scaleY: 0 }}
-          animate={booted ? { scaleY: 1 } : { scaleY: 0 }}
-          transition={{ duration: 1, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        />
-
-        {/* Small square accent */}
-        <motion.div
-          className="absolute top-[60%] right-[25%] w-2 h-2 bg-[#6CE5E8]/20 hidden md:block"
-          initial={{ opacity: 0 }}
-          animate={booted ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.4, delay: 1.2 }}
-        />
       </div>
 
-      {/* ── Scan line — sweeps once on boot ──────────────────── */}
-      <AnimatePresence>
-        {booted && (
-          <motion.div
-            className="absolute left-0 right-0 h-px bg-linear-to-r from-transparent via-[#6CE5E8]/30 to-transparent pointer-events-none"
-            style={{ zIndex: 4 }}
-            initial={{ top: '0%', opacity: 1 }}
-            animate={{ top: '100%', opacity: 0 }}
-            transition={{ duration: 2, ease: 'linear' }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* ── Corner brackets ─────────────────────────────────── */}
-      <div className="absolute inset-6 md:inset-10 pointer-events-none hidden md:block" style={{ zIndex: 5 }}>
-        {/* Top-left */}
-        <motion.div
-          className="absolute top-0 left-0"
-          initial={{ opacity: 0 }}
-          animate={booted ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-        >
-          <div className="w-6 h-px bg-[#6CE5E8]/25" />
-          <div className="w-px h-6 bg-[#6CE5E8]/25" />
-        </motion.div>
-        {/* Top-right */}
-        <motion.div
-          className="absolute top-0 right-0"
-          initial={{ opacity: 0 }}
-          animate={booted ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.4, delay: 0.6 }}
-        >
-          <div className="w-6 h-px bg-[#6CE5E8]/25 ml-auto" />
-          <div className="w-px h-6 bg-[#6CE5E8]/25 ml-auto" />
-        </motion.div>
-        {/* Bottom-left */}
-        <motion.div
-          className="absolute bottom-0 left-0"
-          initial={{ opacity: 0 }}
-          animate={booted ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.4, delay: 0.7 }}
-        >
-          <div className="w-px h-6 bg-[#6CE5E8]/25" />
-          <div className="w-6 h-px bg-[#6CE5E8]/25" />
-        </motion.div>
-        {/* Bottom-right */}
-        <motion.div
-          className="absolute bottom-0 right-0"
-          initial={{ opacity: 0 }}
-          animate={booted ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.4, delay: 0.8 }}
-        >
-          <div className="w-px h-6 bg-[#6CE5E8]/25 ml-auto" />
-          <div className="w-6 h-px bg-[#6CE5E8]/25 ml-auto" />
-        </motion.div>
-      </div>
-
-      {/* ── Content flow — single flex column, no position conflicts ── */}
-      <div className="relative flex-1 flex flex-col px-6 md:px-16 lg:pl-[108px] lg:pr-[208px]" style={{ zIndex: 10 }}>
-
-        {/* Top metadata — hairline rule + 4-column grid (Swiss) */}
-        <div className="pt-20 md:pt-24 pb-4 pointer-events-none shrink-0">
-          <motion.div
-            className="h-px bg-white/20 origin-left mb-3"
-            initial={{ scaleX: 0 }}
-            animate={booted ? { scaleX: 1 } : { scaleX: 0 }}
-            transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          />
-          <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 items-start gap-x-4 font-mono text-[10px] uppercase"
-            initial={{ opacity: 0 }}
-            animate={booted ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.5, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <span className="col-span-2 md:col-span-1 font-bold tracking-[0.3em] md:tracking-[0.18em] whitespace-nowrap text-white/40">
-              // SUPER::PORTFOLIO::CORE::init()
-            </span>
-            <span className="hidden md:block tracking-[0.2em] text-white/60">
-              <span className="text-[#6CE5E8]">(00)</span> / 04 — INDEX 首页
-            </span>
-            <span className="hidden md:block tracking-[0.2em] text-white/30">
-              PORTFOLIO ©{new Date().getFullYear()}
-            </span>
-            <div className="hidden md:block text-right normal-case text-[#6CE5E8]/60 leading-relaxed">
-              <div>{"> STACK: REACT / MOTION / VUE"}</div>
-              <div>{"<CREATIVE.DEV />"}</div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Hero content — safe centering (my-auto collapses when overflowing, enabling scroll) */}
-        <div className="flex-1 flex flex-col max-w-[1000px] text-left">
-          <div className="my-auto">
-            {/* Subtitle with clip reveal */}
-            <motion.div
-              className="mb-6 overflow-hidden py-0.5"
-              initial={{ opacity: 0 }}
-              animate={booted ? { opacity: 1 } : { opacity: 0 }}
-              transition={{ duration: 0.4, delay: 0.6 }}
-            >
-              <motion.span
-                className="block text-[10px] md:text-xs uppercase tracking-[0.3em] text-white/50 font-medium font-mono"
-                initial={{ y: '100%' }}
-                animate={booted ? { y: 0 } : { y: '100%' }}
-                transition={{ duration: 0.5, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              >
-                ▼ Full Stack Developer & Animation Enthusiast
-              </motion.span>
-            </motion.div>
-
-            {/* Primary name — Swiss tight tracking; each letter rises out of the mask */}
-            <div className="overflow-hidden py-4">
-              <h1
-                className="text-display text-[5rem] sm:text-[7rem] md:text-[9rem] lg:text-[min(12rem,16vh)] text-white mb-0 leading-[0.85] tracking-[-0.045em]"
-                style={{ mixBlendMode: 'difference' }}
-                aria-label="Baesory"
-              >
-                {'Baesory'.split('').map((ch, i) => (
-                  <motion.span
-                    key={i}
-                    className="inline-block"
-                    aria-hidden="true"
-                    initial={{ y: '150%' }}
-                    animate={booted ? { y: 0 } : { y: '150%' }}
-                    transition={{ duration: 0.8, delay: 0.3 + i * 0.045, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    {ch}
-                  </motion.span>
-                ))}
-              </h1>
-            </div>
-
-            {/* Secondary name — clip reveal, staggered */}
-            <div className="overflow-hidden py-4 mb-[min(2.5rem,4vh)]">
-              <motion.h2
-                className="text-display text-[4rem] sm:text-[5.5rem] md:text-[7rem] lg:text-[min(10rem,12vh)] text-[#6CE5E8] leading-[0.85]"
-                initial={{ y: '150%' }}
-                animate={booted ? { y: 0 } : { y: '150%' }}
-                transition={{ duration: 0.7, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              >
-                拜瑞
-              </motion.h2>
-            </div>
-
-            {/* Horizontal accent line before buttons */}
-            <motion.div
-              className="w-16 h-px bg-[#6CE5E8]/40 mb-8"
-              initial={{ scaleX: 0 }}
-              animate={booted ? { scaleX: 1 } : { scaleX: 0 }}
-              transition={{ duration: 0.6, delay: 0.9, ease: [0.22, 1, 0.36, 1] }}
-              style={{ transformOrigin: 'left' }}
-            />
-
-            <motion.div
-              initial={{ y: 12, opacity: 0 }}
-              animate={booted ? { y: 0, opacity: 1 } : { y: 12, opacity: 0 }}
-              transition={{ duration: 0.5, delay: 1.0, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <HeroButtons />
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Bottom — numbered info grid on a hairline rule (Swiss); sits right above the watermark band */}
-        <div className="pb-[calc(var(--band-h)+8px)] pointer-events-none shrink-0">
+      {/* ── Content on the page grid ─────────────────────────── */}
+      <div
+        className="relative flex-1 flex flex-col pl-(--mx) pr-(--pr) pt-[calc(var(--nav-h)+48px)] short:pt-[calc(var(--nav-h)+32px)] pb-[calc(var(--band)+32px)]"
+        style={{ zIndex: 10 }}
+      >
+        {/* Meta row — hairline + 12-column grid */}
+        <div className="shrink-0 pointer-events-none">
           <motion.div
             className="h-px bg-white/20 origin-left"
             initial={{ scaleX: 0 }}
-            animate={booted ? { scaleX: 1 } : { scaleX: 0 }}
-            transition={{ duration: 1, delay: 1.05, ease: [0.22, 1, 0.36, 1] }}
+            animate={{ scaleX: booted ? 1 : 0 }}
+            transition={{ duration: 1, delay: 0.2, ease: EASE }}
           />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-5 pt-3">
+          <motion.div
+            className="grid grid-cols-12 gap-x-12 pt-3 font-mono text-[10px] uppercase leading-relaxed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: booted ? 1 : 0 }}
+            transition={{ duration: 0.5, delay: 0.35, ease: EASE }}
+          >
+            <span className="col-span-12 md:col-span-3 font-bold tracking-[0.18em] whitespace-nowrap text-white/40">
+              // SUPER::PORTFOLIO::CORE::init()
+            </span>
+            <span className="hidden md:block col-span-3 tracking-[0.2em] text-white/60">
+              <span className="text-[#6CE5E8]">(00)</span> / 04 — INDEX 首页
+            </span>
+            <span className="hidden md:block col-span-3 tracking-[0.2em] text-white/30">
+              PORTFOLIO ©{new Date().getFullYear()}
+            </span>
+            <span className="hidden md:block col-span-3 normal-case text-[#6CE5E8]/60">
+              {'> STACK: REACT / MOTION / VUE'}<br />{'<CREATIVE.DEV />'}
+            </span>
+          </motion.div>
+        </div>
+
+        {/* Name block */}
+        <div className="flex-1 flex flex-col justify-center py-10 short:py-6">
+          <motion.div className="font-mono text-[10px] md:text-xs uppercase tracking-[0.3em] text-white/50" {...show(0.4)}>
+            ▼ Full Stack Developer &amp; Animation Enthusiast
+          </motion.div>
+
+          <h1
+            className="mt-4 text-display text-white text-[clamp(4.5rem,min(15vw,22vh),14rem)] leading-[0.85] tracking-[-0.045em] -ml-[0.04em] min-h-[0.85em]"
+            style={{ mixBlendMode: 'difference' }}
+            aria-label={NAME}
+          >
+            <span aria-hidden="true">{NAME.slice(0, typed)}</span>
+            {cursorOn && (
+              <span aria-hidden="true" className="inline-block w-[0.06em] h-[0.7em] ml-[0.05em] bg-[#6CE5E8] animate-blink" />
+            )}
+          </h1>
+
+          <div className="overflow-hidden mt-2">
+            <motion.div
+              className="text-display text-[#6CE5E8] text-[clamp(3.25rem,min(8vw,11vh),7.5rem)] leading-[0.95]"
+              initial={{ y: '110%' }}
+              animate={{ y: booted ? '0%' : '110%' }}
+              transition={{ duration: 0.8, delay: 1.3, ease: EASE }}
+            >
+              拜瑞
+            </motion.div>
+          </div>
+
+          <motion.div className="mt-10 short:mt-6" {...show(1.5)}>
+            <HeroButtons />
+          </motion.div>
+        </div>
+
+        {/* Info row — hairline + the same 12-column grid */}
+        <div className="shrink-0 pointer-events-none">
+          <motion.div
+            className="h-px bg-white/20 origin-left"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: booted ? 1 : 0 }}
+            transition={{ duration: 1, delay: 1.4, ease: EASE }}
+          />
+          <div className="grid grid-cols-2 md:grid-cols-12 gap-x-12 gap-y-6 pt-3">
             {heroInfo.map((item, i) => (
-              <motion.div
-                key={item.label}
-                className={i === 2 ? 'hidden md:block' : ''}
-                initial={{ y: 12, opacity: 0 }}
-                animate={booted ? { y: 0, opacity: 1 } : { y: 12, opacity: 0 }}
-                transition={{ duration: 0.5, delay: 1.15 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35 mb-2">
-                  <span className="text-[#6CE5E8]/70">({String(i + 1).padStart(2, '0')})</span> {item.label}
+              <motion.div key={item.label} className={`md:col-span-3 ${i === 2 ? 'hidden md:block' : ''}`} {...show(1.55 + i * 0.07)}>
+                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
+                  <span className="text-[#6CE5E8]/80">({String(i + 1).padStart(2, '0')})</span> {item.label}
                 </div>
-                <div className="text-sm md:text-base font-bold text-white tracking-tight">{item.value}</div>
-                <div className="text-[11px] text-white/40">{item.sub}</div>
+                <div className="mt-3 text-base font-bold text-white">{item.value}</div>
+                <div className="mt-0.5 text-xs text-white/40">{item.sub}</div>
               </motion.div>
             ))}
-
-            <motion.div
-              className="col-span-2 md:col-span-1 flex items-end"
-              initial={{ opacity: 0 }}
-              animate={booted ? { opacity: 1 } : { opacity: 0 }}
-              transition={{ duration: 0.6, delay: 1.35, ease: [0.22, 1, 0.36, 1] }}
+            <motion.p
+              className="col-span-2 md:col-span-3 self-end font-mono text-[10px] leading-relaxed text-white/30"
+              {...show(1.8)}
             >
-              <p className="font-mono text-[10px] text-white/30 leading-relaxed">
-                // &copy; BAESORY<br />a.k.a BURIAL0268 & 拜瑞
-              </p>
-
-            </motion.div>
+              // &copy; BAESORY<br />a.k.a BURIAL0268 &amp; 拜瑞
+            </motion.p>
           </div>
         </div>
       </div>
@@ -361,7 +228,6 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
           ))}
         </Marquee>
       </div>
-
     </section>
   );
 }

@@ -46,7 +46,8 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
       zh="精选项目"
       isDark={true}
       isReady={isReady}
-      // The sub-index is the project picker (AK's boxed list)
+      // The sub-index is the project picker (AK's boxed list) — useful on phones too
+      subIndexOnMobile
       subIndex={projects.map((project, i) => ({
         key: project.slug,
         label: `${pad(i + 1)}  ${project.title}`,
@@ -55,30 +56,27 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
       }))}
       description="开源作品与个人项目，涵盖播放器、桌面工具、Flarum 插件与 API 服务。"
     >
-      <motion.div className="relative" initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.3)}>
+      <motion.div initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.3)}>
+        {/* Case meta row */}
+        <div className="flex items-center justify-between gap-6 border-t border-white/80 pt-3 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/45">
+          <span className="text-white shrink-0">CASE {pad(featuredIndex + 1)} <span className="text-white/40">/ {pad(projects.length)}</span></span>
+          <span className="truncate">{featured?.tags.join(' / ')}</span>
+        </div>
+
         <AnimatePresence mode="wait">
           {featured && (
             <motion.div
               key={featured.slug}
+              className="grid md:grid-cols-9 gap-x-12 gap-y-6 mt-8 short:mt-6"
               initial="hidden"
               animate="shown"
               exit="hidden"
               variants={{ shown: { transition: { staggerChildren: 0.05 } } }}
             >
-              {/* Case meta row */}
-              <motion.div
-                className="flex items-center justify-between gap-6 border-t border-white/20 pt-3 font-bebas text-[14px] tracking-[0.08em] text-white/45"
-                variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }}
-                transition={swap}
-              >
-                <span className="text-white shrink-0">CASE {pad(featuredIndex + 1)} <span className="text-white/40">/ {pad(projects.length)}</span></span>
-                <span className="truncate">{featured.tags.join(' / ')}</span>
-              </motion.div>
-
-              {/* Giant cropped case number */}
-              <div className="overflow-hidden h-[7rem] md:h-[11rem] -mb-2">
+              {/* Number — its own column, never under the title */}
+              <div className="md:col-span-3 overflow-hidden">
                 <motion.div
-                  className="font-bebas text-[10rem] md:text-[16rem] leading-[0.78] text-[#6CE5E8] tabular-nums"
+                  className="font-bebas text-[clamp(7rem,13vw,12rem)] short:text-[clamp(6rem,10vw,9rem)] leading-[0.8] text-[#6CE5E8] tabular-nums"
                   variants={{ hidden: { y: '100%' }, shown: { y: '0%' } }}
                   transition={swap}
                 >
@@ -86,75 +84,69 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                 </motion.div>
               </div>
 
-              <div className="overflow-hidden">
-                <motion.h3
-                  className="text-3xl md:text-5xl font-bold tracking-[-0.02em] leading-[1.1] text-[#F0F0F0] text-display"
-                  variants={{ hidden: { y: '110%' }, shown: { y: '0%' } }}
+              <div className="md:col-span-6 min-w-0">
+                <div className="overflow-hidden">
+                  <motion.h3
+                    className="text-[clamp(1.75rem,3vw,3rem)] font-bold leading-[1.15] text-[#F0F0F0]"
+                    variants={{ hidden: { y: '110%' }, shown: { y: '0%' } }}
+                    transition={swap}
+                  >
+                    {featured.title}
+                  </motion.h3>
+                </div>
+
+                <motion.p
+                  className="mt-4 text-[15px] text-white/55 leading-relaxed max-w-[32em]"
+                  variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }}
                   transition={swap}
                 >
-                  {featured.title}
-                </motion.h3>
-              </div>
+                  {featured.description}
+                </motion.p>
 
-              <motion.p
-                className="mt-5 text-base text-white/55 leading-relaxed max-w-xl"
-                variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }}
-                transition={swap}
-              >
-                {featured.description}
-              </motion.p>
-
-              <motion.div
-                className="flex flex-wrap items-center gap-x-6 gap-y-4 mt-8"
-                variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }}
-                transition={swap}
-              >
-                {featuredHref && (
-                  /* AK's cyan "更多情报 / READ MORE" block */
-                  <a
-                    href={featuredHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-10 pl-3 pr-4 py-2 bg-[#6CE5E8] text-black hover:bg-white transition-colors duration-300"
-                  >
-                    <span className="leading-none">
-                      <span className="block font-bold text-sm">查看项目</span>
-                      <span className="block font-bebas text-[11px] tracking-[0.1em] mt-1">VIEW PROJECT</span>
-                    </span>
-                    <span className="transition-transform duration-300 group-hover:translate-x-1">›</span>
-                  </a>
-                )}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handlePrev}
-                    aria-label="Previous project"
-                    className="w-10 h-10 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
-                  >
-                    ‹
-                  </button>
-                  <button
-                    onClick={handleNext}
-                    aria-label="Next project"
-                    className="w-10 h-10 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
-                  >
-                    ›
-                  </button>
-                </div>
-                <a
-                  href="https://github.com/Burial0268"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-bebas text-[15px] tracking-[0.08em] text-white/50 hover:text-[#6CE5E8] transition-colors duration-300"
+                <motion.div
+                  className="flex flex-wrap items-center gap-x-6 gap-y-4 mt-8 short:mt-6"
+                  variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }}
+                  transition={swap}
                 >
-                  GITHUB / 查看更多 →
-                </a>
-              </motion.div>
+                  {featuredHref && (
+                    /* AK's cyan "更多情报 / READ MORE" block */
+                    <a
+                      href={featuredHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex items-center gap-12 pl-4 pr-4 py-2.5 bg-[#6CE5E8] text-black hover:bg-white transition-colors duration-300"
+                    >
+                      <span className="leading-none">
+                        <span className="block font-bold text-[15px]">查看项目</span>
+                        <span className="block font-bebas text-[12px] tracking-[0.1em] mt-1">VIEW PROJECT</span>
+                      </span>
+                      <span className="transition-transform duration-300 group-hover:translate-x-1">›</span>
+                    </a>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handlePrev}
+                      aria-label="Previous project"
+                      className="w-11 h-11 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={handleNext}
+                      aria-label="Next project"
+                      className="w-11 h-11 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
+                    >
+                      ›
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Segmented progress — one segment per project */}
-        <div className="flex gap-1.5 mt-10">
+        <div className="flex gap-1.5 mt-12 short:mt-8">
           {projects.map((project, i) => (
             <span key={project.slug} className="relative flex-1 h-0.5 bg-white/15 overflow-hidden">
               <motion.span
@@ -166,6 +158,14 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
             </span>
           ))}
         </div>
+        <a
+          href="https://github.com/Burial0268"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-4 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/50 hover:text-[#6CE5E8] transition-colors duration-300"
+        >
+          GITHUB / 查看更多 ↗
+        </a>
       </motion.div>
     </SectionShell>
   );
