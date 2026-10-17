@@ -4,8 +4,6 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Inter Tight", "HarmonyOS_Regular", system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -122,35 +120,27 @@
 }
 
 @layer utilities {
-  /* Swiss display type: one grotesk family, heavy weight, tight tracking */
+  .accent-text {
+    color: #6CE5E8;
+  }
+  .section-light {
+    background-color: #FAFAFA;
+    color: #0A0A0A;
+  }
+  .section-dark {
+    background-color: #0A0A0A;
+    color: #F0F0F0;
+  }
   .text-display {
-    font-family: var(--font-sans);
-    font-weight: 800;
-    letter-spacing: -0.045em;
-    line-height: 0.88;
+    font-family: 'Space Grotesk', "HarmonyOS_Regular", system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 0.9;
   }
-  /* Small uppercase caption used for grid metadata rows */
-  .meta {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    line-height: 1.4;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-  /* Hollow type: stroke follows `color`, so it can be animated */
-  .text-outline {
-    -webkit-text-fill-color: transparent;
-    -webkit-text-stroke: 1px currentColor;
-  }
-  /* Shared horizontal page margin — nav, sections and grid lines all align to it */
-  .page-x {
-    padding-inline: 1.5rem;
-  }
-  @media (width >= 48rem) {
-    .page-x { padding-inline: 2.5rem; }
-  }
-  @media (width >= 64rem) {
-    .page-x { padding-inline: 4rem; }
+  .vertical-text {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-orientation: mixed;
   }
 }
 
@@ -168,6 +158,10 @@
   border-radius: 0;
 }
 
+::-webkit-scrollbar-thumb:hover {
+  background: #8AECEE;
+}
+
 /* Hide default cursor on desktop */
 @media (pointer: fine) {
   * {
@@ -175,11 +169,70 @@
   }
 }
 
-/* Fullpage mode */
-html, body {
+/* Smooth scroll only for anchor links */
+@media (prefers-reduced-motion: no-preference) {
+  html:focus-within {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Prevent text selection highlighting on UI elements */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Page transition */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Delay utilities */
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+.delay-1000 {
+  animation-delay: 1000ms;
+}
+
+/* Fullpage mode — desktop/tablet only; phones scroll natively (Endfield H5 style) */
+@media (width >= 48rem) {
+  html, body {
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+  }
+}
+
+/* No scrolling underneath the boot loader */
+body:has(#loader) {
   overflow: hidden;
-  height: 100vh;
-  height: 100dvh;
 }
 
 /* Hide scrollbar on section scroll containers */
@@ -191,7 +244,7 @@ html, body {
   scrollbar-width: none;
 }
 
-/* Endfield-style HUD flicker before an element settles */
+/* Endfield-style HUD flicker before an element settles (loader + hero contours) */
 @keyframes hud-flash {
   0% { opacity: 0; }
   10% { opacity: 0.5; }
