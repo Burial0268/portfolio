@@ -82,7 +82,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                 <button
                   key={section.id}
                   onClick={() => handleNavClick(section.id)}
-                  className={`relative px-4 py-2 text-xs font-medium tracking-widest transition-colors duration-300 ${
+                  className={`relative px-4 py-2 text-left font-bebas text-[17px] leading-none tracking-[0.04em] transition-colors duration-300 ${
                     currentSection === section.id
                       ? isDark ? 'text-white' : 'text-[#0A0A0A]'
                       : isDark
@@ -91,7 +91,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                   }`}
                 >
                   <span className="block">{section.en}</span>
-                  <span className="block text-[10px] tracking-normal opacity-50">{section.zh}</span>
+                  <span className="block font-sans text-[10px] tracking-normal opacity-50 mt-1">{section.zh}</span>
                   {currentSection === section.id && (
                     <motion.span
                       className="absolute bottom-0 left-0 w-full h-0.5 bg-[#6CE5E8]"
@@ -118,7 +118,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
 
               {/* Mobile: current section index (AK-style) */}
             <span className={`md:hidden ml-auto mr-1 font-mono text-[10px] tracking-wider transition-colors duration-500 ${isDark ? 'text-white/50' : 'text-black/50'}`}>
-              <span className="text-[#6CE5E8]">{String(currentIndex + 1).padStart(2, '0')}</span> / {String(sections.length).padStart(2, '0')}
+              <span className="text-[#6CE5E8]">{String(currentIndex).padStart(2, '0')}</span> / {String(sections.length - 1).padStart(2, '0')}
             </span>
 
             {/* Mobile Menu Button */}

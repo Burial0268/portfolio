@@ -4,7 +4,6 @@ import HeroButtons from '../HeroButtons';
 import Marquee from '../effects/Marquee';
 
 const bannerTopItems = Array(8).fill('BURIAL0268\u00A0\u00A0\u00B7\u00A0\u00A0');
-const bannerBottomItems = Array(9).fill('CREATIVE\u00A0DEVELOPER\u00A0\u00A0\u00B7\u00A0\u00A0');
 
 // Swiss info grid under the name — numbered, hairline-ruled columns
 const heroInfo = [
@@ -37,7 +36,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
   }, [isReady]);
 
   return (
-    <section id="home" className="relative min-h-dvh w-full overflow-clip bg-[#0A0A0A] flex flex-col">
+    <section id="home" className="relative min-h-dvh w-full overflow-clip flex flex-col">
       {/* SVG Filters */}
       <svg className="absolute w-0 h-0" aria-hidden="true">
         <filter id="hero-grain">
@@ -193,7 +192,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
       </div>
 
       {/* ── Content flow — single flex column, no position conflicts ── */}
-      <div className="relative flex-1 flex flex-col px-6 md:pl-[140px] lg:pl-[180px] md:pr-10" style={{ zIndex: 10 }}>
+      <div className="relative flex-1 flex flex-col px-6 md:px-16 lg:pl-[108px] lg:pr-[208px]" style={{ zIndex: 10 }}>
 
         {/* Top metadata — hairline rule + 4-column grid (Swiss) */}
         <div className="pt-20 md:pt-24 pb-4 pointer-events-none shrink-0">
@@ -213,7 +212,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
               // SUPER::PORTFOLIO::CORE::init()
             </span>
             <span className="hidden md:block tracking-[0.2em] text-white/60">
-              <span className="text-[#6CE5E8]">(01)</span> / 05 — INDEX 首页
+              <span className="text-[#6CE5E8]">(00)</span> / 04 — INDEX 首页
             </span>
             <span className="hidden md:block tracking-[0.2em] text-white/30">
               PORTFOLIO ©{new Date().getFullYear()}
@@ -248,7 +247,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
             {/* Primary name — Swiss tight tracking; each letter rises out of the mask */}
             <div className="overflow-hidden py-4">
               <h1
-                className="text-display text-[5rem] sm:text-[7rem] md:text-[9rem] lg:text-[min(12rem,18vh)] text-white mb-0 leading-[0.85] tracking-[-0.045em]"
+                className="text-display text-[5rem] sm:text-[7rem] md:text-[9rem] lg:text-[min(12rem,16vh)] text-white mb-0 leading-[0.85] tracking-[-0.045em]"
                 style={{ mixBlendMode: 'difference' }}
                 aria-label="Baesory"
               >
@@ -268,9 +267,9 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
             </div>
 
             {/* Secondary name — clip reveal, staggered */}
-            <div className="overflow-hidden py-4 mb-10">
+            <div className="overflow-hidden py-4 mb-[min(2.5rem,4vh)]">
               <motion.h2
-                className="text-display text-[4rem] sm:text-[5.5rem] md:text-[7rem] lg:text-[min(10rem,15vh)] text-[#6CE5E8] leading-[0.85]"
+                className="text-display text-[4rem] sm:text-[5.5rem] md:text-[7rem] lg:text-[min(10rem,12vh)] text-[#6CE5E8] leading-[0.85]"
                 initial={{ y: '150%' }}
                 animate={booted ? { y: 0 } : { y: '150%' }}
                 transition={{ duration: 0.7, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -298,8 +297,8 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
           </div>
         </div>
 
-        {/* Bottom — numbered info grid on a hairline rule (Swiss) */}
-        <div className="pb-8 pointer-events-none shrink-0">
+        {/* Bottom — numbered info grid on a hairline rule (Swiss); sits right above the watermark band */}
+        <div className="pb-[calc(var(--band-h)+8px)] pointer-events-none shrink-0">
           <motion.div
             className="h-px bg-white/20 origin-left"
             initial={{ scaleX: 0 }}
@@ -324,7 +323,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
             ))}
 
             <motion.div
-              className="col-span-2 md:col-span-1 flex items-end justify-between"
+              className="col-span-2 md:col-span-1 flex items-end"
               initial={{ opacity: 0 }}
               animate={booted ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.6, delay: 1.35, ease: [0.22, 1, 0.36, 1] }}
@@ -333,19 +332,6 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
                 // &copy; BAESORY<br />a.k.a BURIAL0268 & 拜瑞
               </p>
 
-              {/* Scroll hint — pulsing line */}
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-medium">
-                  SCROLL
-                </span>
-                <span
-                  className="block w-px h-10 origin-top"
-                  style={{
-                    background: 'linear-gradient(to bottom, rgba(108,229,232,0.5), transparent)',
-                    animation: 'hero-flow 2s infinite ease-in-out',
-                  }}
-                />
-              </div>
             </motion.div>
           </div>
         </div>
@@ -376,29 +362,6 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
         </Marquee>
       </div>
 
-      <div
-        className="absolute pointer-events-none flex items-start overflow-hidden"
-        aria-hidden="true"
-        style={{
-          left: '-20vw',
-          width: '140vw',
-          height: '60px',
-          bottom: '8vh',
-          transform: 'rotate(-5deg)',
-          zIndex: 3,
-        }}
-      >
-        <Marquee speed={60} reversed>
-          {bannerBottomItems.map((text, i) => (
-            <span
-              key={i}
-              className="text-[1rem] tracking-[0.4em] text-white/6 uppercase whitespace-nowrap mr-5 font-medium"
-            >
-              {text}
-            </span>
-          ))}
-        </Marquee>
-      </div>
     </section>
   );
 }

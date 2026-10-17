@@ -2,8 +2,12 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+/* Short laptop screens (1366×768, 1280×720): tighten the fullpage layout */
+@custom-variant short (@media (max-height: 820px));
 
 @theme inline {
+  /* Condensed caps (AK's Oswald role): labels, nav, the typewriter watermark */
+  --font-bebas: "Bebas Neue", "Space Grotesk", sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -255,6 +259,12 @@ body:has(#loader) {
   41% { opacity: 0; }
   100% { opacity: 1; }
 }
+
+/* Height of the bottom watermark band — the band, the watermark size and every
+   section's bottom padding derive from it, so short screens shrink them together */
+:root { --band-h: 72px; }
+@media (width >= 48rem) { :root { --band-h: 120px; } }
+@media (width >= 64rem) { :root { --band-h: clamp(96px, 15vh, 140px); } }
 
 /* Typewriter cursor blink */
 @keyframes blink {
