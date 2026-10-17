@@ -6,6 +6,13 @@ import Marquee from '../effects/Marquee';
 const bannerTopItems = Array(8).fill('BURIAL0268\u00A0\u00A0\u00B7\u00A0\u00A0');
 const bannerBottomItems = Array(9).fill('CREATIVE\u00A0DEVELOPER\u00A0\u00A0\u00B7\u00A0\u00A0');
 
+// Swiss info grid under the name — numbered, hairline-ruled columns
+const heroInfo = [
+  { label: 'ROLE / 职能', value: '全栈开发工程师', sub: 'Full-stack Developer' },
+  { label: 'FOCUS / 方向', value: '动效 · 交互', sub: 'Motion & Interaction' },
+  { label: 'STACK / 技术', value: 'React / Motion / Vue', sub: 'Rust · Tauri · PHP' },
+];
+
 interface HeroSectionProps {
   isReady?: boolean;
 }
@@ -188,21 +195,35 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
       {/* ── Content flow — single flex column, no position conflicts ── */}
       <div className="relative flex-1 flex flex-col px-6 md:pl-[140px] lg:pl-[180px] md:pr-10" style={{ zIndex: 10 }}>
 
-        {/* Top metadata — flows naturally below nav */}
-        <motion.div
-          className="pt-20 md:pt-24 pb-4 flex items-start justify-between pointer-events-none shrink-0"
-          initial={{ opacity: 0 }}
-          animate={booted ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <span className="text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] text-white/40 font-mono">
-            // SUPER::PORTFOLIO::CORE::init()
-          </span>
-          <div className="text-right font-mono text-[10px] text-[#6CE5E8]/60 leading-relaxed hidden md:block">
-            <div>{"> STACK: REACT / MOTION / VUE"}</div>
-            <div>{"<CREATIVE.DEV />"}</div>
-          </div>
-        </motion.div>
+        {/* Top metadata — hairline rule + 4-column grid (Swiss) */}
+        <div className="pt-20 md:pt-24 pb-4 pointer-events-none shrink-0">
+          <motion.div
+            className="h-px bg-white/20 origin-left mb-3"
+            initial={{ scaleX: 0 }}
+            animate={booted ? { scaleX: 1 } : { scaleX: 0 }}
+            transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          />
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 items-start gap-x-4 font-mono text-[10px] uppercase"
+            initial={{ opacity: 0 }}
+            animate={booted ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.5, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <span className="col-span-2 md:col-span-1 font-bold tracking-[0.3em] md:tracking-[0.18em] whitespace-nowrap text-white/40">
+              // SUPER::PORTFOLIO::CORE::init()
+            </span>
+            <span className="hidden md:block tracking-[0.2em] text-white/60">
+              <span className="text-[#6CE5E8]">(01)</span> / 05 — INDEX 首页
+            </span>
+            <span className="hidden md:block tracking-[0.2em] text-white/30">
+              PORTFOLIO ©{new Date().getFullYear()}
+            </span>
+            <div className="hidden md:block text-right normal-case text-[#6CE5E8]/60 leading-relaxed">
+              <div>{"> STACK: REACT / MOTION / VUE"}</div>
+              <div>{"<CREATIVE.DEV />"}</div>
+            </div>
+          </motion.div>
+        </div>
 
         {/* Hero content — safe centering (my-auto collapses when overflowing, enabling scroll) */}
         <div className="flex-1 flex flex-col max-w-[1000px] text-left">
@@ -224,17 +245,26 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
               </motion.span>
             </motion.div>
 
-            {/* Primary name — clip reveal from bottom */}
+            {/* Primary name — Swiss tight tracking; each letter rises out of the mask */}
             <div className="overflow-hidden py-4">
-              <motion.h1
-                className="text-display text-[5rem] sm:text-[7rem] md:text-[9rem] lg:text-[min(12rem,18vh)] text-white mb-0 leading-[0.85]"
+              <h1
+                className="text-display text-[5rem] sm:text-[7rem] md:text-[9rem] lg:text-[min(12rem,18vh)] text-white mb-0 leading-[0.85] tracking-[-0.045em]"
                 style={{ mixBlendMode: 'difference' }}
-                initial={{ y: '150%' }}
-                animate={booted ? { y: 0 } : { y: '150%' }}
-                transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                aria-label="Baesory"
               >
-                Baesory
-              </motion.h1>
+                {'Baesory'.split('').map((ch, i) => (
+                  <motion.span
+                    key={i}
+                    className="inline-block"
+                    aria-hidden="true"
+                    initial={{ y: '150%' }}
+                    animate={booted ? { y: 0 } : { y: '150%' }}
+                    transition={{ duration: 0.8, delay: 0.3 + i * 0.045, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    {ch}
+                  </motion.span>
+                ))}
+              </h1>
             </div>
 
             {/* Secondary name — clip reveal, staggered */}
@@ -268,32 +298,57 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
           </div>
         </div>
 
-        {/* Bottom metadata — at end of flex column */}
-        <motion.div
-          className="pb-8 flex items-end justify-between pointer-events-none shrink-0"
-          initial={{ opacity: 0 }}
-          animate={booted ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ duration: 0.6, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <div className="font-mono text-[10px] text-white/30 leading-relaxed">
-            <p>[ PORTFOLIO {(new Date()).getFullYear()} ]</p>
-            <p className='text-display'>// &copy; BAESORY a.k.a BURIAL0268 & 拜瑞</p>
-          </div>
+        {/* Bottom — numbered info grid on a hairline rule (Swiss) */}
+        <div className="pb-8 pointer-events-none shrink-0">
+          <motion.div
+            className="h-px bg-white/20 origin-left"
+            initial={{ scaleX: 0 }}
+            animate={booted ? { scaleX: 1 } : { scaleX: 0 }}
+            transition={{ duration: 1, delay: 1.05, ease: [0.22, 1, 0.36, 1] }}
+          />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-5 pt-3">
+            {heroInfo.map((item, i) => (
+              <motion.div
+                key={item.label}
+                className={i === 2 ? 'hidden md:block' : ''}
+                initial={{ y: 12, opacity: 0 }}
+                animate={booted ? { y: 0, opacity: 1 } : { y: 12, opacity: 0 }}
+                transition={{ duration: 0.5, delay: 1.15 + i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35 mb-2">
+                  <span className="text-[#6CE5E8]/70">({String(i + 1).padStart(2, '0')})</span> {item.label}
+                </div>
+                <div className="text-sm md:text-base font-bold text-white tracking-tight">{item.value}</div>
+                <div className="text-[11px] text-white/40">{item.sub}</div>
+              </motion.div>
+            ))}
 
-          {/* Scroll hint — pulsing line */}
-          <div className="flex flex-col items-center gap-2">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-medium">
-              SCROLL
-            </span>
-            <span
-              className="block w-px h-10 origin-top"
-              style={{
-                background: 'linear-gradient(to bottom, rgba(108,229,232,0.5), transparent)',
-                animation: 'hero-flow 2s infinite ease-in-out',
-              }}
-            />
+            <motion.div
+              className="col-span-2 md:col-span-1 flex items-end justify-between"
+              initial={{ opacity: 0 }}
+              animate={booted ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ duration: 0.6, delay: 1.35, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p className="font-mono text-[10px] text-white/30 leading-relaxed">
+                // &copy; BAESORY<br />a.k.a BURIAL0268 & 拜瑞
+              </p>
+
+              {/* Scroll hint — pulsing line */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-medium">
+                  SCROLL
+                </span>
+                <span
+                  className="block w-px h-10 origin-top"
+                  style={{
+                    background: 'linear-gradient(to bottom, rgba(108,229,232,0.5), transparent)',
+                    animation: 'hero-flow 2s infinite ease-in-out',
+                  }}
+                />
+              </div>
+            </motion.div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* Diagonal Banners */}
