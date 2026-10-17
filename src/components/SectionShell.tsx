@@ -3,8 +3,7 @@ import { motion } from 'motion/react';
 interface SectionShellProps {
   index: number;
   total: number;
-  en: string;
-  zh: string;
+  caption: string;
   heading: string;
   isDark: boolean;
   subtitle?: string;
@@ -18,14 +17,13 @@ export const pad = (n: number) => String(n).padStart(2, '0');
 interface MetaRowProps {
   index: number;
   total: number;
-  en: string;
-  zh: string;
+  caption: string;
   isDark: boolean;
   isReady: boolean;
 }
 
 /** Swiss meta row: hairline rule + four cells on the same 4-column grid as the page guides */
-export function MetaRow({ index, total, en, zh, isDark, isReady }: MetaRowProps) {
+export function MetaRow({ index, total, caption, isDark, isReady }: MetaRowProps) {
   const t = (delay: number, duration: number) =>
     isReady ? { duration, delay, ease: EASE } : { duration: 0.3, delay: 0 };
   const textColor = isDark ? 'text-[#F0F0F0]' : 'text-[#0A0A0A]';
@@ -33,7 +31,7 @@ export function MetaRow({ index, total, en, zh, isDark, isReady }: MetaRowProps)
 
   const cells = [
     { text: `(${pad(index)})`, className: textColor },
-    { text: `${en} — ${zh}`, className: textColor },
+    { text: caption, className: textColor },
     { text: 'Baesory / Portfolio', className: `${mutedColor} hidden md:block` },
     { text: `${pad(index)} / ${pad(total)}`, className: `${mutedColor} hidden md:block text-right` },
   ];
@@ -66,8 +64,7 @@ export function MetaRow({ index, total, en, zh, isDark, isReady }: MetaRowProps)
 export default function SectionShell({
   index,
   total,
-  en,
-  zh,
+  caption,
   heading,
   isDark,
   subtitle,
@@ -84,7 +81,7 @@ export default function SectionShell({
   return (
     <section className="relative min-h-dvh flex flex-col page-x pt-24 md:pt-28 pb-16 md:pb-20">
       <div className="mb-10 md:mb-16">
-        <MetaRow index={index} total={total} en={en} zh={zh} isDark={isDark} isReady={isReady} />
+        <MetaRow index={index} total={total} caption={caption} isDark={isDark} isReady={isReady} />
 
         {/* Heading rises out of a mask */}
         <div className="overflow-hidden mt-8 md:mt-14 pb-[0.06em]">

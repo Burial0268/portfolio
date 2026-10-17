@@ -63,7 +63,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
 
   return (
     <section className="relative h-dvh min-h-[560px] flex flex-col page-x pt-24 md:pt-28">
-      <MetaRow index={5} total={5} en="Gallery" zh="影集" isDark={true} isReady={isReady} />
+      <MetaRow index={5} total={5} caption="Photography / 摄影" isDark={true} isReady={isReady} />
 
       <div className="flex-1 min-h-0 grid grid-rows-[1fr_auto] md:grid-cols-4 md:grid-rows-1 mt-6 md:mt-8 gap-y-4">
         {/* Caption column — 1 grid column on desktop */}

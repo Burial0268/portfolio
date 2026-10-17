@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, MotionConfig, useMotionValue } from 'motion/react';
+import { motion, AnimatePresence, MotionConfig, useMotionValue, animate } from 'motion/react';
 import Navigation from './Navigation';
 import { useBGM } from '@/hooks/useBGM';
 import HeroSection from './sections/HeroSection';
@@ -110,16 +110,12 @@ export default function App({ projects }: AppProps) {
   const [contentReady, setContentReady] = useState(false);
   const [sectionVisible, setSectionVisible] = useState(true);
 
-  // Giant section word (Endfield-style): which section's word is shown, and travel direction
-  const [wordIndex, setWordIndex] = useState(0);
-  const [dir, setDir] = useState(1);
-  // Word drifts sideways while the active section scrolls internally
-  const drift = useMotionValue(0);
-
-  // Typewriter watermark (original design) — retyped on every section change
+  // Section watermark: one giant word, retyped on every section change (typewriter)…
   const [watermarkText, setWatermarkText] = useState('');
   const [watermarkProminent, setWatermarkProminent] = useState(false);
   const [cursorVisible, setCursorVisible] = useState(false);
+  // …that drifts sideways while the active section scrolls internally (Endfield-style)
+  const drift = useMotionValue(0);
 
   // Shared background state
   const [bgColor, setBgColor] = useState<string>(SECTIONS[0].bg);
@@ -177,11 +173,12 @@ export default function App({ projects }: AppProps) {
     lockedRef.current = true;
     wheelAccum.current = 0;
 
-    // Phase 1: Fade out section content; watermark steps forward with its cursor
+    // Phase 1: Fade out section content; watermark steps forward with its cursor and glides home
     setContentReady(false);
     setSectionVisible(false);
     setWatermarkProminent(true);
     setCursorVisible(true);
+    animate(drift, 0, { duration: 0.5, ease: [0.22, 1, 0.36, 1] });
     await delay(250);
 
     // Phase 2: Delete old watermark char by char
@@ -190,9 +187,7 @@ export default function App({ projects }: AppProps) {
       await delay(25);
     }
 
-    // Phase 3: Giant words pass each other while the bg flips and the new watermark types in
-    setDir(targetIndex > activeIndexRef.current ? 1 : -1);
-    setWordIndex(targetIndex);
+    // Phase 3: Background flips while the new watermark types in
     setBgColor(SECTIONS[targetIndex].bg);
     setBgIsDark(SECTIONS[targetIndex].isDark);
     for (let i = 1; i <= toWord.length; i++) {
@@ -208,7 +203,6 @@ export default function App({ projects }: AppProps) {
     setActiveIndex(targetIndex);
     const wrapper = sectionRefs.current[targetIndex];
     if (wrapper) wrapper.scrollTop = 0;
-    drift.set(0);
     await delay(50);
 
     setSectionVisible(true);
@@ -222,7 +216,7 @@ export default function App({ projects }: AppProps) {
     setTimeout(() => { lockedRef.current = false; }, 500);
   }, [drift]); // stable — uses refs and a motion value, not state
 
-  /* ── Scroll-linked drift of the giant word ───────────────────── */
+  /* ── Scroll-linked drift of the watermark ────────────────────── */
   useEffect(() => {
     const el = sectionRefs.current[activeIndex];
     if (!el) return;
@@ -394,14 +388,16 @@ export default function App({ projects }: AppProps) {
           </div>
         </div>
 
-        {/* Typewriter watermark — persists between sections, retyped on change */}
-        <div className="fixed top-16 md:top-20 inset-x-0 z-1 pointer-events-none select-none overflow-hidden page-x" aria-hidden="true">
+        {/* Section watermark — one giant outlined word: typed on section change, drifts with in-section scroll.
+            20vw keeps the longest word (GALLERY ≈ 4.1em) plus the typing cursor on screen at every breakpoint. */}
+        <div className="fixed inset-x-0 bottom-0 z-1 pointer-events-none select-none overflow-hidden page-x" aria-hidden="true">
           <motion.div
-            className="text-[8rem] md:text-[12rem] leading-none text-display whitespace-nowrap"
+            className="text-display text-outline whitespace-nowrap text-[20vw] leading-[0.74] translate-y-[12%]"
+            style={{ x: drift }}
             animate={{
               color: bgIsDark
-                ? (watermarkProminent ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.03)')
-                : (watermarkProminent ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.03)')
+                ? (watermarkProminent ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)')
+                : (watermarkProminent ? 'rgba(0,0,0,0.35)' : 'rgba(0,0,0,0.09)')
             }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
@@ -409,7 +405,7 @@ export default function App({ projects }: AppProps) {
             <AnimatePresence>
               {cursorVisible && (
                 <motion.span
-                  className="inline-block w-[3px] md:w-[4px] h-[0.75em] ml-1 align-middle"
+                  className="inline-block w-[0.045em] h-[0.7em] ml-[0.06em]"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -420,39 +416,6 @@ export default function App({ projects }: AppProps) {
               )}
             </AnimatePresence>
           </motion.div>
-        </div>
-
-        {/* Giant section word — slides through on section change, drifts with in-section scroll */}
-        <div
-          className="fixed inset-x-0 bottom-0 z-1 pointer-events-none select-none overflow-hidden h-[40vh]"
-          style={{ '--stroke': bgIsDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.09)' } as React.CSSProperties}
-          aria-hidden="true"
-        >
-          <AnimatePresence initial={false} custom={dir}>
-            {SECTIONS[wordIndex].word && (
-              <motion.div
-                key={SECTIONS[wordIndex].word}
-                custom={dir}
-                className="absolute bottom-0 left-0 page-x"
-                variants={{
-                  enter: (d: number) => ({ x: d > 0 ? '75vw' : '-75vw' }),
-                  center: { x: 0 },
-                  exit: (d: number) => ({ x: d > 0 ? '-75vw' : '75vw' }),
-                }}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <motion.div
-                  className="text-display text-outline whitespace-nowrap text-[28vw] leading-[0.74] translate-y-[12%]"
-                  style={{ x: drift }}
-                >
-                  {SECTIONS[wordIndex].word}
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         <Navigation currentSection={SECTIONS[activeIndex].id} isDark={bgIsDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} />

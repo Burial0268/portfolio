@@ -45,7 +45,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
   };
 
   return (
-    <SectionShell index={3} total={5} en="Works" zh="作品" heading="精选项目" isDark={true} isReady={isReady}>
+    <SectionShell index={3} total={5} caption={`${pad(projects.length)} Projects / 项目`} heading="精选项目" isDark={true} isReady={isReady}>
       <div className="grid md:grid-cols-4 gap-y-12 mb-12">
         {/* Case detail — 2 columns */}
         <motion.div

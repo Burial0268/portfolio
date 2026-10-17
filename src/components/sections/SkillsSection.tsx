@@ -45,7 +45,7 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
   const categories = Object.keys(grouped);
 
   return (
-    <SectionShell index={4} total={5} en="Skills" zh="技能" heading="技能专长" isDark={false} isReady={isReady}>
+    <SectionShell index={4} total={5} caption="Toolkit / 工具箱" heading="技能专长" isDark={false} isReady={isReady}>
       {/* One category per grid column */}
       <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-y-12 mb-16 md:mb-24">
         {categories.map((category, ci) => (

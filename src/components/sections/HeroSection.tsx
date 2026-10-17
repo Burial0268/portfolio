@@ -71,7 +71,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
             transition={t(0.1, 1)}
           />
           <div className="grid grid-cols-2 md:grid-cols-4 pt-3 meta">
-            {['(01)', 'Index — 首页', `Portfolio ©${new Date().getFullYear()}`].map((text, i) => (
+            {['(01)', 'Introduction / 介绍', `Portfolio ©${new Date().getFullYear()}`].map((text, i) => (
               <motion.span
                 key={text}
                 className={i === 0 ? 'text-white' : i === 1 ? 'text-white' : 'text-white/45 hidden md:block'}

@@ -43,7 +43,7 @@ export default function AboutSection({ isReady = false }: AboutSectionProps) {
   const specialties = ['前端开发', '动效设计', '后端开发'];
 
   return (
-    <SectionShell index={2} total={5} en="About" zh="关于" heading="关于我" isDark={false} isReady={isReady}>
+    <SectionShell index={2} total={5} caption="Profile / 简介" heading="关于我" isDark={false} isReady={isReady}>
       {/* Statement (3 cols) + aside (1 col) on the page grid */}
       <div className="grid md:grid-cols-4 gap-y-10 mb-16 md:mb-24">
         <motion.p
