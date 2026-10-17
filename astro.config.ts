@@ -12,7 +12,7 @@ export default defineConfig({
       allowedHosts: ['bzsr-devenvlaptop02.taila30f9f.ts.net']
     },
     ssr: {
-      noExternal: ['motion', '@applemusic-like-lyrics/react', '@applemusic-like-lyrics/core']
+      noExternal: ['motion']
     },
     build: {
       rollupOptions: {
