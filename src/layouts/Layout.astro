@@ -170,15 +170,17 @@ const topo = topoPath();
 				var s=Date.now(), d=1800,
 					p=document.querySelector('.ld-pct'),
 					a=document.querySelector('.ld-accent-fill'),
-					bt=document.querySelector('.ld-bottom');
+					bt=document.querySelector('.ld-bottom'),
+					lg=document.querySelector('.ld-log');
+				// percentage starts below the TTY log, then rides down the accent bar
+				var y0=lg?lg.offsetTop+lg.offsetHeight+32:24;
 				(function tick(){
 					var t=Math.min((Date.now()-s)/d, 1),
 						e=1-Math.pow(1-t, 3),
 						v=Math.round(e*100);
 					if(p)p.textContent=v+'%';
 					if(a)a.style.height=(e*100)+'%';
-					// percentage rides down the accent bar, like Endfield's loader
-					if(bt)bt.style.transform='translateY('+(e*(window.innerHeight-bt.offsetHeight-64))+'px)';
+					if(bt)bt.style.transform='translateY('+(y0+e*(window.innerHeight-y0-bt.offsetHeight-40))+'px)';
 					if(t<1)requestAnimationFrame(tick);
 					else{
 						window.__loaderDone=true;
@@ -288,10 +290,9 @@ const topo = topoPath();
 
 	.ld-log {
 		position: absolute;
-		bottom: 24px;
+		top: 24px;
+		left: 20px;
 		right: 20px;
-		max-width: calc(100% - 40px);
-		text-align: right;
 		font-family: "Courier New", Consolas, monospace;
 		font-size: 11px;
 		line-height: 1.7;
@@ -334,7 +335,7 @@ const topo = topoPath();
 
 	.ld-bottom {
 		position: absolute;
-		top: 24px;
+		top: 0;
 		left: 20px;
 		will-change: transform;
 	}
