@@ -30,7 +30,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
   }, [isReady]);
 
   return (
-    <section id="home" className="relative min-h-screen w-full overflow-x-clip bg-[#0A0A0A] flex flex-col">
+    <section id="home" className="relative min-h-dvh w-full overflow-clip bg-[#0A0A0A] flex flex-col">
       {/* SVG Filters */}
       <svg className="absolute w-0 h-0" aria-hidden="true">
         <filter id="hero-grain">
@@ -105,7 +105,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
 
         {/* Secondary outline block */}
         <motion.div
-          className="absolute left-[8%] bottom-[12%] w-[80px] md:w-[140px] h-[80px] md:h-[140px] border border-[#6CE5E8]/10"
+          className="absolute right-[22%] bottom-[14%] w-[80px] md:w-[140px] h-[80px] md:h-[140px] border border-[#6CE5E8]/10"
           initial={{ scale: 0, opacity: 0 }}
           animate={booted ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
           transition={{ duration: 0.8, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -191,7 +191,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
 
         {/* Top metadata — flows naturally below nav */}
         <motion.div
-          className="pt-[68px] md:pt-[84px] pb-4 flex items-start justify-between pointer-events-none shrink-0"
+          className="pt-20 md:pt-24 pb-4 flex items-start justify-between pointer-events-none shrink-0"
           initial={{ opacity: 0 }}
           animate={booted ? { opacity: 1 } : { opacity: 0 }}
           transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}

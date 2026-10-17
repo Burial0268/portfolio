@@ -5,6 +5,7 @@ import FFTVisualizer from './effects/FFTVisualizer';
 
 interface NavigationProps {
   currentSection?: string;
+  isDark?: boolean;
   onNavigate?: (section: string) => void;
   bgmPlaying?: boolean;
   onBGMToggle?: () => void;
@@ -19,13 +20,9 @@ const sections = [
   { id: 'gallery', en: 'GALLERY', zh: '影集' }
 ];
 
-const darkSections = new Set(['home', 'projects', 'gallery']);
-
-export default function Navigation({ currentSection = 'home', onNavigate, bgmPlaying, onBGMToggle, bgmAnalyser }: NavigationProps) {
+export default function Navigation({ currentSection = 'home', isDark = true, onNavigate, bgmPlaying, onBGMToggle, bgmAnalyser }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-  const isDark = darkSections.has(currentSection);
 
   useEffect(() => {
     setMounted(true);
@@ -53,15 +50,15 @@ export default function Navigation({ currentSection = 'home', onNavigate, bgmPla
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <div
-              className="font-bold text-xl md:text-2xl cursor-pointer transition-opacity hover:opacity-70"
+            <button
+              className="font-bold text-xl md:text-2xl transition-opacity hover:opacity-70"
               onClick={() => handleNavClick('home')}
             >
               <span className={`transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
                 BAESORY
               </span>
               <span className="text-[#6CE5E8]">拜瑞</span>
-            </div>
+            </button>
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-1">
@@ -90,27 +87,31 @@ export default function Navigation({ currentSection = 'home', onNavigate, bgmPla
               ))}
             </div>
 
-            {/* BGM Toggle */}
-            <button
-              onClick={onBGMToggle}
-              className={`p-2 rounded-sm transition-colors ${
-                isDark ? 'text-white hover:bg-white/10' : 'text-[#0A0A0A] hover:bg-black/5'
-              }`}
-              aria-label={bgmPlaying ? 'Pause music' : 'Play music'}
-            >
-              <FFTVisualizer analyser={bgmAnalyser?.current ?? null} playing={!!bgmPlaying} />
-            </button>
+            <div className="flex items-center gap-1">
+              {/* BGM Toggle */}
+              <button
+                onClick={onBGMToggle}
+                data-bgm-toggle
+                className={`p-2 rounded-sm transition-colors ${
+                  isDark ? 'text-white hover:bg-white/10' : 'text-[#0A0A0A] hover:bg-black/5'
+                }`}
+                aria-label={bgmPlaying ? 'Pause music' : 'Play music'}
+              >
+                <FFTVisualizer analyser={bgmAnalyser?.current ?? null} playing={!!bgmPlaying} />
+              </button>
 
-            {/* Mobile Menu Button */}
-            <button
-              className={`md:hidden p-2 rounded-sm transition-colors ${
-                isDark ? 'text-white hover:bg-white/10' : 'text-[#0A0A0A] hover:bg-black/5'
-              }`}
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle menu"
-            >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+              {/* Mobile Menu Button */}
+              <button
+                className={`md:hidden p-2 rounded-sm transition-colors ${
+                  isDark ? 'text-white hover:bg-white/10' : 'text-[#0A0A0A] hover:bg-black/5'
+                }`}
+                onClick={() => setIsOpen(!isOpen)}
+                aria-label="Toggle menu"
+                aria-expanded={isOpen}
+              >
+                {isOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
         </div>
       </nav>

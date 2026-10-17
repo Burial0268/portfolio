@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, MotionConfig } from 'motion/react';
 import Navigation from './Navigation';
 import { useBGM } from '@/hooks/useBGM';
 import HeroSection from './sections/HeroSection';
@@ -34,8 +34,14 @@ const SECTIONS = [
 
 const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
+// Can this section's own scroll container move further in `dir` (1 = down, -1 = up)?
+const hasRoom = (el: HTMLElement | null | undefined, dir: number) => {
+  if (!el || el.scrollHeight <= el.clientHeight + 2) return false;
+  return dir > 0 ? el.scrollTop + el.clientHeight < el.scrollHeight - 2 : el.scrollTop > 0;
+};
+
 /* ── Section Dots — MD3 expressive stretch ─────────────────────── */
-function SectionDots({ current, total }: { current: number; total: number }) {
+function SectionDots({ current, total, isDark }: { current: number; total: number; isDark: boolean }) {
   const DOT = 4, GAP = 12, STEP = DOT + GAP;
   const IH = 20; // indicator height at rest
   const PAD = (IH - DOT) / 2; // vertical padding so indicator doesn't clip
@@ -59,12 +65,12 @@ function SectionDots({ current, total }: { current: number; total: number }) {
         {Array.from({ length: total }).map((_, i) => (
           <div
             key={i}
-            className="absolute left-1/2 -translate-x-1/2"
+            className="absolute left-1/2 -translate-x-1/2 transition-colors duration-500"
             style={{
               width: DOT,
               height: DOT,
               top: PAD + i * STEP,
-              backgroundColor: 'rgba(255,255,255,0.15)',
+              backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
             }}
           />
         ))}
@@ -171,18 +177,18 @@ export default function App({ projects }: AppProps) {
     // Phase 1: Fade out section content
     setContentReady(false);
     setSectionVisible(false);
-    await delay(400);
+    await delay(300);
 
     // Phase 2: Watermark becomes prominent
     setWatermarkProminent(true);
     setCursorVisible(true);
-    await delay(200);
+    await delay(150);
 
     // Phase 3: Delete old watermark char by char
     if (fromWatermark) {
       for (let i = fromWatermark.length; i >= 0; i--) {
         setWatermarkText(fromWatermark.slice(0, i));
-        await delay(35);
+        await delay(25);
       }
     }
 
@@ -195,20 +201,20 @@ export default function App({ projects }: AppProps) {
     // Phase 4: Background color + text color transition
     setBgColor(SECTIONS[targetIndex].bg);
     setBgIsDark(SECTIONS[targetIndex].isDark);
-    await delay(400);
+    await delay(350);
 
     // Phase 5: Type new watermark char by char + settle
     if (toWatermark) {
       for (let i = 0; i <= toWatermark.length; i++) {
         setWatermarkText(toWatermark.slice(0, i));
-        await delay(55);
+        await delay(40);
       }
 
       // Phase 6: Settle — watermark returns to subtle
-      await delay(300);
+      await delay(250);
       setCursorVisible(false);
       setWatermarkProminent(false);
-      await delay(200);
+      await delay(150);
     }
 
     // Phase 7: Switch section + reveal
@@ -219,7 +225,7 @@ export default function App({ projects }: AppProps) {
     await delay(50);
 
     setSectionVisible(true);
-    await delay(350);
+    await delay(300);
 
     // Phase 8: Content entrance animations
     setContentReady(true);
@@ -254,25 +260,10 @@ export default function App({ projects }: AppProps) {
       const wrapper = sectionRefs.current[idx];
 
       // Handle internal section scroll
-      if (wrapper) {
-        const { scrollTop, scrollHeight, clientHeight } = wrapper;
-        const hasScroll = scrollHeight > clientHeight + 2;
-
-        if (hasScroll) {
-          const atTop = scrollTop <= 0;
-          const atBottom = scrollTop + clientHeight >= scrollHeight - 2;
-
-          if (delta > 0 && !atBottom) {
-            wrapper.scrollTop += delta;
-            wheelAccum.current = 0;
-            return;
-          }
-          if (delta < 0 && !atTop) {
-            wrapper.scrollTop += delta;
-            wheelAccum.current = 0;
-            return;
-          }
-        }
+      if (wrapper && delta !== 0 && hasRoom(wrapper, Math.sign(delta))) {
+        wrapper.scrollTop += delta;
+        wheelAccum.current = 0;
+        return;
       }
 
       // At boundary or no internal scroll — accumulate for page transition
@@ -297,13 +288,18 @@ export default function App({ projects }: AppProps) {
       if (lockedRef.current) return;
 
       const idx = activeIndexRef.current;
+      if (e.key === ' ' && (e.target as HTMLElement).closest('button, a')) return;
 
-      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+      const dir = ['ArrowDown', 'PageDown', ' '].includes(e.key) ? 1
+        : ['ArrowUp', 'PageUp'].includes(e.key) ? -1 : 0;
+      if (dir) {
         e.preventDefault();
-        navigateToSection(idx + 1);
-      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
-        e.preventDefault();
-        navigateToSection(idx - 1);
+        const wrapper = sectionRefs.current[idx];
+        if (wrapper && hasRoom(wrapper, dir)) {
+          wrapper.scrollBy({ top: dir * wrapper.clientHeight * 0.8, behavior: 'smooth' });
+        } else {
+          navigateToSection(idx + dir);
+        }
       } else if (e.key === 'Home') {
         e.preventDefault();
         navigateToSection(0);
@@ -341,18 +337,8 @@ export default function App({ projects }: AppProps) {
       // Must be a decisive vertical swipe: far enough, fast enough, mostly vertical
       if (absDeltaY < 120 || deltaTime > 400 || deltaX > absDeltaY * 0.5) return;
 
-      // Check if the section has internal scroll room in the swipe direction
-      const wrapper = sectionRefs.current[idx];
-      if (wrapper) {
-        const { scrollTop, scrollHeight, clientHeight } = wrapper;
-        const hasScroll = scrollHeight > clientHeight + 2;
-        if (hasScroll) {
-          const atTop = scrollTop <= 0;
-          const atBottom = scrollTop + clientHeight >= scrollHeight - 2;
-          if (deltaY > 0 && !atBottom) return; // still has content below
-          if (deltaY < 0 && !atTop) return;    // still has content above
-        }
-      }
+      // Section still has internal scroll room in the swipe direction
+      if (hasRoom(sectionRefs.current[idx], Math.sign(deltaY))) return;
 
       if (deltaY > 0) {
         navigateToSection(idx + 1);
@@ -386,74 +372,76 @@ export default function App({ projects }: AppProps) {
 
   /* ── Render ──────────────────────────────────────────────────── */
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      {/* Background layer — transitions between section bg colors */}
-      <motion.div
-        className="fixed inset-0 z-0"
-        animate={{ backgroundColor: bgColor }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      />
-
-      {/* Shared watermark — persists between sections, typewriter animates directly */}
-      <div className="fixed top-16 left-0 md:left-[120px] lg:left-[160px] right-0 z-1 pointer-events-none select-none overflow-hidden px-4 md:px-8">
+    <MotionConfig reducedMotion="user">
+      <div className="fixed inset-0 overflow-hidden">
+        {/* Background layer — transitions between section bg colors */}
         <motion.div
-          className="text-[8rem] md:text-[12rem] font-black leading-none tracking-tight text-display whitespace-nowrap"
-          animate={{
-            color: bgIsDark
-              ? (watermarkProminent ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.03)')
-              : (watermarkProminent ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.03)')
-          }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {watermarkText}
-          <AnimatePresence>
-            {cursorVisible && (
-              <motion.span
-                className="inline-block w-[3px] md:w-[4px] h-[0.75em] ml-1 align-middle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <span className="block w-full h-full bg-[#6CE5E8] animate-blink" />
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </div>
+          className="fixed inset-0 z-0"
+          animate={{ backgroundColor: bgColor }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        />
 
-      <Navigation currentSection={SECTIONS[activeIndex].id} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} />
-      <SectionProgress current={activeIndex} total={SECTIONS.length} />
-      <SectionDots current={activeIndex} total={SECTIONS.length} />
-
-      {/* Section Layers — transparent bg, content only */}
-      {SECTIONS.map((section, i) => {
-        const isActive = i === activeIndex;
-        return (
+        {/* Shared watermark — persists between sections, typewriter animates directly */}
+        <div className="fixed top-16 left-0 md:left-[120px] lg:left-[160px] right-0 z-1 pointer-events-none select-none overflow-hidden px-4 md:px-8">
           <motion.div
-            key={section.id}
-            ref={(el) => { sectionRefs.current[i] = el; }}
-            className={`absolute inset-0 z-2 section-scroll ${
-              isActive ? 'overflow-y-auto' : 'overflow-hidden pointer-events-none'
-            }`}
+            className="text-[8rem] md:text-[12rem] font-black leading-none tracking-tight text-display whitespace-nowrap"
             animate={{
-              opacity: isActive && sectionVisible ? 1 : 0,
+              color: bgIsDark
+                ? (watermarkProminent ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.03)')
+                : (watermarkProminent ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.03)')
             }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            style={{
-              visibility: isActive ? 'visible' : 'hidden',
-            }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            {i === 0 && <HeroSection isReady={contentReady && isActive} />}
-            {i === 1 && <AboutSection isReady={contentReady && isActive} />}
-            {i === 2 && <ProjectsSection projects={projects} isReady={contentReady && isActive} />}
-            {i === 3 && <SkillsSection isReady={contentReady && isActive} />}
-            {i === 4 && <GallerySection isReady={contentReady && isActive} />}
+            {watermarkText}
+            <AnimatePresence>
+              {cursorVisible && (
+                <motion.span
+                  className="inline-block w-[3px] md:w-[4px] h-[0.75em] ml-1 align-middle"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <span className="block w-full h-full bg-[#6CE5E8] animate-blink" />
+                </motion.span>
+              )}
+            </AnimatePresence>
           </motion.div>
-        );
-      })}
+        </div>
 
-      <Cursor />
-    </div>
+        <Navigation currentSection={SECTIONS[activeIndex].id} isDark={bgIsDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} />
+        <SectionProgress current={activeIndex} total={SECTIONS.length} />
+        <SectionDots current={activeIndex} total={SECTIONS.length} isDark={bgIsDark} />
+
+        {/* Section Layers — transparent bg, content only */}
+        {SECTIONS.map((section, i) => {
+          const isActive = i === activeIndex;
+          return (
+            <motion.div
+              key={section.id}
+              ref={(el) => { sectionRefs.current[i] = el; }}
+              className={`absolute inset-0 z-2 section-scroll ${
+                isActive ? 'overflow-y-auto' : 'overflow-hidden pointer-events-none'
+              }`}
+              animate={{
+                opacity: isActive && sectionVisible ? 1 : 0,
+              }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                visibility: isActive ? 'visible' : 'hidden',
+              }}
+            >
+              {i === 0 && <HeroSection isReady={contentReady && isActive} />}
+              {i === 1 && <AboutSection isReady={contentReady && isActive} />}
+              {i === 2 && <ProjectsSection projects={projects} isReady={contentReady && isActive} />}
+              {i === 3 && <SkillsSection isReady={contentReady && isActive} />}
+              {i === 4 && <GallerySection isReady={contentReady && isActive} />}
+            </motion.div>
+          );
+        })}
+
+        <Cursor />
+      </div>
+    </MotionConfig>
   );
 }

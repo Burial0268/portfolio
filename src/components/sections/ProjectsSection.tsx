@@ -36,7 +36,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
   }, [isReady]);
 
   const featured = projects[featuredIndex];
-  const others = projects.filter((_, i) => i !== featuredIndex);
+  const featuredHref = featured?.link || featured?.github;
 
   const handlePrev = () => {
     setFeaturedIndex((prev) => (prev - 1 + projects.length) % projects.length);
@@ -74,7 +74,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               >
                 <span className="text-[5rem] md:text-[7rem] font-black text-white/5 text-display leading-none mb-4">
                   {String(featuredIndex + 1).padStart(2, '0')}
@@ -96,14 +96,16 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                   ))}
                 </div>
 
-                <a
-                  href={featured.link || featured.github || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs uppercase tracking-widest text-[#6CE5E8] font-bold hover:text-white transition-colors duration-300"
-                >
-                  VIEW PROJECT →
-                </a>
+                {featuredHref && (
+                  <a
+                    href={featuredHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="self-start text-xs uppercase tracking-widest text-[#6CE5E8] font-bold hover:text-white transition-colors duration-300"
+                  >
+                    VIEW PROJECT →
+                  </a>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -116,20 +118,32 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
           animate={showR}
           transition={t(0.4)}
         >
-          {others.map((project) => {
-            const originalIndex = projects.indexOf(project);
+          {projects.map((project, originalIndex) => {
+            const isActive = originalIndex === featuredIndex;
             return (
               <button
                 key={project.slug}
                 onClick={() => setFeaturedIndex(originalIndex)}
-                className="group text-left border-b border-white/8 py-5 px-4 hover:bg-white/3 transition-colors duration-300"
+                aria-current={isActive}
+                className={`group relative text-left border-b border-white/8 py-5 px-4 transition-colors duration-300 ${
+                  isActive ? 'bg-white/4' : 'hover:bg-white/3'
+                }`}
               >
+                {isActive && (
+                  <motion.span
+                    layoutId="project-active"
+                    className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#6CE5E8]"
+                    transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                  />
+                )}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] text-white/20 font-mono mr-2">
                       {String(originalIndex + 1).padStart(2, '0')}
                     </span>
-                    <span className="text-sm font-bold text-[#F0F0F0] group-hover:text-[#6CE5E8] transition-colors duration-300">
+                    <span className={`text-sm font-bold transition-colors duration-300 ${
+                      isActive ? 'text-[#6CE5E8]' : 'text-[#F0F0F0] group-hover:text-[#6CE5E8]'
+                    }`}>
                       {project.title}
                     </span>
                     <div className="flex flex-wrap gap-1.5 mt-2">
@@ -140,7 +154,9 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                       ))}
                     </div>
                   </div>
-                  <span className="text-white/20 group-hover:text-[#6CE5E8] transition-colors duration-300 text-sm mt-1">
+                  <span className={`text-sm mt-1 transition-all duration-300 group-hover:translate-x-1 ${
+                    isActive ? 'text-[#6CE5E8]' : 'text-white/20 group-hover:text-[#6CE5E8]'
+                  }`}>
                     →
                   </span>
                 </div>
@@ -160,12 +176,14 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
         <div className="flex items-center gap-3">
           <button
             onClick={handlePrev}
+            aria-label="Previous project"
             className="w-10 h-10 border border-white/15 flex items-center justify-center text-white/50 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
           >
             ◀
           </button>
           <button
             onClick={handleNext}
+            aria-label="Next project"
             className="w-10 h-10 border border-white/15 flex items-center justify-center text-white/50 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
           >
             ▶
@@ -177,6 +195,8 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
 
         <a
           href="https://github.com/Burial0268"
+          target="_blank"
+          rel="noopener noreferrer"
           className="text-xs uppercase tracking-widest text-[#6CE5E8] font-bold hover:text-white transition-colors duration-300"
         >
           VIEW GITHUB → <br />

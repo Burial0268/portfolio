@@ -13,14 +13,14 @@ export function useCountUp(target: number, duration: number = 1.2, trigger?: boo
     // Prop-driven trigger mode (for fullpage system)
     if (trigger !== undefined) {
       if (trigger) {
-        animate(0, target, {
+        const controls = animate(0, target, {
           duration,
-          ease: [0.25, 0.1, 0.25, 1],
+          ease: [0.22, 1, 0.36, 1],
           onUpdate: (latest) => setValue(Math.round(latest)),
         });
-      } else {
-        setValue(0);
+        return () => controls.stop();
       }
+      setValue(0);
       return;
     }
 

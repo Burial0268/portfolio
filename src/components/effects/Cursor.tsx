@@ -1,8 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { motion, useMotionValue, useSpring } from 'motion/react';
 
 export default function Cursor() {
-  const cursorRef = useRef<HTMLDivElement>(null);
   const [hasFinePointer, setHasFinePointer] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [hovering, setHovering] = useState(false);
+
+  const x = useMotionValue(-100);
+  const y = useMotionValue(-100);
+  const springX = useSpring(x, { stiffness: 900, damping: 50, mass: 0.4 });
+  const springY = useSpring(y, { stiffness: 900, damping: 50, mass: 0.4 });
 
   useEffect(() => {
     // Only show custom cursor on devices with a fine pointer (mouse)
@@ -17,71 +24,43 @@ export default function Cursor() {
   useEffect(() => {
     if (!hasFinePointer) return;
 
-    const cursor = cursorRef.current;
-    if (!cursor) return;
-
-    let mouseX = 0;
-    let mouseY = 0;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-
-      requestAnimationFrame(() => {
-        cursor.style.left = `${mouseX}px`;
-        cursor.style.top = `${mouseY}px`;
-      });
+    // Show on first move — `mouseenter` never fires on document, which left the cursor invisible
+    const handleMove = (e: PointerEvent) => {
+      x.set(e.clientX);
+      y.set(e.clientY);
+      setVisible(true);
+    };
+    const handleLeave = () => setVisible(false);
+    const handleOver = (e: Event) => {
+      setHovering(!!(e.target as HTMLElement).closest?.('a, button, .interactive'));
     };
 
-    const handleMouseEnter = () => {
-      cursor.style.opacity = '1';
-    };
-
-    const handleMouseLeave = () => {
-      cursor.style.opacity = '0';
-    };
-
-    const handleInteractiveHover = (e: Event) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'A' ||
-        target.tagName === 'BUTTON' ||
-        target.classList.contains('interactive') ||
-        target.closest('a') ||
-        target.closest('button')
-      ) {
-        cursor.style.backgroundColor = 'rgba(108, 229, 232, 0.2)';
-        cursor.style.borderColor = '#6CE5E8';
-      } else {
-        cursor.style.backgroundColor = 'transparent';
-        cursor.style.borderColor = '#6CE5E8';
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseenter', handleMouseEnter);
-    document.addEventListener('mouseleave', handleMouseLeave);
-    document.addEventListener('mouseover', handleInteractiveHover);
+    window.addEventListener('pointermove', handleMove);
+    document.documentElement.addEventListener('mouseleave', handleLeave);
+    document.addEventListener('mouseover', handleOver);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseenter', handleMouseEnter);
-      document.removeEventListener('mouseleave', handleMouseLeave);
-      document.removeEventListener('mouseover', handleInteractiveHover);
+      window.removeEventListener('pointermove', handleMove);
+      document.documentElement.removeEventListener('mouseleave', handleLeave);
+      document.removeEventListener('mouseover', handleOver);
     };
-  }, [hasFinePointer]);
+  }, [hasFinePointer, x, y]);
 
   // Don't render on touch devices
   if (!hasFinePointer) return null;
 
   return (
-    <div
-      ref={cursorRef}
-      className="fixed w-4 h-4 border border-[#6CE5E8] pointer-events-none z-[9999] opacity-0 mix-blend-difference"
-      style={{
-        transform: 'translate(-50%, -50%)',
-        transition: 'background-color 0.2s, border-color 0.2s'
+    <motion.div
+      className="fixed left-0 top-0 w-4 h-4 border border-[#6CE5E8] pointer-events-none z-[9999] mix-blend-difference"
+      style={{ x: springX, y: springY, translateX: '-50%', translateY: '-50%' }}
+      initial={{ opacity: 0 }}
+      animate={{
+        opacity: visible ? 1 : 0,
+        scale: hovering ? 1.6 : 1,
+        rotate: hovering ? 45 : 0,
+        backgroundColor: hovering ? 'rgba(108,229,232,0.2)' : 'rgba(108,229,232,0)',
       }}
+      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
     />
   );
 }

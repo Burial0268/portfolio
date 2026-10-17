@@ -17,9 +17,8 @@ export default defineConfig({
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            'motion': ['motion']
-          }
+          // rolldown (Vite 8) only accepts the function form
+          manualChunks: (id) => (id.includes('node_modules/motion') ? 'motion' : undefined)
         }
       }
     }

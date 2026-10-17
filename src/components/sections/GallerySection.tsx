@@ -34,30 +34,34 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
       : { duration: 0.3, delay: 0 };
 
   const [index, setIndex] = useState(0);
-  // 即使使用全量渲染，direction 依然有助于确定非当前图片的静止位置
-  const [direction, setDirection] = useState(0);
 
   useEffect(() => {
     if (isReady) setIndex(0);
   }, [isReady]);
 
-  const navigate = useCallback(
-    (next: number) => {
-      if (next < 0 || next >= photos.length || next === index) return;
-      setDirection(next > index ? 1 : -1);
-      setIndex(next);
-    },
-    [index],
-  );
+  const navigate = useCallback((next: number) => {
+    if (next >= 0 && next < photos.length) setIndex(next);
+  }, []);
 
   const handlePrev = () => navigate(index - 1);
   const handleNext = () => navigate(index + 1);
+
+  // ←/→ browse photos while this section is active (↑/↓ stay with page navigation)
+  useEffect(() => {
+    if (!isReady) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') navigate(index - 1);
+      else if (e.key === 'ArrowRight') navigate(index + 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isReady, index, navigate]);
 
   const current = photos[index];
   const pad = (n: number) => String(n).padStart(2, '0');
 
   return (
-    <section className="relative min-h-screen flex flex-col overflow-hidden pt-16 md:pt-20">
+    <section className="relative min-h-dvh flex flex-col overflow-hidden pt-16 md:pt-20">
       <div className="flex flex-1 min-h-0">
         {/* Desktop: left sidebar strip */}
         <motion.div
@@ -184,42 +188,43 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
             <div className="flex-1 relative min-h-0 flex flex-col">
               {/* Image container */}
               <motion.div
-                className="flex-1 relative overflow-hidden bg-[#111]"
+                className="flex-1 relative overflow-hidden bg-[#111] touch-pan-y"
                 initial={{ opacity: 0 }}
                 animate={isReady ? { opacity: 1 } : { opacity: 0 }}
                 transition={t(0.15)}
+                onPanEnd={(_, info) => {
+                  if (Math.abs(info.offset.x) > 50) navigate(index + (info.offset.x < 0 ? 1 : -1));
+                }}
               >
                 {photos.map((photo, i) => {
-                  // 计算每张图片相对于当前 index 的状态
                   const isActive = i === index;
-                  const isBefore = i < index;
-                  // 如果是当前图片，x=0。如果在左边，x=-100(或-40)。如果在右边，x=100(或40)。
-                  const xPos = isActive ? 0 : isBefore ? -40 : 40;
-                  
+                  // 左侧的图片向左收起，右侧的图片从右侧展开 —— 方向感来自 clip-path 擦除
+                  const clip = isActive ? 'inset(0% 0% 0% 0%)' : i < index ? 'inset(0% 100% 0% 0%)' : 'inset(0% 0% 0% 100%)';
+
                   return (
                     <motion.img
                       key={photo.src}
                       src={`${PHOTO_CDN_PERFIX}${photo.src}`}
                       alt={photo.title}
                       className="absolute inset-0 w-full h-full object-cover"
+                      initial={false}
                       animate={{
-                        opacity: isActive ? 1 : 0,
-                        x: xPos,
-                        scale: isActive ? 1 : 1.02, // 细微缩放效果
+                        clipPath: clip,
+                        scale: isActive ? 1 : 1.06,
                         zIndex: isActive ? 10 : 0,
-                        // 当图片变的不活跃时，禁用指针事件，防止误触
-                        pointerEvents: isActive ? 'auto' : 'none', 
                       }}
-                      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                      style={{ pointerEvents: isActive ? 'auto' : 'none' }}
+                      onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
                       draggable={false}
-                      loading="eager" 
+                      loading="eager"
                     />
                   );
                 })}
 
                 {/* Right-edge vertical text */}
                 <motion.div
-                  className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:block z-20 pointer-events-none"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 hidden md:block z-20 pointer-events-none"
                   initial={{ opacity: 0 }}
                   animate={isReady ? { opacity: 1 } : { opacity: 0 }}
                   transition={t(0.5)}
@@ -288,6 +293,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               <button
                 onClick={handlePrev}
                 disabled={index === 0}
+                aria-label="Previous photo"
                 className="w-8 h-8 border border-white/15 flex items-center justify-center text-white/40 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:hover:border-white/15 disabled:hover:text-white/40 text-xs"
               >
                 ◀
@@ -298,6 +304,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               <button
                 onClick={handleNext}
                 disabled={index === photos.length - 1}
+                aria-label="Next photo"
                 className="w-8 h-8 border border-white/15 flex items-center justify-center text-white/40 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:hover:border-white/15 disabled:hover:text-white/40 text-xs"
               >
                 ▶

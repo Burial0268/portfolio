@@ -4,7 +4,7 @@
 		<meta charset="UTF-8" />
 		<meta
 			name="viewport"
-			content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+			content="width=device-width, initial-scale=1.0"
 		/>
 		<meta name="description" content="分享我的乐趣" />
 		<meta name="keywords" content="全栈开发,Tauri,设计" />
@@ -26,7 +26,7 @@
 			rel="stylesheet"
 		/>
 
-		<link rel="icon" type="image/svg+xml" href="/favicon.jpg" />
+		<link rel="icon" type="image/jpeg" href="/favicon.jpg" />
 		<!-- HarmonyOS Sans -->
 		<link
 			rel="stylesheet"
@@ -83,7 +83,7 @@
 			(function(){
 				var hwConcurrency = window.navigator.hardwareConcurrency ?? 12
 				var dm=document.querySelector('[data-drm]');
-				var hw = document.querySelector('[data-smp');
+				var hw = document.querySelector('[data-smp]');
 				if(dm)dm.textContent='[    0.039817] drm: framebuffer ['+screen.width+'x'+screen.height+'] initialized at 0xfe000000';
 				if(hw)hw.textContent='[    0.014903] smpboot: Bringing up '+ hwConcurrency +' CPUs / ' + hwConcurrency + ' threads';
 			

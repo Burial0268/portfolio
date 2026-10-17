@@ -7,7 +7,7 @@ import '@/styles/global.css';
 const projects = await getCollection('projects');
 const projectData = projects
   .sort((a, b) => a.data.order - b.data.order)
-  .map(p => ({ slug: p.slug, ...p.data }));
+  .map(p => ({ slug: p.id, ...p.data }));
 ---
 
 <Layout>
