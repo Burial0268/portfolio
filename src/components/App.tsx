@@ -116,6 +116,11 @@ export default function App({ projects }: AppProps) {
   // Word drifts sideways while the active section scrolls internally
   const drift = useMotionValue(0);
 
+  // Typewriter watermark (original design) — retyped on every section change
+  const [watermarkText, setWatermarkText] = useState('');
+  const [watermarkProminent, setWatermarkProminent] = useState(false);
+  const [cursorVisible, setCursorVisible] = useState(false);
+
   // Shared background state
   const [bgColor, setBgColor] = useState<string>(SECTIONS[0].bg);
   const [bgIsDark, setBgIsDark] = useState<boolean>(SECTIONS[0].isDark);
@@ -166,22 +171,39 @@ export default function App({ projects }: AppProps) {
     if (lockedRef.current) return;
     if (targetIndex === activeIndexRef.current || targetIndex < 0 || targetIndex >= SECTIONS.length) return;
 
+    const fromWord = SECTIONS[activeIndexRef.current].word;
+    const toWord = SECTIONS[targetIndex].word;
+
     lockedRef.current = true;
     wheelAccum.current = 0;
 
-    // Phase 1: Fade out section content
+    // Phase 1: Fade out section content; watermark steps forward with its cursor
     setContentReady(false);
     setSectionVisible(false);
+    setWatermarkProminent(true);
+    setCursorVisible(true);
     await delay(250);
 
-    // Phase 2: Giant words pass each other (old slides out, new slides in) while the bg flips
+    // Phase 2: Delete old watermark char by char
+    for (let i = fromWord.length; i >= 0; i--) {
+      setWatermarkText(fromWord.slice(0, i));
+      await delay(25);
+    }
+
+    // Phase 3: Giant words pass each other while the bg flips and the new watermark types in
     setDir(targetIndex > activeIndexRef.current ? 1 : -1);
     setWordIndex(targetIndex);
     setBgColor(SECTIONS[targetIndex].bg);
     setBgIsDark(SECTIONS[targetIndex].isDark);
-    await delay(450);
+    for (let i = 1; i <= toWord.length; i++) {
+      setWatermarkText(toWord.slice(0, i));
+      await delay(40);
+    }
+    await delay(150);
+    setCursorVisible(false);
+    setWatermarkProminent(false);
 
-    // Phase 3: Switch section + reveal
+    // Phase 4: Switch section + reveal
     activeIndexRef.current = targetIndex;
     setActiveIndex(targetIndex);
     const wrapper = sectionRefs.current[targetIndex];
@@ -192,7 +214,7 @@ export default function App({ projects }: AppProps) {
     setSectionVisible(true);
     await delay(250);
 
-    // Phase 4: Content entrance animations
+    // Phase 5: Content entrance animations
     setContentReady(true);
 
     // Post-transition cooldown — absorbs trackpad momentum
@@ -370,6 +392,34 @@ export default function App({ projects }: AppProps) {
               />
             ))}
           </div>
+        </div>
+
+        {/* Typewriter watermark — persists between sections, retyped on change */}
+        <div className="fixed top-16 md:top-20 inset-x-0 z-1 pointer-events-none select-none overflow-hidden page-x" aria-hidden="true">
+          <motion.div
+            className="text-[8rem] md:text-[12rem] leading-none text-display whitespace-nowrap"
+            animate={{
+              color: bgIsDark
+                ? (watermarkProminent ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.03)')
+                : (watermarkProminent ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.03)')
+            }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {watermarkText}
+            <AnimatePresence>
+              {cursorVisible && (
+                <motion.span
+                  className="inline-block w-[3px] md:w-[4px] h-[0.75em] ml-1 align-middle"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <span className="block w-full h-full bg-[#6CE5E8] animate-blink" />
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </div>
 
         {/* Giant section word — slides through on section change, drifts with in-section scroll */}

@@ -202,6 +202,16 @@ html, body {
   100% { opacity: 1; }
 }
 
+/* Typewriter cursor blink */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 0.8s infinite;
+}
+
 /* Hero scroll hint pulsing line */
 @keyframes hero-flow {
   0%, 100% { transform: scaleY(0); transform-origin: top; }
