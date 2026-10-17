@@ -37,7 +37,7 @@ export default function SectionShell({
   const metaColor = isDark ? 'text-white/30' : 'text-black/30';
 
   return (
-    <section className="relative min-h-screen flex flex-col overflow-x-clip">
+    <section className="relative min-h-dvh flex flex-col overflow-x-clip">
       {/* Mobile: horizontal accent bar — slides from left */}
       <motion.div
         className="md:hidden h-14 bg-[#6CE5E8] flex items-center px-6 gap-4 shrink-0 overflow-hidden"
@@ -84,7 +84,7 @@ export default function SectionShell({
         </motion.div>
 
         {/* Content area */}
-        <div className="flex-1 min-w-0 px-6 md:px-10 lg:px-16 py-16 md:py-20 flex flex-col">
+        <div className="flex-1 min-w-0 px-6 md:px-10 lg:px-16 pt-12 pb-16 md:pt-28 md:pb-20 flex flex-col">
           {/* Editorial header — Endfield-style tight 3-tier tag */}
           <div className="mb-10 md:mb-14">
             {/* Tier 1: Brand tag line */}

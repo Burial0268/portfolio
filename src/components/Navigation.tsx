@@ -5,6 +5,7 @@ import FFTVisualizer from './effects/FFTVisualizer';
 
 interface NavigationProps {
   currentSection?: string;
+  isDark?: boolean;
   onNavigate?: (section: string) => void;
   bgmPlaying?: boolean;
   onBGMToggle?: () => void;
@@ -19,17 +20,29 @@ const sections = [
   { id: 'gallery', en: 'GALLERY', zh: '影集' }
 ];
 
-const darkSections = new Set(['home', 'projects', 'gallery']);
-
-export default function Navigation({ currentSection = 'home', onNavigate, bgmPlaying, onBGMToggle, bgmAnalyser }: NavigationProps) {
+export default function Navigation({ currentSection = 'home', isDark: sectionIsDark = true, onNavigate, bgmPlaying, onBGMToggle, bgmAnalyser }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-  const isDark = darkSections.has(currentSection);
+  // The full-screen menu is dark, so the bar sitting on top of it goes dark too
+  const isDark = sectionIsDark || isOpen;
+  const currentIndex = Math.max(0, sections.findIndex(s => s.id === currentSection));
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Phones scroll the document: freeze it under the open menu, and let Esc close it
+  useEffect(() => {
+    if (!isOpen) return;
+    const root = document.documentElement;
+    root.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      root.style.overflow = '';
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [isOpen]);
 
   const handleNavClick = (sectionId: string) => {
     if (onNavigate) {
@@ -53,15 +66,15 @@ export default function Navigation({ currentSection = 'home', onNavigate, bgmPla
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <div
-              className="font-bold text-xl md:text-2xl cursor-pointer transition-opacity hover:opacity-70"
+            <button
+              className="font-bold text-xl md:text-2xl transition-opacity hover:opacity-70"
               onClick={() => handleNavClick('home')}
             >
               <span className={`transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
                 BAESORY
               </span>
               <span className="text-[#6CE5E8]">拜瑞</span>
-            </div>
+            </button>
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-1">
@@ -90,73 +103,113 @@ export default function Navigation({ currentSection = 'home', onNavigate, bgmPla
               ))}
             </div>
 
-            {/* BGM Toggle */}
-            <button
-              onClick={onBGMToggle}
-              className={`p-2 rounded-sm transition-colors ${
-                isDark ? 'text-white hover:bg-white/10' : 'text-[#0A0A0A] hover:bg-black/5'
-              }`}
-              aria-label={bgmPlaying ? 'Pause music' : 'Play music'}
-            >
-              <FFTVisualizer analyser={bgmAnalyser?.current ?? null} playing={!!bgmPlaying} />
-            </button>
+            <div className="flex items-center gap-1">
+              {/* BGM Toggle */}
+              <button
+                onClick={onBGMToggle}
+                data-bgm-toggle
+                className={`p-2 rounded-sm transition-colors ${
+                  isDark ? 'text-white hover:bg-white/10' : 'text-[#0A0A0A] hover:bg-black/5'
+                }`}
+                aria-label={bgmPlaying ? 'Pause music' : 'Play music'}
+              >
+                <FFTVisualizer analyser={bgmAnalyser?.current ?? null} playing={!!bgmPlaying} />
+              </button>
+
+              {/* Mobile: current section index (AK-style) */}
+            <span className={`md:hidden ml-auto mr-1 font-mono text-[10px] tracking-wider transition-colors duration-500 ${isDark ? 'text-white/50' : 'text-black/50'}`}>
+              <span className="text-[#6CE5E8]">{String(currentIndex + 1).padStart(2, '0')}</span> / {String(sections.length).padStart(2, '0')}
+            </span>
 
             {/* Mobile Menu Button */}
-            <button
-              className={`md:hidden p-2 rounded-sm transition-colors ${
-                isDark ? 'text-white hover:bg-white/10' : 'text-[#0A0A0A] hover:bg-black/5'
-              }`}
-              onClick={() => setIsOpen(!isOpen)}
-              aria-label="Toggle menu"
-            >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+              <button
+                className={`md:hidden p-2 rounded-sm transition-colors ${
+                  isDark ? 'text-white hover:bg-white/10' : 'text-[#0A0A0A] hover:bg-black/5'
+                }`}
+                onClick={() => setIsOpen(!isOpen)}
+                aria-label="Toggle menu"
+                aria-expanded={isOpen}
+              >
+                {isOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu — full-screen dark panel (Arknights / Endfield H5 style) */}
       <AnimatePresence>
         {isOpen && (
-          <>
-            <motion.div
-              className="fixed inset-y-0 right-0 w-72 bg-white z-40 md:hidden shadow-xl"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          <motion.div
+            className="fixed inset-0 z-40 md:hidden bg-[#0A0A0A] flex flex-col pt-24 pb-8 px-6 overflow-hidden"
+            initial={{ clipPath: 'inset(0 0 100% 0)' }}
+            animate={{ clipPath: 'inset(0 0 0% 0)' }}
+            exit={{ clipPath: 'inset(0 0 100% 0)' }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none text-[#6CE5E8]/[0.06]"
+              viewBox="0 0 160 100"
+              preserveAspectRatio="xMidYMid slice"
+              aria-hidden="true"
             >
-              <div className="flex flex-col h-full pt-24 px-6">
-                {sections.map((section, index) => (
+              <use href="#topo" />
+            </svg>
+            <div className="absolute left-0 top-16 bottom-0 w-1 bg-[#6CE5E8]" />
+
+            <div className="relative text-[10px] uppercase tracking-[0.3em] text-white/30 font-mono mb-6">
+              ▼ / MENU — BURIAL0268
+            </div>
+
+            <nav className="relative flex-1">
+              {sections.map((section, index) => {
+                const active = currentSection === section.id;
+                return (
                   <motion.button
                     key={section.id}
                     onClick={() => handleNavClick(section.id)}
-                    className={`text-left py-4 text-sm font-medium tracking-widest transition-colors border-b border-gray-100 ${
-                      currentSection === section.id
-                        ? 'text-[#0A0A0A] border-l-2 border-l-[#6CE5E8] pl-4'
-                        : 'text-gray-400 hover:text-[#0A0A0A] pl-4'
-                    }`}
+                    className="group w-full flex items-center gap-4 py-4 border-b border-white/8 text-left"
                     initial={{ x: 40, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: 40, opacity: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5, delay: 0.15 + index * 0.06, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <span className="block">{section.en}</span>
-                    <span className="block text-xs tracking-normal opacity-50 mt-0.5">{section.zh}</span>
+                    <span className="font-mono text-[10px] text-white/30 w-6">{String(index + 1).padStart(2, '0')}</span>
+                    <span
+                      className={`inline-block w-4 h-3 -skew-x-12 transition-colors duration-300 ${
+                        active ? 'bg-[#6CE5E8]' : 'bg-white/15 group-active:bg-[#6CE5E8]'
+                      }`}
+                    />
+                    <span className={`text-display text-3xl tracking-wide ${active ? 'text-[#6CE5E8]' : 'text-white'}`}>
+                      {section.en}
+                    </span>
+                    <span className="ml-auto text-xs text-white/40">{section.zh}</span>
                   </motion.button>
-                ))}
-              </div>
-            </motion.div>
+                );
+              })}
+            </nav>
 
-            {/* Mobile Menu Overlay */}
             <motion.div
-              className="fixed inset-0 bg-black/20 z-30 md:hidden"
-              onClick={() => setIsOpen(false)}
+              className="relative flex items-center justify-between pt-6 border-t border-white/10 text-[10px] font-mono uppercase tracking-wider"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-            />
-          </>
+              transition={{ duration: 0.4, delay: 0.5 }}
+            >
+              <button onClick={onBGMToggle} className="flex items-center gap-2 text-white/50" data-bgm-toggle>
+                <FFTVisualizer analyser={bgmAnalyser?.current ?? null} playing={!!bgmPlaying} />
+                BGM {bgmPlaying ? 'ON' : 'OFF'}
+              </button>
+              <a
+                href="https://github.com/Burial0268"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#6CE5E8]"
+              >
+                GITHUB →
+              </a>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

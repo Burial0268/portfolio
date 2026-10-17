@@ -221,11 +221,18 @@
   animation-delay: 1000ms;
 }
 
-/* Fullpage mode */
-html, body {
+/* Fullpage mode — desktop/tablet only; phones scroll natively (Endfield H5 style) */
+@media (width >= 48rem) {
+  html, body {
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+  }
+}
+
+/* No scrolling underneath the boot loader */
+body:has(#loader) {
   overflow: hidden;
-  height: 100vh;
-  height: 100dvh;
 }
 
 /* Hide scrollbar on section scroll containers */
@@ -235,6 +242,18 @@ html, body {
 .section-scroll {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Endfield-style HUD flicker before an element settles (loader + hero contours) */
+@keyframes hud-flash {
+  0% { opacity: 0; }
+  10% { opacity: 0.5; }
+  11% { opacity: 0; }
+  20% { opacity: 0.5; }
+  21% { opacity: 0; }
+  40% { opacity: 0.5; }
+  41% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 /* Typewriter cursor blink */

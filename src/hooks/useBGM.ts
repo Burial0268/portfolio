@@ -31,19 +31,22 @@ export function useBGM() {
     audio.volume = 0.3;
     audioRef.current = audio;
 
-    const startOnInteraction = () => {
+    const startOnInteraction = (e: Event) => {
       if (hasInteracted.current) return;
       hasInteracted.current = true;
+      events.forEach(ev => window.removeEventListener(ev, startOnInteraction));
+      // The BGM button's own click toggles playback — autoplaying here would make it pause instantly
+      if ((e.target as Element | null)?.closest?.('[data-bgm-toggle]')) return;
       ensureAudioContext();
       if (audioCtxRef.current?.state === 'suspended') {
         audioCtxRef.current.resume();
       }
       audio.play().then(() => setPlaying(true)).catch(() => {});
-      events.forEach(e => window.removeEventListener(e, startOnInteraction));
     };
 
-    const events = ['click', 'scroll', 'keydown', 'touchstart', 'wheel'];
-    events.forEach(e => window.addEventListener(e, startOnInteraction, { once: true }));
+    // Only events that grant user activation — wheel/scroll would make play() reject
+    const events = ['pointerdown', 'keydown', 'touchend'];
+    events.forEach(e => window.addEventListener(e, startOnInteraction));
 
     return () => {
       events.forEach(e => window.removeEventListener(e, startOnInteraction));
@@ -61,7 +64,7 @@ export function useBGM() {
       audioCtxRef.current.resume();
     }
     if (audio.paused) {
-      audio.play().then(() => setPlaying(true));
+      audio.play().then(() => setPlaying(true)).catch(() => {});
     } else {
       audio.pause();
       setPlaying(false);

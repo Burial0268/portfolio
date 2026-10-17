@@ -13,12 +13,12 @@ export default function Marquee({ children, speed = 30, reversed = false, classN
   const [contentWidth, setContentWidth] = useState(0);
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    const firstChild = containerRef.current.children[0] as HTMLElement;
-    if (firstChild) {
-      setContentWidth(firstChild.offsetWidth);
-    }
-  }, [children]);
+    const firstChild = containerRef.current?.children[0] as HTMLElement | undefined;
+    if (!firstChild) return;
+    const ro = new ResizeObserver(() => setContentWidth(firstChild.offsetWidth));
+    ro.observe(firstChild);
+    return () => ro.disconnect();
+  }, []);
 
   const duration = contentWidth > 0 ? contentWidth / speed : 20;
 

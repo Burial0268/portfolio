@@ -30,7 +30,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
   }, [isReady]);
 
   return (
-    <section id="home" className="relative min-h-screen w-full overflow-x-clip bg-[#0A0A0A] flex flex-col">
+    <section id="home" className="relative min-h-dvh w-full overflow-clip bg-[#0A0A0A] flex flex-col">
       {/* SVG Filters */}
       <svg className="absolute w-0 h-0" aria-hidden="true">
         <filter id="hero-grain">
@@ -50,20 +50,19 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
         }}
       />
 
-      {/* Topographic contour lines — multi-layer concentric rings */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          zIndex: 1,
-          backgroundImage: [
-            'repeating-radial-gradient(circle at 22% 42%, transparent 0, transparent 60px, rgba(108,229,232,0.03) 61px, transparent 62px)',
-            'repeating-radial-gradient(circle at 22% 42%, transparent 0, transparent 120px, rgba(108,229,232,0.02) 121px, transparent 122px)',
-            'repeating-radial-gradient(circle at 70% 28%, transparent 0, transparent 90px, rgba(108,229,232,0.02) 91px, transparent 92px)',
-            'repeating-radial-gradient(circle at 70% 28%, transparent 0, transparent 180px, rgba(108,229,232,0.015) 181px, transparent 182px)',
-            'repeating-radial-gradient(circle at 50% 75%, transparent 0, transparent 110px, rgba(108,229,232,0.015) 111px, transparent 112px)',
-          ].join(', '),
-        }}
-      />
+      {/* Topographic contour lines — same procedural map as the loader (shared #topo symbol) */}
+      <motion.svg
+        className="absolute inset-0 w-full h-full pointer-events-none text-[#6CE5E8]/[0.08]"
+        style={{ zIndex: 1, animation: booted ? 'hud-flash 0.9s linear' : undefined }}
+        viewBox="0 0 160 100"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+        initial={{ opacity: 0, scale: 1.06 }}
+        animate={booted ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 1.06 }}
+        transition={{ opacity: { duration: 0.9 }, scale: { duration: 2.4, ease: [0.22, 1, 0.36, 1] } }}
+      >
+        <use href="#topo" />
+      </motion.svg>
 
       {/* Film grain overlay */}
       <div
@@ -105,7 +104,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
 
         {/* Secondary outline block */}
         <motion.div
-          className="absolute left-[8%] bottom-[12%] w-[80px] md:w-[140px] h-[80px] md:h-[140px] border border-[#6CE5E8]/10"
+          className="absolute right-[22%] bottom-[14%] w-[80px] md:w-[140px] h-[80px] md:h-[140px] border border-[#6CE5E8]/10"
           initial={{ scale: 0, opacity: 0 }}
           animate={booted ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
           transition={{ duration: 0.8, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -191,7 +190,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
 
         {/* Top metadata — flows naturally below nav */}
         <motion.div
-          className="pt-[68px] md:pt-[84px] pb-4 flex items-start justify-between pointer-events-none shrink-0"
+          className="pt-20 md:pt-24 pb-4 flex items-start justify-between pointer-events-none shrink-0"
           initial={{ opacity: 0 }}
           animate={booted ? { opacity: 1 } : { opacity: 0 }}
           transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
