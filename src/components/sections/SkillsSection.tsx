@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import SectionShell from '../SectionShell';
+import SectionShell, { pad } from '../SectionShell';
 
 interface Skill {
   name: string;
@@ -12,11 +12,10 @@ interface SkillsSectionProps {
 }
 
 export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
-  const showL = isReady ? { x: 0, opacity: 1 } : { x: -15, opacity: 0 };
   const showY = isReady ? { y: 0, opacity: 1 } : { y: 15, opacity: 0 };
-  const t = (delay: number) =>
+  const t = (delay: number, duration = 0.6) =>
     isReady
-      ? { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const }
+      ? { duration, delay, ease: [0.22, 1, 0.36, 1] as const }
       : { duration: 0.3, delay: 0 };
 
   const skills: Skill[] = [
@@ -47,65 +46,43 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
 
   return (
     <SectionShell
-      sidebarLabel="技能"
-      sidebarVerticalText="SKILLS"
+      label="TOOLKIT"
+      en="Skills"
+      zh="技能专长"
       isDark={false}
-      tagLine="▼ / BURIAL0268"
-      badgeText="SKILLS"
-      heading="技能专长"
-      metaLine="// SUPER::PORTFOLIO::SKILLS::GET()"
       isReady={isReady}
+      subIndex={categories.map((c, i) => ({ key: c, label: `${pad(i + 1)}  ${c}`, active: i === 0 }))}
+      description="技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。"
     >
-      {/* Category rows */}
-      <div className="space-y-8 mb-12">
+      {/* One category per column */}
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-12">
         {categories.map((category, ci) => (
-          <motion.div
-            key={category}
-            initial={{ x: -15, opacity: 0 }}
-            animate={showL}
-            transition={t(0.3 + ci * 0.08)}
-          >
-            {/* Category label + separator */}
-            <div className="flex items-center gap-4 mb-4">
-              <span className="inline-block w-3 h-2 bg-[#0A0A0A] -skew-x-12 shrink-0" />
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#0A0A0A] whitespace-nowrap">
-                {category}
-              </span>
-              <div className="flex-1 h-px bg-gray-200" />
+          <motion.div key={category} initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.3 + ci * 0.08)}>
+            <div className="flex items-baseline justify-between border-t border-[#0A0A0A] pt-3 mb-2">
+              <span className="font-bebas text-[20px] leading-none tracking-[0.05em] text-[#0A0A0A]">{category}</span>
+              <span className="font-bebas text-[15px] leading-none text-black/40">({pad(grouped[category].length)})</span>
             </div>
-
-            {/* Skill names inline */}
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
-              {grouped[category].map((skill) => (
-                <span
-                  key={skill.name}
-                  className={`text-base ${
-                    skill.level >= 90
-                      ? 'font-bold text-[#0A0A0A]'
-                      : skill.level >= 80
-                        ? 'font-medium text-gray-700'
-                        : 'font-normal text-gray-500'
-                  }`}
-                >
-                  {skill.name}
-                </span>
+            <ul>
+              {grouped[category].map((skill, si) => (
+                <li key={skill.name} className="relative py-3 short:py-2 border-b border-black/10">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[clamp(1rem,1.3vw,1.25rem)] font-bold text-[#0A0A0A]">{skill.name}</span>
+                    <span className="font-bebas text-[15px] text-black/40 tabular-nums">{skill.level}</span>
+                  </div>
+                  {/* Proficiency hairline grows in once the section is ready */}
+                  <motion.span
+                    className="absolute left-0 -bottom-px h-px bg-[#6CE5E8] origin-left"
+                    style={{ width: `${skill.level}%` }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: isReady ? 1 : 0 }}
+                    transition={t(0.5 + ci * 0.08 + si * 0.05, 1)}
+                  />
+                </li>
               ))}
-            </div>
+            </ul>
           </motion.div>
         ))}
       </div>
-
-      {/* Bottom separator + quote */}
-      <motion.div
-        initial={{ y: 15, opacity: 0 }}
-        animate={showY}
-        transition={t(0.6)}
-      >
-        <div className="h-px bg-gray-200 mb-8" />
-        <p className="text-gray-500 text-sm leading-relaxed max-w-2xl">
-          技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。
-        </p>
-      </motion.div>
     </SectionShell>
   );
 }

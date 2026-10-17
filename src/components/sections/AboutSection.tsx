@@ -6,12 +6,12 @@ function StatCounter({ value, label, suffix, isReady }: { value: number; label: 
   const { ref, value: count } = useCountUp(value, 1.2, isReady);
 
   return (
-    <div className="flex items-baseline gap-2 py-3 border-b border-gray-200 last:border-b-0">
-      <span ref={ref} className="text-3xl md:text-4xl font-black text-[#6CE5E8] tabular-nums">
-        {count}
-      </span>
-      <span className="text-2xl font-black text-[#6CE5E8]">{suffix}</span>
-      <span className="text-xs uppercase tracking-widest text-gray-500 font-medium ml-2">{label}</span>
+    <div className="border-t border-[#0A0A0A] pt-3 pr-6">
+      <div className="font-bebas text-[15px] tracking-[0.08em] text-black/45 leading-none">{label}</div>
+      <div className="mt-4 text-display text-[clamp(3rem,5.2vw,5rem)] short:text-[clamp(2.75rem,4vw,3.75rem)] text-[#0A0A0A] tabular-nums">
+        <span ref={ref}>{count}</span>
+        <span className="text-[#6CE5E8]">{suffix}</span>
+      </div>
     </div>
   );
 }
@@ -21,106 +21,82 @@ interface AboutSectionProps {
 }
 
 export default function AboutSection({ isReady = false }: AboutSectionProps) {
-  const showL = isReady ? { x: 0, opacity: 1 } : { x: -20, opacity: 0 };
-  const showR = isReady ? { x: 0, opacity: 1 } : { x: 20, opacity: 0 };
   const showY = isReady ? { y: 0, opacity: 1 } : { y: 15, opacity: 0 };
   const t = (delay: number) =>
     isReady
-      ? { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const }
+      ? { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] as const }
       : { duration: 0.3, delay: 0 };
 
   const stats = [
-    { value: 5, label: '年经验', suffix: '+' },
-    { value: 50, label: '项目完成', suffix: '+' },
-    { value: 20, label: '技术栈', suffix: '+' },
-    { value: 99, label: '满意度', suffix: '%' },
+    { value: 5, label: '年经验 / YEARS', suffix: '+' },
+    { value: 50, label: '项目完成 / PROJECTS', suffix: '+' },
+    { value: 20, label: '技术栈 / TOOLS', suffix: '+' },
+    { value: 99, label: '满意度 / SATISFACTION', suffix: '%' },
   ];
 
   const techStack = [
     'React', 'TypeScript', 'Next.js', 'Astro', 'Vue',
-    'Tailwind CSS', 'Motion', 'Node.js','WebGL', 
+    'Tailwind CSS', 'Motion', 'Node.js', 'WebGL',
     'Git', 'Vite', 'Rust', 'Tauri', 'PHP'
   ];
 
   return (
     <SectionShell
-      sidebarLabel="关于"
-      sidebarVerticalText="ABOUT"
+      label="PROFILE"
+      en="About Me"
+      zh="关于我"
       isDark={false}
-      tagLine="▼ / BURIAL0268"
-      badgeText="ABOUT"
-      heading="关于我"
-      metaLine="// SUPER::PORTFOLIO::ABOUT::GET()"
       isReady={isReady}
+      subIndex={[
+        { key: 'profile', label: 'PROFILE / 简介', active: true },
+        { key: 'numbers', label: 'KEY NUMBERS / 数据' },
+        { key: 'stack', label: 'TECH STACK / 技术栈' },
+      ]}
+      description="对动效设计和 3D 可视化有浓厚兴趣，致力于将创意转化为令人惊叹的数字体验。相信优秀的设计与技术实现应该完美结合。"
     >
-      {/* Two-column asymmetric layout */}
-      <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 mb-12">
-        {/* Left column — editorial intro (55%) */}
-        <motion.div
-          className="lg:w-[55%]"
-          initial={{ x: -20, opacity: 0 }}
-          animate={showL}
-          transition={t(0.3)}
-        >
-          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-[#0A0A0A] leading-snug mb-6">
-            我是一名热爱技术的全栈开发工程师，专注于打造极致的用户体验。擅长使用现代 Web 技术栈构建高性能、富交互的应用程序。
-          </p>
-          <p className="text-base text-gray-500 leading-relaxed mb-8">
-            对动效设计和 3D 可视化有浓厚兴趣，致力于将创意转化为令人惊叹的数字体验。相信优秀的设计与技术实现应该完美结合。
-          </p>
-
-          {/* Specialty labels */}
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-bold text-[#0A0A0A] uppercase tracking-wider">
-            <span>前端开发</span>
-            <span className="text-[#6CE5E8]">·</span>
-            <span>动效设计</span>
-            <span className="text-[#6CE5E8]">·</span>
-            <span>后端开发</span>
-          </div>
-        </motion.div>
-
-        {/* Right column — stats stacked (45%) */}
-        <motion.div
-          className="lg:w-[45%]"
-          initial={{ x: 20, opacity: 0 }}
-          animate={showR}
-          transition={t(0.4)}
-        >
-          <div className="border border-gray-200 bg-white p-6 md:p-8">
-            <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400 mb-4">
-              <span className="inline-block w-3 h-2 bg-[#0A0A0A] -skew-x-12" />
-              KEY NUMBERS
-            </h3>
-            {stats.map((stat, i) => (
-              <StatCounter key={i} {...stat} isReady={isReady} />
-            ))}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Tech stack — single horizontal row */}
-      <motion.div
+      {/* Statement */}
+      <motion.p
+        className="text-[clamp(1.6rem,2.5vw,2.5rem)] short:text-[clamp(1.5rem,2vw,2rem)] font-bold text-[#0A0A0A] leading-[1.3] max-w-[24em]"
         initial={{ y: 15, opacity: 0 }}
         animate={showY}
-        transition={t(0.5)}
+        transition={t(0.3)}
       >
-        <h3 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400 mb-4">
-          <span className="inline-block w-3 h-2 bg-[#0A0A0A] -skew-x-12" />
-          TECH STACK
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {techStack.map((tech, i) => (
-            <motion.span
-              key={tech}
-              className="text-sm px-4 py-2 border border-[#6CE5E8]/30 bg-[#6CE5E8]/5 text-gray-700 font-medium hover:-translate-y-0.5 transition-transform duration-300"
-              initial={{ y: 8, opacity: 0 }}
-              animate={showY}
-              transition={t(0.55 + i * 0.02)}
-            >
+        我是一名热爱技术的全栈开发工程师，专注于打造<span className="bg-[#6CE5E8] px-1">极致的用户体验</span>。擅长使用现代 Web 技术栈构建高性能、富交互的应用程序。
+      </motion.p>
+
+      <motion.div
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-6 font-bebas text-[20px] leading-none tracking-[0.05em] text-[#0A0A0A]"
+        initial={{ y: 15, opacity: 0 }}
+        animate={showY}
+        transition={t(0.36)}
+      >
+        <span>FRONTEND 前端开发</span>
+        <span className="w-1.5 h-1.5 bg-[#6CE5E8]" />
+        <span>MOTION 动效设计</span>
+        <span className="w-1.5 h-1.5 bg-[#6CE5E8]" />
+        <span>BACKEND 后端开发</span>
+      </motion.div>
+
+      {/* Key numbers — 4 equal columns */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 mt-12 short:mt-8">
+        {stats.map((stat, i) => (
+          <motion.div key={stat.label} initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.42 + i * 0.06)}>
+            <StatCounter {...stat} isReady={isReady} />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Tech stack — boxed index list */}
+      <motion.div className="mt-12 short:mt-8 border-t border-black/15 pt-3" initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.66)}>
+        <div className="font-bebas text-[15px] tracking-[0.08em] text-black/45 leading-none">TECH STACK / 技术栈</div>
+        <ul className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-x-6 gap-y-2.5 mt-4">
+          {techStack.map((tech) => (
+            <li key={tech} className="group flex items-center gap-2.5 text-[15px] font-medium text-[#0A0A0A] whitespace-nowrap">
+              <span className="w-[7px] h-[7px] border border-black/40 group-hover:bg-[#6CE5E8] group-hover:border-[#6CE5E8] transition-colors duration-300" />
               {tech}
-            </motion.span>
+            </li>
           ))}
-        </div>
+        </ul>
       </motion.div>
     </SectionShell>
   );

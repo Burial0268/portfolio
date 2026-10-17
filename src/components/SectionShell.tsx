@@ -1,158 +1,135 @@
 import { motion } from 'motion/react';
 
+export interface SubIndexItem {
+  key: string;
+  label: string;
+  active?: boolean;
+  onSelect?: () => void;
+}
+
 interface SectionShellProps {
-  sidebarLabel: string;
-  sidebarVerticalText: string;
+  label: string;          // condensed label after "BAESORY ://", e.g. PROFILE
+  en: string;             // EN title, e.g. ABOUT ME
+  zh: string;             // CJK title, e.g. 关于我
+  description?: React.ReactNode;
+  url?: string;
+  subIndex?: SubIndexItem[];
+  subIndexOnMobile?: boolean; // phones show the sub-index only when it is a real picker people need
   isDark: boolean;
-  tagLine: string;
-  badgeText: string;
-  heading: string;
-  metaLine: string;
-  subtitle?: string;
   isReady: boolean;
+  aside?: React.ReactNode; // extra block at the foot of the left column (e.g. footer)
   children: React.ReactNode;
 }
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+export const pad = (n: number) => String(n).padStart(2, '0');
+
+/*
+ * Arknights #media layout on a 12-column grid: a 3-column left column read top-down
+ * (label → titles → cyan bar → description → boxed sub-index → url) and 9 columns of
+ * content, both starting on the same line. Edges come from the layout variables
+ * (--mx / --pr / --nav-h / --band); the giant typewriter watermark sits behind, in App.
+ */
 export default function SectionShell({
-  sidebarLabel,
-  sidebarVerticalText,
+  label,
+  en,
+  zh,
+  description,
+  url = 'HTTPS://GITHUB.COM/BURIAL0268',
+  subIndex,
+  subIndexOnMobile = false,
   isDark,
-  tagLine,
-  badgeText,
-  heading,
-  metaLine,
-  subtitle,
   isReady,
+  aside,
   children,
 }: SectionShellProps) {
-  const showY = isReady ? { y: 0, opacity: 1 } : { y: 15, opacity: 0 };
+  const t = (delay: number, duration = 0.6) =>
+    isReady ? { duration, delay, ease: EASE } : { duration: 0.3, delay: 0 };
   const showL = isReady ? { x: 0, opacity: 1 } : { x: -15, opacity: 0 };
-  const t = (delay: number) =>
-    isReady
-      ? { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const }
-      : { duration: 0.3, delay: 0 };
+  const fade = { opacity: isReady ? 1 : 0 };
 
-  const textColor = isDark ? 'text-[#F0F0F0]' : 'text-[#0A0A0A]';
-  const mutedColor = isDark ? 'text-white/40' : 'text-black/40';
-  const metaColor = isDark ? 'text-white/30' : 'text-black/30';
+  const text = isDark ? 'text-[#F0F0F0]' : 'text-[#0A0A0A]';
+  const muted = isDark ? 'text-white/45' : 'text-black/45';
+  const rule = isDark ? 'border-white/15' : 'border-black/15';
 
   return (
-    <section className="relative min-h-dvh flex flex-col overflow-x-clip">
-      {/* Mobile: horizontal accent bar — slides from left */}
-      <motion.div
-        className="md:hidden h-14 bg-[#6CE5E8] flex items-center px-6 gap-4 shrink-0 overflow-hidden"
-        initial={{ clipPath: 'inset(0 100% 0 0)' }}
-        animate={isReady ? { clipPath: 'inset(0 0% 0 0)' } : { clipPath: 'inset(0 100% 0 0)' }}
-        transition={t(0)}
-      >
-        <span className="text-black font-black text-sm tracking-wider uppercase">
-          {sidebarVerticalText}
-        </span>
-        <span className="text-black/50 text-xs font-medium">{sidebarLabel}</span>
-      </motion.div>
+    <section className="relative min-h-dvh pl-(--mx) pr-(--pr) pt-[calc(var(--nav-h)+48px)] short:pt-[calc(var(--nav-h)+32px)] pb-[calc(var(--band)+48px)] short:pb-[calc(var(--band)+24px)]">
+      <div className="grid lg:grid-cols-12 gap-x-12 gap-y-12">
+        {/* ── Left column (3/12) ───────────────────────────────── */}
+        <aside className="lg:col-span-3">
+          <motion.div className={`font-bebas text-[15px] tracking-[0.1em] leading-none ${muted}`} initial={{ opacity: 0 }} animate={fade} transition={t(0.1, 0.4)}>
+            BAESORY :// <span className={text}>{label}</span>
+          </motion.div>
 
-      <div className="flex flex-1 min-h-0">
-        {/* Desktop: left sidebar strip — clip reveal */}
-        <motion.div
-          className="hidden md:flex w-[120px] lg:w-[160px] bg-[#6CE5E8] shrink-0 flex-col items-center justify-between py-10 relative overflow-hidden"
-          initial={{ clipPath: 'inset(0 0 100% 0)' }}
-          animate={isReady ? { clipPath: 'inset(0 0 0% 0)' } : { clipPath: 'inset(0 0 100% 0)' }}
-          transition={{ duration: 0.6, delay: 0, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {/* Top spacer */}
-          <div />
-
-          {/* Vertical English text — fades in after sidebar reveals */}
-          <motion.span
-            className="vertical-text text-black font-black text-lg lg:text-xl tracking-[0.3em] uppercase select-none"
-            initial={{ opacity: 0 }}
-            animate={isReady ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.4, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {sidebarVerticalText}
-          </motion.span>
-
-          {/* Bottom Chinese label */}
-          <motion.span
-            className="text-black/60 text-xs font-bold tracking-wider"
-            initial={{ opacity: 0 }}
-            animate={isReady ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.4, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {sidebarLabel}
-          </motion.span>
-        </motion.div>
-
-        {/* Content area */}
-        <div className="flex-1 min-w-0 px-6 md:px-10 lg:px-16 pt-12 pb-16 md:pt-28 md:pb-20 flex flex-col">
-          {/* Editorial header — Endfield-style tight 3-tier tag */}
-          <div className="mb-10 md:mb-14">
-            {/* Tier 1: Brand tag line */}
-            <motion.div
-              className={`text-[10px] uppercase tracking-[0.3em] ${mutedColor} font-medium font-mono mb-1.5`}
-              initial={{ opacity: 0 }}
-              animate={isReady ? { opacity: 1 } : { opacity: 0 }}
-              transition={t(0.1)}
-            >
-              {tagLine}
-            </motion.div>
-
-            {/* Tier 2: Parallelogram marker + section badge */}
-            <motion.div
-              className="flex items-center gap-2.5 mb-1.5"
-              initial={{ x: -15, opacity: 0 }}
-              animate={showL}
-              transition={t(0.15)}
-            >
-              <motion.span
-                className={`inline-block w-5 h-3.5 ${isDark ? 'bg-white' : 'bg-[#0A0A0A]'} -skew-x-12`}
-                initial={{ scaleX: 0 }}
-                animate={isReady ? { scaleX: 1 } : { scaleX: 0 }}
-                transition={{ duration: 0.4, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                style={{ transformOrigin: 'left' }}
-              />
-              <span className={`text-sm md:text-base font-bold uppercase tracking-[0.2em] ${textColor}`}>
-                {badgeText}
-              </span>
-            </motion.div>
-
-            {/* Tier 3: Chinese heading */}
+          <div className="mt-6 overflow-hidden">
             <motion.h2
-              className={`text-4xl md:text-5xl lg:text-6xl font-black ${textColor} text-display mb-2`}
-              initial={{ x: -15, opacity: 0 }}
-              animate={showL}
-              transition={t(0.2)}
+              className={`text-display uppercase text-[2rem] tracking-[0.01em] ${text}`}
+              initial={{ y: '105%' }}
+              animate={{ y: isReady ? '0%' : '105%' }}
+              transition={t(0.2, 0.7)}
             >
-              {heading}
+              {en}
             </motion.h2>
-
-            {/* Meta line */}
+          </div>
+          <div className="overflow-hidden">
             <motion.div
-              className={`text-[10px] font-mono ${metaColor} tracking-wider`}
-              initial={{ opacity: 0 }}
-              animate={isReady ? { opacity: 1 } : { opacity: 0 }}
-              transition={t(0.3)}
+              className={`text-[3rem] short:text-[2.5rem] font-bold leading-[1.15] ${text}`}
+              initial={{ y: '105%' }}
+              animate={{ y: isReady ? '0%' : '105%' }}
+              transition={t(0.27, 0.7)}
             >
-              {metaLine}
+              {zh}
             </motion.div>
-
-            {subtitle && (
-              <motion.p
-                className={`mt-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} max-w-xl`}
-                initial={{ x: -15, opacity: 0 }}
-                animate={showL}
-                transition={t(0.35)}
-              >
-                {subtitle}
-              </motion.p>
-            )}
           </div>
+          <motion.div
+            className="mt-4 h-1.5 w-40 bg-[#6CE5E8] origin-left"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: isReady ? 1 : 0 }}
+            transition={t(0.4, 0.8)}
+          />
 
-          {/* Section-specific content */}
-          <div className="flex-1">
-            {children}
-          </div>
-        </div>
+          {description && (
+            <motion.p className={`mt-6 text-[13px] leading-relaxed max-w-[300px] ${muted}`} initial={{ opacity: 0 }} animate={fade} transition={t(0.45, 0.5)}>
+              {description}
+            </motion.p>
+          )}
+
+          {subIndex && (
+            <ul className={`mt-8 short:mt-6 border-t pt-4 ${rule} ${subIndexOnMobile ? '' : 'hidden lg:block'}`}>
+              {subIndex.map((item, i) => {
+                const Tag = item.onSelect ? 'button' : 'div';
+                return (
+                  <motion.li key={item.key} initial={{ x: -15, opacity: 0 }} animate={showL} transition={t(0.45 + i * 0.04)}>
+                    <Tag
+                      {...(item.onSelect ? { onClick: item.onSelect, 'aria-pressed': !!item.active } : {})}
+                      className={`group w-full flex items-center gap-3 py-1 short:py-0 text-left text-[13px] transition-colors duration-300 ${
+                        item.active ? text : `${muted} ${item.onSelect ? (isDark ? 'hover:text-white' : 'hover:text-black') : ''}`
+                      }`}
+                    >
+                      <span
+                        className={`w-[9px] h-[9px] shrink-0 border transition-colors duration-300 ${
+                          item.active
+                            ? 'bg-[#6CE5E8] border-[#6CE5E8]'
+                            : `${isDark ? 'border-white/40' : 'border-black/40'} group-hover:border-[#6CE5E8]`
+                        }`}
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </Tag>
+                  </motion.li>
+                );
+              })}
+            </ul>
+          )}
+
+          <motion.div className="mt-8 short:mt-6 hidden lg:block" initial={{ opacity: 0 }} animate={fade} transition={t(0.6, 0.5)}>
+            <div className={`font-mono text-[10px] tracking-[0.15em] ${text}`}>{url}</div>
+            <div className={`mt-2 w-24 border-t ${isDark ? 'border-white/40' : 'border-black/40'}`} />
+            {aside}
+          </motion.div>
+        </aside>
+
+        {/* ── Content (9/12) ───────────────────────────────────── */}
+        <div className="lg:col-span-9 min-w-0">{children}</div>
       </div>
     </section>
   );

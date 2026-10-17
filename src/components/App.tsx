@@ -24,13 +24,16 @@ interface AppProps {
   projects: Project[];
 }
 
+// `watermark` is the typewriter word in the bottom band; `name` labels the right rail
 const SECTIONS = [
-  { id: 'home', watermark: '', bg: '#0A0A0A', isDark: true },
-  { id: 'about', watermark: 'ABOUT', bg: '#FAFAFA', isDark: false },
-  { id: 'projects', watermark: 'WORKS', bg: '#0A0A0A', isDark: true },
-  { id: 'skills', watermark: 'SKILLS', bg: '#FFFFFF', isDark: false },
-  { id: 'gallery', watermark: 'GALLERY', bg: '#0A0A0A', isDark: true },
+  { id: 'home', name: 'HOMEPAGE', watermark: '', bg: '#0A0A0A', isDark: true }, // hero types its own title
+  { id: 'about', name: 'ABOUT', watermark: 'ABOUT', bg: '#FAFAFA', isDark: false },
+  { id: 'projects', name: 'WORKS', watermark: 'WORKS', bg: '#0A0A0A', isDark: true },
+  { id: 'skills', name: 'SKILLS', watermark: 'SKILLS', bg: '#FFFFFF', isDark: false },
+  { id: 'gallery', name: 'GALLERY', watermark: 'GALLERY', bg: '#0A0A0A', isDark: true },
 ] as const;
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
 
 const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
@@ -59,7 +62,7 @@ function SectionDots({ current, total, isDark }: { current: number; total: numbe
   const trail = { type: 'spring' as const, stiffness: 300, damping: 35, mass: 2 };
 
   return (
-    <div className="fixed right-6 xl:right-10 top-1/2 -translate-y-1/2 z-40 hidden lg:block">
+    <div className="relative">
       <div className="relative" style={{ width: 6, height: containerH }}>
         {/* Static background dots */}
         {Array.from({ length: total }).map((_, i) => (
@@ -70,7 +73,7 @@ function SectionDots({ current, total, isDark }: { current: number; total: numbe
               width: DOT,
               height: DOT,
               top: PAD + i * STEP,
-              backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
+              backgroundColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
             }}
           />
         ))}
@@ -84,6 +87,45 @@ function SectionDots({ current, total, isDark }: { current: number; total: numbe
             bottom: dir < 0 ? trail : lead,
           }}
         />
+      </div>
+    </div>
+  );
+}
+
+/* ── Right rail — Arknights-style section index ─────────────────── */
+function RightRail({ index, isDark }: { index: number; isDark: boolean }) {
+  const ease = [0.22, 1, 0.36, 1] as const;
+  return (
+    <div
+      className={`fixed top-(--nav-h) bottom-0 right-0 w-(--rail) z-30 hidden lg:block border-l pointer-events-none transition-colors duration-500 ${
+        isDark ? 'border-white/10' : 'border-black/10'
+      }`}
+    >
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-6">
+        {/* Number rolls like a counter; its lower part is cropped (AK) */}
+        <div className="h-[4.2rem] overflow-hidden">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={index}
+              className="font-bebas text-[6.5rem] leading-[0.8] text-[#6CE5E8]"
+              initial={{ y: '100%' }}
+              animate={{ y: '0%' }}
+              exit={{ y: '-100%' }}
+              transition={{ duration: 0.6, ease }}
+            >
+              {pad2(index)}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <div className={`font-mono text-[10px] tracking-[0.1em] mt-1 transition-colors duration-500 ${isDark ? 'text-white/40' : 'text-black/40'}`}>
+          // {pad2(index)} / {pad2(SECTIONS.length - 1)}
+        </div>
+        <div className={`font-bebas text-[18px] tracking-[0.14em] transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
+          {SECTIONS[index].name}
+        </div>
+        <div className="mt-10">
+          <SectionDots current={index} total={SECTIONS.length} isDark={isDark} />
+        </div>
       </div>
     </div>
   );
@@ -129,6 +171,9 @@ export default function App({ projects }: AppProps) {
   const [isMobile, setIsMobile] = useState(false);
   const isMobileRef = useRef(false);
   const [seen, setSeen] = useState<boolean[]>(() => SECTIONS.map(() => false));
+
+  // Section the frame (rail) shows — flips with the background, before the content swaps in
+  const [frameIndex, setFrameIndex] = useState(0);
 
   // Shared background state
   const [bgColor, setBgColor] = useState<string>(SECTIONS[0].bg);
@@ -196,6 +241,7 @@ export default function App({ projects }: AppProps) {
     const toWatermark = SECTIONS[targetIndex].watermark;
 
     lockedRef.current = true;
+    typeToken.current++; // cancel a phone-side retype that may still be running
     setTransitioning(true);
     wheelAccum.current = 0;
 
@@ -224,7 +270,8 @@ export default function App({ projects }: AppProps) {
       setWatermarkProminent(false);
     }
 
-    // Phase 4: Background color + text color transition
+    // Phase 4: Background color + text color transition; rail number rolls
+    setFrameIndex(targetIndex);
     setBgColor(SECTIONS[targetIndex].bg);
     setBgIsDark(SECTIONS[targetIndex].isDark);
     await delay(350);
@@ -304,6 +351,7 @@ export default function App({ projects }: AppProps) {
         if (!entry.isIntersecting || i === activeIndexRef.current) continue;
         activeIndexRef.current = i;
         setActiveIndex(i);
+        setFrameIndex(i);
         setBgColor(SECTIONS[i].bg);
         setBgIsDark(SECTIONS[i].isDark);
         retypeWatermark(SECTIONS[i].watermark);
@@ -483,16 +531,16 @@ export default function App({ projects }: AppProps) {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         />
 
-        {/* Shared watermark — persists between sections, typewriter animates directly */}
-        {/* On phones the sections paint their own bg, so the watermark floats above them */}
-        <div className={`fixed top-16 left-0 md:left-[120px] lg:left-[160px] right-0 ${isMobile ? 'z-3' : 'z-1'} pointer-events-none select-none overflow-hidden px-4 md:px-8`}>
+        {/* Typewriter watermark — the design's centrepiece: half the viewport tall, behind the
+            content, starting on the page margin and bled off the bottom edge */}
+        <div className={`fixed inset-0 ${isMobile ? 'z-3' : 'z-1'} pointer-events-none select-none overflow-hidden`} aria-hidden="true">
           <motion.div
-            className="text-[8rem] md:text-[12rem] font-black leading-none tracking-tight text-display whitespace-nowrap"
+            className="absolute left-(--mx) -bottom-[0.11em] -ml-[0.03em] font-bebas text-[46vw] md:text-[min(46vh,30vw)] leading-[0.8] whitespace-nowrap"
             style={{ x: driftSmooth }}
             animate={{
               color: bgIsDark
-                ? (watermarkProminent ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.03)')
-                : (watermarkProminent ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.03)')
+                ? (watermarkProminent ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.045)')
+                : (watermarkProminent ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.04)')
             }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
@@ -500,7 +548,7 @@ export default function App({ projects }: AppProps) {
             <AnimatePresence>
               {cursorVisible && (
                 <motion.span
-                  className="inline-block w-[3px] md:w-[4px] h-[0.75em] ml-1 align-middle"
+                  className="inline-block w-[0.045em] h-[0.66em] ml-[0.05em]"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -513,9 +561,28 @@ export default function App({ projects }: AppProps) {
           </motion.div>
         </div>
 
+        {/* Bottom hairline + AK-style scroll hint (desktop/tablet) */}
+        {!isMobile && (
+          <div
+            className={`fixed inset-x-0 bottom-0 h-(--band) z-1 pointer-events-none border-t transition-colors duration-500 ${
+              bgIsDark ? 'border-white/10' : 'border-black/10'
+            }`}
+          >
+            {frameIndex < SECTIONS.length - 1 && (
+              <div className={`absolute left-1/2 -translate-x-1/2 bottom-5 flex flex-col items-center gap-1.5 transition-colors duration-500 ${bgIsDark ? 'text-white/40' : 'text-black/40'}`}>
+                <span className="font-bebas text-[12px] leading-none tracking-[0.2em]">SCROLL</span>
+                <svg width="18" height="8" viewBox="0 0 18 8" className="animate-bounce" aria-hidden="true">
+                  <path d="M1 1l8 6 8-6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+              </div>
+            )}
+          </div>
+        )}
+
+        <RightRail index={frameIndex} isDark={bgIsDark} />
+
         <Navigation currentSection={SECTIONS[activeIndex].id} isDark={bgIsDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} />
         <SectionProgress current={activeIndex} total={SECTIONS.length} />
-        <SectionDots current={activeIndex} total={SECTIONS.length} isDark={bgIsDark} />
 
         {/* Section Layers — transparent bg, content only */}
         {SECTIONS.map((section, i) => {

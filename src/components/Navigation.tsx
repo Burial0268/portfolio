@@ -63,8 +63,8 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
             : 'bg-transparent'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="pl-(--mx) pr-(--mx) lg:pr-0">
+          <div className="flex items-center justify-between h-(--nav-h)">
             {/* Logo */}
             <button
               className="font-bold text-xl md:text-2xl transition-opacity hover:opacity-70"
@@ -77,12 +77,12 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
             </button>
 
             {/* Desktop Menu */}
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden md:flex items-center space-x-1 ml-auto md:mr-6 lg:mr-10">
               {sections.map((section) => (
                 <button
                   key={section.id}
                   onClick={() => handleNavClick(section.id)}
-                  className={`relative px-4 py-2 text-xs font-medium tracking-widest transition-colors duration-300 ${
+                  className={`relative px-4 py-2 text-left font-bebas text-[17px] leading-none tracking-[0.04em] transition-colors duration-300 ${
                     currentSection === section.id
                       ? isDark ? 'text-white' : 'text-[#0A0A0A]'
                       : isDark
@@ -91,7 +91,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                   }`}
                 >
                   <span className="block">{section.en}</span>
-                  <span className="block text-[10px] tracking-normal opacity-50">{section.zh}</span>
+                  <span className="block font-sans text-[10px] tracking-normal opacity-50 mt-1">{section.zh}</span>
                   {currentSection === section.id && (
                     <motion.span
                       className="absolute bottom-0 left-0 w-full h-0.5 bg-[#6CE5E8]"
@@ -103,7 +103,11 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
               ))}
             </div>
 
-            <div className="flex items-center gap-1">
+            <div
+              className={`flex items-center gap-1 lg:w-(--rail) lg:h-full lg:justify-center lg:border-l transition-colors duration-500 ${
+                isDark ? 'lg:border-white/10' : 'lg:border-black/10'
+              }`}
+            >
               {/* BGM Toggle */}
               <button
                 onClick={onBGMToggle}
@@ -118,7 +122,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
 
               {/* Mobile: current section index (AK-style) */}
             <span className={`md:hidden ml-auto mr-1 font-mono text-[10px] tracking-wider transition-colors duration-500 ${isDark ? 'text-white/50' : 'text-black/50'}`}>
-              <span className="text-[#6CE5E8]">{String(currentIndex + 1).padStart(2, '0')}</span> / {String(sections.length).padStart(2, '0')}
+              <span className="text-[#6CE5E8]">{String(currentIndex).padStart(2, '0')}</span> / {String(sections.length - 1).padStart(2, '0')}
             </span>
 
             {/* Mobile Menu Button */}
