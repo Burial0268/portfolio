@@ -1,3 +1,10 @@
+---
+import { topoPath } from '@/lib/topo';
+
+// Generated once at build time; every contour layer on the page <use>s this symbol
+const topo = topoPath();
+---
+
 <!doctype html>
 <html lang="zh-CN">
 	<head>
@@ -18,11 +25,11 @@
 			content="专注于现代技术与动效设计的全栈开发工程师"
 		/>
 
-		<!-- Google Fonts: Space Grotesk -->
+		<!-- Google Fonts: Inter Tight (Swiss grotesk) -->
 		<link rel="preconnect" href="https://fonts.googleapis.cn" />
 		<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
 		<link
-			href="https://fonts.googleapis.cn/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&display=swap"
+			href="https://fonts.googleapis.cn/css2?family=Inter+Tight:wght@400;500;600;700;800;900&display=swap"
 			rel="stylesheet"
 		/>
 
@@ -35,7 +42,14 @@
 		<title>分享我的乐趣 - Baesory</title>
 	</head>
 	<body>
+		<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+			<symbol id="topo">
+				<path d={topo} fill="none" stroke="currentColor" vector-effect="non-scaling-stroke" />
+			</symbol>
+		</svg>
 		<div id="loader">
+			<div class="ld-grid"></div>
+			<svg class="ld-topo" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><use href="#topo" /></svg>
 			<div class="ld-accent"><div class="ld-accent-fill"></div></div>
 			<div class="ld-log">
 				<p style="--i:0">
@@ -155,13 +169,16 @@
 				// 进度条逻辑
 				var s=Date.now(), d=1800,
 					p=document.querySelector('.ld-pct'),
-					a=document.querySelector('.ld-accent-fill');
+					a=document.querySelector('.ld-accent-fill'),
+					bt=document.querySelector('.ld-bottom');
 				(function tick(){
 					var t=Math.min((Date.now()-s)/d, 1),
 						e=1-Math.pow(1-t, 3),
 						v=Math.round(e*100);
 					if(p)p.textContent=v+'%';
 					if(a)a.style.height=(e*100)+'%';
+					// percentage rides down the accent bar, like Endfield's loader
+					if(bt)bt.style.transform='translateY('+(e*(window.innerHeight-bt.offsetHeight-64))+'px)';
 					if(t<1)requestAnimationFrame(tick);
 					else{
 						window.__loaderDone=true;
@@ -191,7 +208,8 @@
 
 	body {
 		font-family:
-			"Space Grotesk",
+			"Inter Tight",
+			"HarmonyOS_Regular",
 			-apple-system,
 			BlinkMacSystemFont,
 			"Segoe UI",
@@ -208,15 +226,49 @@
 		z-index: 100;
 		background: #0a0a0a;
 		overflow: hidden;
-		transition:
-			opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-			transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	/* Exit: a cyan panel sweeps across (Endfield's colour flash), then the loader fades under it */
+	#loader::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: #6ce5e8;
+		clip-path: inset(0 100% 0 0);
+		z-index: 2;
 	}
 
 	#loader.loader-exit {
 		opacity: 0;
-		transform: translateY(-8px);
 		pointer-events: none;
+		transition: opacity 0.35s ease 0.45s;
+	}
+
+	#loader.loader-exit::after {
+		animation: ld-wipe 0.75s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+	}
+
+	.ld-grid {
+		position: absolute;
+		inset: 0;
+		background-image:
+			linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+			linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+		background-size: 96px 96px;
+		background-position: -1px -1px;
+	}
+
+	.ld-topo {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		color: rgba(255, 255, 255, 0.11);
+		opacity: 0;
+		transform: scale(1.06);
+		animation:
+			hud-flash 0.9s linear 0.5s forwards,
+			ld-settle 2.4s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
 	}
 
 	.ld-accent {
@@ -236,9 +288,10 @@
 
 	.ld-log {
 		position: absolute;
-		top: 24px;
-		left: 20px;
+		bottom: 24px;
 		right: 20px;
+		max-width: calc(100% - 40px);
+		text-align: right;
 		font-family: "Courier New", Consolas, monospace;
 		font-size: 11px;
 		line-height: 1.7;
@@ -281,8 +334,9 @@
 
 	.ld-bottom {
 		position: absolute;
-		bottom: 40px;
+		top: 24px;
 		left: 20px;
+		will-change: transform;
 	}
 
 	.ld-pipe {
@@ -293,9 +347,10 @@
 	}
 
 	.ld-pct {
-		font-family: "Space Grotesk", sans-serif;
+		font-family: "Inter Tight", sans-serif;
 		font-size: clamp(36px, 8vw, 56px);
-		font-weight: 700;
+		font-weight: 800;
+		letter-spacing: -0.04em;
 		color: #6ce5e8;
 		line-height: 1;
 	}
@@ -339,9 +394,21 @@
 		}
 	}
 
-	@keyframes ld-deco-in {
+	@keyframes ld-settle {
 		to {
-			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	@keyframes ld-wipe {
+		0% {
+			clip-path: inset(0 100% 0 0);
+		}
+		55% {
+			clip-path: inset(0 0 0 0);
+		}
+		100% {
+			clip-path: inset(0 0 0 100%);
 		}
 	}
 

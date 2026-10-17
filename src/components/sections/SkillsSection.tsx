@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import SectionShell from '../SectionShell';
+import SectionShell, { pad } from '../SectionShell';
 
 interface Skill {
   name: string;
@@ -12,11 +12,10 @@ interface SkillsSectionProps {
 }
 
 export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
-  const showL = isReady ? { x: 0, opacity: 1 } : { x: -15, opacity: 0 };
-  const showY = isReady ? { y: 0, opacity: 1 } : { y: 15, opacity: 0 };
-  const t = (delay: number) =>
+  const showY = isReady ? { y: 0, opacity: 1 } : { y: 20, opacity: 0 };
+  const t = (delay: number, duration = 0.7) =>
     isReady
-      ? { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const }
+      ? { duration, delay, ease: [0.22, 1, 0.36, 1] as const }
       : { duration: 0.3, delay: 0 };
 
   const skills: Skill[] = [
@@ -46,64 +45,53 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
   const categories = Object.keys(grouped);
 
   return (
-    <SectionShell
-      sidebarLabel="技能"
-      sidebarVerticalText="SKILLS"
-      isDark={false}
-      tagLine="▼ / BURIAL0268"
-      badgeText="SKILLS"
-      heading="技能专长"
-      metaLine="// SUPER::PORTFOLIO::SKILLS::GET()"
-      isReady={isReady}
-    >
-      {/* Category rows */}
-      <div className="space-y-8 mb-12">
+    <SectionShell index={4} total={5} en="Skills" zh="技能" heading="技能专长" isDark={false} isReady={isReady}>
+      {/* One category per grid column */}
+      <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-y-12 mb-16 md:mb-24">
         {categories.map((category, ci) => (
           <motion.div
             key={category}
-            initial={{ x: -15, opacity: 0 }}
-            animate={showL}
+            className="sm:pr-6"
+            initial={{ y: 20, opacity: 0 }}
+            animate={showY}
             transition={t(0.3 + ci * 0.08)}
           >
-            {/* Category label + separator */}
-            <div className="flex items-center gap-4 mb-4">
-              <span className="inline-block w-3 h-2 bg-[#0A0A0A] -skew-x-12 shrink-0" />
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-[#0A0A0A] whitespace-nowrap">
-                {category}
-              </span>
-              <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex justify-between border-t border-[#0A0A0A] pt-3 mb-5 meta">
+              <span className="text-[#0A0A0A]">{category}</span>
+              <span className="text-black/40">({pad(grouped[category].length)})</span>
             </div>
-
-            {/* Skill names inline */}
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
-              {grouped[category].map((skill) => (
-                <span
-                  key={skill.name}
-                  className={`text-base ${
-                    skill.level >= 90
-                      ? 'font-bold text-[#0A0A0A]'
-                      : skill.level >= 80
-                        ? 'font-medium text-gray-700'
-                        : 'font-normal text-gray-500'
-                  }`}
-                >
-                  {skill.name}
-                </span>
+            <ul>
+              {grouped[category].map((skill, si) => (
+                <li key={skill.name} className="relative py-2.5 border-b border-black/10">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-lg md:text-xl font-semibold tracking-[-0.02em] text-[#0A0A0A]">{skill.name}</span>
+                    <span className="meta text-black/40 tabular-nums">{skill.level}</span>
+                  </div>
+                  {/* Proficiency hairline grows in once the section is ready */}
+                  <motion.span
+                    className="absolute left-0 -bottom-px h-px bg-[#0A0A0A] origin-left"
+                    style={{ width: `${skill.level}%` }}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: isReady ? 1 : 0 }}
+                    transition={t(0.5 + ci * 0.08 + si * 0.05, 1)}
+                  />
+                </li>
               ))}
-            </div>
+            </ul>
           </motion.div>
         ))}
       </div>
 
-      {/* Bottom separator + quote */}
+      {/* Pull quote */}
       <motion.div
-        initial={{ y: 15, opacity: 0 }}
+        className="grid md:grid-cols-4 gap-y-4 border-t border-black/15 pt-3"
+        initial={{ y: 20, opacity: 0 }}
         animate={showY}
-        transition={t(0.6)}
+        transition={t(0.7)}
       >
-        <div className="h-px bg-gray-200 mb-8" />
-        <p className="text-gray-500 text-sm leading-relaxed max-w-2xl">
-          技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。
+        <span className="meta text-black/45">Motto / 信条</span>
+        <p className="md:col-span-3 text-2xl md:text-3xl lg:text-4xl font-semibold leading-[1.2] tracking-[-0.025em] text-[#0A0A0A] max-w-4xl">
+          技术是工具，创意是灵魂。<span className="text-black/35">我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。</span>
         </p>
       </motion.div>
     </SectionShell>
