@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import SectionShell, { pad } from '../SectionShell';
@@ -36,6 +36,9 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
 
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
+  // Only fetch photos near the one being viewed (full-size JPEGs); once seen they stay
+  const seen = useRef(new Set([0, 1]));
+  [index - 1, index, index + 1].forEach((i) => seen.current.add(i));
   // Phones: the frame follows each photo's ratio inside a sweet spot (4:5 – 16:9), so cover crops very little
   const [ratios, setRatios] = useState<Record<string, number>>({});
   const recordRatio = (src: string, img: HTMLImageElement | null) => {
@@ -106,7 +109,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
                   return (
                     <motion.img
                       key={photo.src}
-                      src={`${PHOTO_CDN_PERFIX}${photo.src}`}
+                      src={seen.current.has(i) ? `${PHOTO_CDN_PERFIX}${photo.src}` : undefined}
                       alt={photo.title}
                       className="absolute inset-0 w-full h-full object-cover"
                       ref={(el) => recordRatio(photo.src, el)}
@@ -121,7 +124,6 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
                       style={{ pointerEvents: isActive ? 'auto' : 'none' }}
                       onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
                       draggable={false}
-                      loading="eager"
                     />
                   );
                 })}

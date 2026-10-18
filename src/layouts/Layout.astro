@@ -28,9 +28,12 @@ const topo = topoPath();
 		<!-- Google Fonts: Space Grotesk -->
 		<link rel="preconnect" href="https://fonts.googleapis.cn" />
 		<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+		<!-- Font stylesheets load without blocking first paint (media=print swap); text uses display=swap -->
 		<link
 			href="https://fonts.googleapis.cn/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&display=swap"
 			rel="stylesheet"
+			media="print"
+			onload="this.media='all'"
 		/>
 
 		<link rel="icon" type="image/jpeg" href="/favicon.jpg" />
@@ -38,7 +41,13 @@ const topo = topoPath();
 		<link
 			rel="stylesheet"
 			href="https://s1.hdslb.com/bfs/static/jinkela/long/font/regular.css"
+			media="print"
+			onload="this.media='all'"
 		/>
+		<noscript>
+			<link rel="stylesheet" href="https://fonts.googleapis.cn/css2?family=Bebas+Neue&family=Space+Grotesk:wght@500;600;700&display=swap" />
+			<link rel="stylesheet" href="https://s1.hdslb.com/bfs/static/jinkela/long/font/regular.css" />
+		</noscript>
 		<title>分享我的乐趣 - Baesory</title>
 	</head>
 	<body>
