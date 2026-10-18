@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import HeroButtons from '../HeroButtons';
-import Marquee from '../effects/Marquee';
 
-const bannerTopItems = Array(8).fill('BURIAL0268\u00A0\u00A0\u00B7\u00A0\u00A0');
 const NAME = 'Baesory';
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -137,9 +135,6 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
             <span className="hidden md:block col-span-3 tracking-[0.2em] text-white/30">
               PORTFOLIO ©{new Date().getFullYear()}
             </span>
-            <span className="hidden md:block col-span-3 normal-case text-[#6CE5E8]/60">
-              {'> STACK: REACT / MOTION / VUE'}<br />{'<CREATIVE.DEV />'}
-            </span>
           </motion.div>
         </div>
 
@@ -178,13 +173,19 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
 
         {/* Info row — hairline + the same 12-column grid */}
         <div className="shrink-0 pointer-events-none">
+          {/* Ruler divider: hairline + minor tick every 12px, major every 120px */}
           <motion.div
-            className="h-px bg-white/20 origin-left"
+            className="h-[9px] border-t border-white/20 origin-left"
+            style={{
+              backgroundImage: 'linear-gradient(90deg, rgba(255,255,255,.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.2) 1px, transparent 1px)',
+              backgroundSize: '12px 4px, 120px 9px',
+              backgroundRepeat: 'repeat-x',
+            }}
             initial={{ scaleX: 0 }}
             animate={{ scaleX: booted ? 1 : 0 }}
             transition={{ duration: 1, delay: 1.4, ease: EASE }}
           />
-          <div className="grid grid-cols-2 md:grid-cols-12 gap-x-12 gap-y-6 pt-3">
+          <div className="grid grid-cols-2 md:grid-cols-12 gap-x-12 gap-y-6 pt-2">
             {heroInfo.map((item, i) => (
               <motion.div key={item.label} className={`md:col-span-3 ${i === 2 ? 'hidden md:block' : ''}`} {...show(1.55 + i * 0.07)}>
                 <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
@@ -202,31 +203,6 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
             </motion.p>
           </div>
         </div>
-      </div>
-
-      {/* Diagonal Banners */}
-      <div
-        className="absolute pointer-events-none flex items-start overflow-hidden"
-        aria-hidden="true"
-        style={{
-          left: '-20vw',
-          width: '140vw',
-          height: '60px',
-          top: '8vh',
-          transform: 'rotate(-5deg)',
-          zIndex: 3,
-        }}
-      >
-        <Marquee speed={60}>
-          {bannerTopItems.map((text, i) => (
-            <span
-              key={i}
-              className="text-[1rem] tracking-[0.4em] text-white/6 uppercase whitespace-nowrap mr-5 font-medium"
-            >
-              {text}
-            </span>
-          ))}
-        </Marquee>
       </div>
     </section>
   );

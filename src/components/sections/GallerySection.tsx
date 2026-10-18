@@ -34,6 +34,13 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
       : { duration: 0.3, delay: 0 };
 
   const [index, setIndex] = useState(0);
+  // Natural aspect ratio per photo — on phones the frame follows the current photo instead of cropping it
+  const [ratios, setRatios] = useState<Record<string, number>>({});
+  const recordRatio = (src: string, img: HTMLImageElement | null) => {
+    if (!img?.naturalWidth) return;
+    const r = img.naturalWidth / img.naturalHeight;
+    setRatios((prev) => (prev[src] === r ? prev : { ...prev, [src]: r }));
+  };
 
   useEffect(() => {
     if (isReady) setIndex(0);
@@ -79,7 +86,8 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
       <motion.div initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.25)}>
         {/* Image — directional clip-path wipe, swipe/drag to browse */}
         <motion.div
-          className="relative overflow-hidden bg-[#111] touch-pan-y aspect-[4/3] lg:aspect-auto lg:h-[min(50vh,560px)] lg:short:h-[40vh]"
+          className="relative overflow-hidden bg-[#111] touch-pan-y aspect-(--ar) transition-[aspect-ratio] duration-500 lg:aspect-auto lg:h-[min(50vh,560px)] lg:short:h-[40vh]"
+          style={{ '--ar': Math.min(Math.max(ratios[current.src] ?? 4 / 3, 0.75), 2) } as React.CSSProperties}
           initial={{ clipPath: 'inset(0 0 100% 0)' }}
           animate={{ clipPath: isReady ? 'inset(0 0 0% 0)' : 'inset(0 0 100% 0)' }}
           transition={t(0.2)}
@@ -97,7 +105,9 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
                       key={photo.src}
                       src={`${PHOTO_CDN_PERFIX}${photo.src}`}
                       alt={photo.title}
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-contain"
+                      ref={(el) => recordRatio(photo.src, el)}
+                      onLoad={(e) => recordRatio(photo.src, e.currentTarget)}
                       initial={false}
                       animate={{
                         clipPath: clip,

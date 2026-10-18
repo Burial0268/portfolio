@@ -61,7 +61,7 @@ export default function AboutSection({ isReady = false }: AboutSectionProps) {
         animate={showY}
         transition={t(0.3)}
       >
-        我是一名热爱技术的全栈开发工程师，专注于打造<span className="bg-[#6CE5E8] px-1">极致的用户体验</span>。擅长使用现代 Web 技术栈构建高性能、富交互的应用程序。
+        我是一名热爱技术的全栈开发工程师，专注于打造<span className="underline decoration-[#6CE5E8] decoration-[0.12em] underline-offset-[0.2em]">极致的用户体验</span>。擅长使用现代 Web 技术栈构建高性能、富交互的应用程序。
       </motion.p>
 
       <motion.div
