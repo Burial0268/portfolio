@@ -234,7 +234,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
 }
 
 // Full, uncropped photo. App's wheel/key/touch handlers live on window, so swallow them (capture) while open.
-// Entrance = HUD sequence: shutter slit opens → scan line sweeps → cyan corner brackets lock on.
+// Entrance = HUD sequence: shutter slit opens → scan line sweeps → cyan corner brackets lock on. No flicker/flash (photosensitivity).
 function Lightbox({ photo, index, total, onNavigate, onClose }: {
   photo: Photo; index: number; total: number; onNavigate: (i: number) => void; onClose: () => void;
 }) {
@@ -296,7 +296,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
               key={photo.src}
               src={`${PHOTO_CDN_PERFIX}${photo.src}`}
               alt={photo.title}
-              className="block w-auto h-auto max-w-[calc(100vw-2*var(--mx))] max-h-[calc(100dvh-11rem)] motion-safe:animate-[hud-flash_0.7s_linear]"
+              className="block w-auto h-auto max-w-[calc(100vw-2*var(--mx))] max-h-[calc(100dvh-11rem)]"
               initial={settled.current ? { clipPath: dir > 0 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)' } : false}
               animate={{ clipPath: 'inset(0 0 0 0)' }}
               transition={{ duration: 0.6, ease }}
