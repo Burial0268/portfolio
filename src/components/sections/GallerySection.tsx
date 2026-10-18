@@ -36,6 +36,8 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
 
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
+  const [portalReady, setPortalReady] = useState(false); // document.body only exists after hydration
+  useEffect(() => setPortalReady(true), []);
   // Only fetch photos near the one being viewed (full-size JPEGs); once seen they stay
   const seen = useRef(new Set([0, 1]));
   [index - 1, index, index + 1].forEach((i) => seen.current.add(i));
@@ -221,8 +223,10 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
         </p>
         </div>
       </motion.div>
-      {open && createPortal(
-        <Lightbox photo={current} index={index} total={photos.length} onNavigate={navigate} onClose={() => setOpen(false)} />,
+      {portalReady && createPortal(
+        <AnimatePresence>
+          {open && <Lightbox photo={current} index={index} total={photos.length} onNavigate={navigate} onClose={() => setOpen(false)} />}
+        </AnimatePresence>,
         document.body,
       )}
     </SectionShell>
@@ -230,9 +234,15 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
 }
 
 // Full, uncropped photo. App's wheel/key/touch handlers live on window, so swallow them (capture) while open.
+// Entrance = HUD sequence: shutter slit opens → scan line sweeps → cyan corner brackets lock on.
 function Lightbox({ photo, index, total, onNavigate, onClose }: {
   photo: Photo; index: number; total: number; onNavigate: (i: number) => void; onClose: () => void;
 }) {
+  const prevIndex = useRef(index);
+  const settled = useRef(false); // first render opens via the shutter, later ones wipe by direction
+  const dir = index >= prevIndex.current ? 1 : -1;
+  useEffect(() => { prevIndex.current = index; settled.current = true; });
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       e.stopImmediatePropagation();
@@ -252,6 +262,16 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
     };
   }, [index, onNavigate, onClose]);
 
+  const ease = [0.22, 1, 0.36, 1] as const;
+  const swap = { duration: 0.45, ease };
+  const slit = 'inset(50% 0% 50% 0%)';
+  const corners = [
+    '-top-2 -left-2 border-t border-l',
+    '-top-2 -right-2 border-t border-r',
+    '-bottom-2 -left-2 border-b border-l',
+    '-bottom-2 -right-2 border-b border-r',
+  ];
+
   return (
     <motion.div
       className="fixed inset-0 z-[9000] bg-[#0A0A0A]/95 flex flex-col"
@@ -259,22 +279,73 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
       aria-modal="true"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.35 }}
       onClick={onClose}
     >
-      <div className="flex-1 min-h-0 p-[var(--mx)] pb-4 flex items-center justify-center">
-        <img
-          key={photo.src}
-          src={`${PHOTO_CDN_PERFIX}${photo.src}`}
-          alt={photo.title}
-          className="max-w-full max-h-full object-contain"
-          draggable={false}
-          onClick={(e) => e.stopPropagation()}
-        />
+      <div className="flex-1 min-h-0 p-(--mx) pb-4 flex items-center justify-center">
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
+          <motion.div
+            className="relative overflow-hidden"
+            initial={{ clipPath: slit }}
+            animate={{ clipPath: 'inset(0% 0% 0% 0%)' }}
+            exit={{ clipPath: slit }}
+            transition={{ duration: 0.7, delay: 0.1, ease }}
+          >
+            <motion.img
+              key={photo.src}
+              src={`${PHOTO_CDN_PERFIX}${photo.src}`}
+              alt={photo.title}
+              className="block w-auto h-auto max-w-[calc(100vw-2*var(--mx))] max-h-[calc(100dvh-11rem)] motion-safe:animate-[hud-flash_0.7s_linear]"
+              initial={settled.current ? { clipPath: dir > 0 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)' } : false}
+              animate={{ clipPath: 'inset(0 0 0 0)' }}
+              transition={{ duration: 0.6, ease }}
+              draggable={false}
+            />
+            {/* one cyan scan line sweeps the frame as it opens */}
+            <motion.span
+              className="absolute inset-x-0 h-px bg-[#6CE5E8] shadow-[0_0_12px_#6CE5E8] pointer-events-none"
+              initial={{ top: '0%', opacity: 0 }}
+              animate={{ top: '100%', opacity: [0, 1, 1, 0] }}
+              transition={{ duration: 0.9, delay: 0.35, ease: 'linear' }}
+            />
+          </motion.div>
+          {corners.map((c) => (
+            <motion.span
+              key={c}
+              className={`absolute w-3 h-3 border-[#6CE5E8] pointer-events-none ${c}`}
+              initial={{ opacity: 0, scale: 1.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, delay: 0.7, ease }}
+            />
+          ))}
+        </div>
       </div>
-      <div className="flex items-center gap-4 px-(--mx) pb-6 font-bebas tracking-[0.1em] text-white/60" onClick={(e) => e.stopPropagation()}>
-        <span className="text-[#6CE5E8] text-lg tabular-nums">{pad(index + 1)} / {pad(total)}</span>
-        <span className="text-white text-lg">{photo.title}</span>
+
+      <motion.div
+        className="flex items-center gap-4 px-(--mx) pb-6 font-bebas tracking-[0.1em] text-white/60"
+        initial={{ y: 12, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 12, opacity: 0 }}
+        transition={{ duration: 0.5, delay: 0.5, ease }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="overflow-hidden h-[1.4em] leading-[1.4em] text-[#6CE5E8] text-lg tabular-nums">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span key={index} className="block" initial={{ y: '100%' }} animate={{ y: '0%' }} exit={{ y: '-100%' }} transition={swap}>
+              {pad(index + 1)}
+            </motion.span>
+          </AnimatePresence>
+        </span>
+        <span className="text-[13px] text-white/45 -ml-2">/ {pad(total)}</span>
+        <span className="overflow-hidden h-[1.4em] leading-[1.4em] text-white text-lg">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span key={photo.title} className="block" initial={{ y: '100%' }} animate={{ y: '0%' }} exit={{ y: '-100%' }} transition={swap}>
+              {photo.title}
+            </motion.span>
+          </AnimatePresence>
+        </span>
         <span className="text-[13px] text-white/45">{photo.tag} · {photo.subtitle}</span>
         <div className="ml-auto flex items-center gap-2">
           {[['‹', index - 1, 'Previous photo'], ['›', index + 1, 'Next photo']].map(([g, to, label]) => (
@@ -284,7 +355,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
           <button onClick={onClose} aria-label="Close"
             className="w-11 h-11 border border-white/20 flex items-center justify-center hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300">✕</button>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
