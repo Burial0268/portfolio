@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import SectionShell, { pad } from '../SectionShell';
 
@@ -34,7 +35,8 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
       : { duration: 0.3, delay: 0 };
 
   const [index, setIndex] = useState(0);
-  // Natural aspect ratio per photo — on phones the frame follows the current photo instead of cropping it
+  const [open, setOpen] = useState(false);
+  // Phones: the frame follows each photo's ratio inside a sweet spot (4:5 – 16:9), so cover crops very little
   const [ratios, setRatios] = useState<Record<string, number>>({});
   const recordRatio = (src: string, img: HTMLImageElement | null) => {
     if (!img?.naturalWidth) return;
@@ -87,7 +89,8 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
         {/* Image — directional clip-path wipe, swipe/drag to browse */}
         <motion.div
           className="relative overflow-hidden bg-[#111] touch-pan-y aspect-(--ar) transition-[aspect-ratio] duration-500 lg:aspect-auto lg:h-[min(50vh,560px)] lg:short:h-[40vh]"
-          style={{ '--ar': Math.min(Math.max(ratios[current.src] ?? 4 / 3, 0.75), 2) } as React.CSSProperties}
+          style={{ '--ar': Math.min(Math.max(ratios[current.src] ?? 4 / 3, 0.8), 16 / 9) } as React.CSSProperties}
+          onTap={() => setOpen(true)}
           initial={{ clipPath: 'inset(0 0 100% 0)' }}
           animate={{ clipPath: isReady ? 'inset(0 0 0% 0)' : 'inset(0 0 100% 0)' }}
           transition={t(0.2)}
@@ -105,7 +108,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
                       key={photo.src}
                       src={`${PHOTO_CDN_PERFIX}${photo.src}`}
                       alt={photo.title}
-                      className="absolute inset-0 w-full h-full object-contain"
+                      className="absolute inset-0 w-full h-full object-cover"
                       ref={(el) => recordRatio(photo.src, el)}
                       onLoad={(e) => recordRatio(photo.src, e.currentTarget)}
                       initial={false}
@@ -126,6 +129,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
           {/* Corner crosshairs */}
           <div className="absolute top-4 right-4 w-4 h-4 border-t border-r border-white/30 z-20 pointer-events-none" />
           <div className="absolute bottom-4 left-4 w-4 h-4 border-b border-l border-white/30 z-20 pointer-events-none" />
+          <span className="absolute bottom-4 right-4 z-20 pointer-events-none font-mono text-[10px] tracking-[0.2em] text-white/50">VIEW ↗</span>
         </motion.div>
 
         {/* Caption row: number · title · meta · controls */}
@@ -215,6 +219,70 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
         </p>
         </div>
       </motion.div>
+      {open && createPortal(
+        <Lightbox photo={current} index={index} total={photos.length} onNavigate={navigate} onClose={() => setOpen(false)} />,
+        document.body,
+      )}
     </SectionShell>
+  );
+}
+
+// Full, uncropped photo. App's wheel/key/touch handlers live on window, so swallow them (capture) while open.
+function Lightbox({ photo, index, total, onNavigate, onClose }: {
+  photo: Photo; index: number; total: number; onNavigate: (i: number) => void; onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      e.stopImmediatePropagation();
+      if (e.key === 'Escape') onClose();
+      else if (e.key === 'ArrowLeft') onNavigate(index - 1);
+      else if (e.key === 'ArrowRight') onNavigate(index + 1);
+    };
+    const stop = (e: Event) => e.stopImmediatePropagation();
+    const block = (e: Event) => { stop(e); e.preventDefault(); }; // not on touchend: that would cancel the tap's click
+    window.addEventListener('keydown', onKey, true);
+    window.addEventListener('wheel', block, { capture: true, passive: false });
+    window.addEventListener('touchend', stop, true);
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('wheel', block, true);
+      window.removeEventListener('touchend', stop, true);
+    };
+  }, [index, onNavigate, onClose]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[9000] bg-[#0A0A0A]/95 flex flex-col"
+      role="dialog"
+      aria-modal="true"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      onClick={onClose}
+    >
+      <div className="flex-1 min-h-0 p-[var(--mx)] pb-4 flex items-center justify-center">
+        <img
+          key={photo.src}
+          src={`${PHOTO_CDN_PERFIX}${photo.src}`}
+          alt={photo.title}
+          className="max-w-full max-h-full object-contain"
+          draggable={false}
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+      <div className="flex items-center gap-4 px-(--mx) pb-6 font-bebas tracking-[0.1em] text-white/60" onClick={(e) => e.stopPropagation()}>
+        <span className="text-[#6CE5E8] text-lg tabular-nums">{pad(index + 1)} / {pad(total)}</span>
+        <span className="text-white text-lg">{photo.title}</span>
+        <span className="text-[13px] text-white/45">{photo.tag} · {photo.subtitle}</span>
+        <div className="ml-auto flex items-center gap-2">
+          {[['‹', index - 1, 'Previous photo'], ['›', index + 1, 'Next photo']].map(([g, to, label]) => (
+            <button key={label as string} onClick={() => onNavigate(to as number)} aria-label={label as string}
+              className="w-11 h-11 border border-white/20 flex items-center justify-center hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300">{g}</button>
+          ))}
+          <button onClick={onClose} aria-label="Close"
+            className="w-11 h-11 border border-white/20 flex items-center justify-center hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300">✕</button>
+        </div>
+      </div>
+    </motion.div>
   );
 }
