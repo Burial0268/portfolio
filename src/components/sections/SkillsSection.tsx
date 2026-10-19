@@ -1,13 +1,10 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import SectionShell, { pad } from '../SectionShell';
 
-// Proficiency scale shown on the axis
-const MIN = 70, MAX = 100, TICKS = MAX - MIN;
-const TICK = 'linear-gradient(90deg, rgba(10,10,10,.25) 1px, transparent 1px)';
-const GRID = 'linear-gradient(90deg, rgba(10,10,10,.07) 1px, transparent 1px)';
-
 interface Skill {
   name: string;
+  sym: string;      // element-style symbol
   level: number;
   category: string;
 }
@@ -16,38 +13,35 @@ interface SkillsSectionProps {
   isReady?: boolean;
 }
 
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const skills: Skill[] = [
+  { name: 'React', sym: 'Re', level: 95, category: 'FRONTEND' },
+  { name: 'TypeScript', sym: 'Ts', level: 90, category: 'FRONTEND' },
+  { name: 'Vue.js', sym: 'Vu', level: 88, category: 'FRONTEND' },
+  { name: 'Astro', sym: 'As', level: 85, category: 'FRONTEND' },
+  { name: 'Motion', sym: 'Mo', level: 90, category: 'ANIMATION & 3D' },
+  { name: 'GSAP', sym: 'Gs', level: 82, category: 'ANIMATION & 3D' },
+  { name: 'WebGL', sym: 'Wg', level: 75, category: 'ANIMATION & 3D' },
+  { name: 'TailwindCSS', sym: 'Tw', level: 92, category: 'STYLING' },
+  { name: 'CSS Animations', sym: 'Cs', level: 88, category: 'STYLING' },
+  { name: 'Node.js', sym: 'Nd', level: 80, category: 'TOOLS & BACKEND' },
+  { name: 'PHP', sym: 'Ph', level: 85, category: 'TOOLS & BACKEND' },
+  { name: 'Tauri', sym: 'Ta', level: 88, category: 'TOOLS & BACKEND' },
+  { name: 'Rust', sym: 'Ru', level: 75, category: 'TOOLS & BACKEND' },
+  { name: 'Docker', sym: 'Dk', level: 78, category: 'TOOLS & BACKEND' },
+];
+
+const categories = [...new Set(skills.map((s) => s.category))];
+
 export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
-  const showY = isReady ? { y: 0, opacity: 1 } : { y: 15, opacity: 0 };
   const t = (delay: number, duration = 0.6) =>
-    isReady
-      ? { duration, delay, ease: [0.22, 1, 0.36, 1] as const }
-      : { duration: 0.3, delay: 0 };
+    isReady ? { duration, delay, ease: EASE } : { duration: 0.3, delay: 0 };
 
-  const skills: Skill[] = [
-    { name: 'React', level: 95, category: 'FRONTEND' },
-    { name: 'TypeScript', level: 90, category: 'FRONTEND' },
-    { name: 'Vue.js', level: 88, category: 'FRONTEND' },
-    { name: 'Astro', level: 85, category: 'FRONTEND' },
-    { name: 'Motion', level: 90, category: 'ANIMATION & 3D' },
-    { name: 'GSAP', level: 82, category: 'ANIMATION & 3D' },
-    { name: 'WebGL', level: 75, category: 'ANIMATION & 3D' },
-    { name: 'TailwindCSS', level: 92, category: 'STYLING' },
-    { name: 'CSS Animations', level: 88, category: 'STYLING' },
-    { name: 'Node.js', level: 80, category: 'TOOLS & BACKEND' },
-    { name: 'PHP', level: 85, category: 'TOOLS & BACKEND' },
-    { name: 'Tauri', level: 88, category: 'TOOLS & BACKEND' },
-    { name: 'Rust', level: 75, category: 'TOOLS & BACKEND' },
-    { name: 'Docker', level: 78, category: 'TOOLS & BACKEND' },
-  ];
-
-  // Group by category preserving insertion order
-  const grouped = skills.reduce<Record<string, Skill[]>>((acc, skill) => {
-    if (!acc[skill.category]) acc[skill.category] = [];
-    acc[skill.category].push(skill);
-    return acc;
-  }, {});
-
-  const categories = Object.keys(grouped);
+  // Legend ↔ cells: hovering (or tapping) a category lights its cells and dims the rest
+  const [hover, setHover] = useState<string | null>(null);
+  const [pin, setPin] = useState<string | null>(null);
+  const focus = hover ?? pin;
 
   return (
     <SectionShell
@@ -59,77 +53,58 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       isReady={isReady}
       description="技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。"
     >
-      {/* Strip plot on a ruler: one band per category, one "flag pole" per skill at x = proficiency.
-          Poles step through 3 lanes (4 on phones, where the plot is narrower; sorted high → low) so labels never collide. Plot starts on the
-          same column as Works' titles. */}
-      <div className="[--lane:30px] short:[--lane:26px]">
-        {categories.map((category, ci) => (
-          <div key={category} className="grid md:grid-cols-9 gap-x-12 gap-y-3 border-t border-[#0A0A0A] pt-3">
-            <div className="md:col-span-3 flex items-baseline gap-3 leading-none">
-              <span className="font-bebas text-[15px] text-black/40 tabular-nums">{pad(ci + 1)}</span>
-              <span className="font-bebas text-[20px] tracking-[0.05em] text-[#0A0A0A]">{category}</span>
-            </div>
-            <ul
-              className="md:col-span-6 relative isolate h-[calc(var(--lane)*4+16px)] md:h-[calc(var(--lane)*3+16px)] [&:hover>li:not(:hover)]:opacity-35"
-              style={{ backgroundImage: GRID, backgroundSize: `calc(100% / ${TICKS / 5}) 100%` }}
-            >
-              {[...grouped[category]].sort((x, y) => y.level - x.level).map((skill, si) => {
-                const pct = ((skill.level - MIN) / (MAX - MIN)) * 100;
-                const flip = pct > 78; // near the right edge the label hangs to the left of its pole
-                return (
-                  <li
-                    key={skill.name}
-                    className="group/s absolute bottom-0 w-0 transition-opacity duration-300 top-[calc(var(--lane)*var(--i4))] md:top-[calc(var(--lane)*var(--i3))]"
-                    style={{ left: `${pct}%`, '--i3': si % 3, '--i4': si % 4 } as React.CSSProperties}
-                  >
-                    <motion.span
-                      className="absolute left-0 top-0 bottom-0 w-px bg-[#0A0A0A]/70 group-hover/s:bg-[#6CE5E8] group-hover/s:w-0.5 origin-bottom transition-colors duration-300"
-                      initial={{ scaleY: 0 }}
-                      animate={{ scaleY: isReady ? 1 : 0 }}
-                      transition={t(0.35 + ci * 0.08 + si * 0.05)}
-                    />
-                    <motion.span
-                      // label sits on a page-colored halo so other poles break behind the text instead of striking through it
-                      className={`absolute z-10 top-0 whitespace-nowrap leading-none font-bold text-[14px] md:text-[16px] text-[#0A0A0A] bg-white px-1.5 py-px ${flip ? 'right-0.5 text-right' : 'left-0.5'}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: isReady ? 1 : 0 }}
-                      transition={t(0.45 + ci * 0.08 + si * 0.05)}
-                    >
-                      {skill.name}
-                      <span className="ml-1.5 font-bebas text-[13px] font-normal text-black/40 tabular-nums">{skill.level}</span>
-                    </motion.span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+      {/* Periodic table of skills: a strict hairline grid, one cell per skill — number, level, symbol, name, level bar (60–100 scale).
+          The legend is the filter. */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: isReady ? 1 : 0 }} transition={t(0.3, 0.5)} className="flex flex-wrap gap-x-6 gap-y-2 font-bebas text-[15px] leading-none tracking-[0.06em]">
+        {categories.map((c, ci) => (
+          <button
+            key={c}
+            onMouseEnter={() => setHover(c)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => setPin((p) => (p === c ? null : c))}
+            aria-pressed={pin === c}
+            className={`flex items-baseline gap-2 pb-1 border-b-2 transition-colors duration-300 ${focus === c ? 'border-[#6CE5E8] text-[#0A0A0A]' : 'border-transparent text-black/45 hover:text-[#0A0A0A]'}`}
+          >
+            <span className="tabular-nums text-black/40">{pad(ci + 1)}</span>
+            {c}
+            <span className="text-black/40 tabular-nums">{pad(skills.filter((s) => s.category === c).length)}</span>
+          </button>
         ))}
+      </motion.div>
 
-        {/* Shared axis — same ruler motif as the hero, ticks tied to the 70–100 scale */}
-        <div className="grid md:grid-cols-9 gap-x-12 border-t border-[#0A0A0A] mt-0">
-          <div className="hidden md:block md:col-span-3" />
-          <div className="md:col-span-6 relative">
-            <div
-              className="h-[9px]"
-              style={{
-                backgroundImage: `${TICK}, ${TICK}`,
-                backgroundSize: `calc(100% / ${TICKS}) 4px, calc(100% / ${TICKS / 5}) 9px`,
-                backgroundRepeat: 'repeat-x',
-              }}
-            />
-            <div className="relative h-5 mt-1 font-bebas text-[13px] leading-none text-black/40 tabular-nums">
-              {Array.from({ length: TICKS / 5 + 1 }, (_, i) => MIN + i * 5).map((v, i, all) => (
-                <span
-                  key={v}
-                  className="absolute"
-                  style={{ left: `${(i / (all.length - 1)) * 100}%`, transform: i === 0 ? 'none' : i === all.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)' }}
-                >
-                  {v}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
+      <div className="mt-4 grid grid-cols-3 md:grid-cols-5 xl:grid-cols-7 gap-px bg-black/20 border border-black/20 [--cell:13rem] short:[--cell:10rem]">
+        {skills.map((skill, i) => {
+          const dim = focus && focus !== skill.category;
+          return (
+            <motion.div
+              key={skill.name}
+              className={`group/c relative flex flex-col justify-between h-(--cell) p-3 bg-white hover:bg-[#0A0A0A] transition-colors duration-300 `}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: isReady ? 1 : 0, y: isReady ? 0 : 8 }}
+              transition={t(0.35 + (i % 7) * 0.05 + Math.floor(i / 7) * 0.04, 0.5)}
+            >
+              {/* dimming lives on an inner layer so it isn't delayed by the entrance transition */}
+              <div className={`flex h-full flex-col justify-between p-3 transition-opacity duration-300 ${dim ? 'opacity-30' : ''}`}>
+                <div className="flex justify-between font-bebas text-[13px] leading-none tabular-nums text-black/40 group-hover/c:text-white/50 transition-colors duration-300">
+                  <span>{pad(i + 1)}</span>
+                  <span>{skill.level}</span>
+                </div>
+                <div>
+                  <div className="font-bebas text-[4.5rem] short:text-[3.5rem] leading-[0.85] text-[#0A0A0A] group-hover/c:text-[#6CE5E8] transition-colors duration-300">{skill.sym}</div>
+                  <div className="mt-2 text-[12px] md:text-[13px] font-bold leading-tight text-[#0A0A0A] group-hover/c:text-white transition-colors duration-300">{skill.name}</div>
+                </div>
+              </div>
+              <motion.span
+                className="absolute left-0 bottom-0 h-[3px] w-full bg-[#0A0A0A] group-hover/c:bg-[#6CE5E8] origin-left transition-colors duration-300"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: isReady ? (skill.level - 60) / 40 : 0 }}
+                transition={t(0.6 + (i % 7) * 0.05, 0.8)}
+              />
+            </motion.div>
+          );
+        })}
+        {/* 14 skills: one blank cell squares off the 3- and 5-column grids */}
+        <div className="bg-white xl:hidden" aria-hidden="true" />
       </div>
     </SectionShell>
   );
