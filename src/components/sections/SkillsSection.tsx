@@ -33,6 +33,14 @@ const skills: Skill[] = [
 
 const categories = [...new Set(skills.map((s) => s.category))];
 
+// One treatment per category, on by default: ink block, cyan block, bare ink type, grey block
+const TONE: Record<string, { bg: string; fg: string }> = {
+  FRONTEND: { bg: '#0A0A0A', fg: '#FFFFFF' },
+  'ANIMATION & 3D': { bg: '#6CE5E8', fg: '#0A0A0A' },
+  STYLING: { bg: 'transparent', fg: '#0A0A0A' },
+  'TOOLS & BACKEND': { bg: '#E6E6E6', fg: '#0A0A0A' },
+};
+
 /*
  * Constructivist pinwheel: the words alone make the picture — no rules, rings or planes.
  * React stands in the middle, vertical. Four arms hang off its four sides, each rotated one step round it:
@@ -45,7 +53,7 @@ const ARMS = {
   top: { w: 15, names: ['Astro', 'GSAP', 'WebGL'] },                  // bottom on React, left edge on React's left, grows right
   bottom: { w: 15, names: ['PHP', 'Tauri', 'Rust'] },                 // top on React, right edge on React, grows left
 };
-const REACT_LEN = 25, GAP = 0.6, ARM_GAP = 1.6, LEAD = 0.8, FRAME_W = 100, FRAME_H = 54;
+const REACT_LEN = 25, GAP = 1.4, ARM_GAP = 2.8, LEAD = 0.8, FRAME_W = 100, FRAME_H = 54;
 
 type Em = Record<string, number>; // width of each name in em (Bebas, uppercase)
 const guessEm = (name: string) => name.length * 0.4;
@@ -76,7 +84,7 @@ function compose(em: Em): Box[] {
   });
   const x0 = Math.min(...ext.map((r) => r.x0)), x1 = Math.max(...ext.map((r) => r.x1));
   const y0 = Math.min(...ext.map((r) => r.y0)), y1 = Math.max(...ext.map((r) => r.y1));
-  const pad = 3.2; // room for the level numbers hanging off the outer ends
+  const pad = 3.6; // room for the level numbers hanging off the outer ends
   const f = Math.min((FRAME_W - 2 * pad) / (x1 - x0), (FRAME_H - 2 * pad) / (y1 - y0));
   const ox = (FRAME_W - (x1 - x0) * f) / 2 - x0 * f, oy = (FRAME_H - (y1 - y0) * f) / 2 - y0 * f;
   return boxes.map((b) => ({ ...b, x: b.x * f + ox, y: b.y * f + oy, s: b.s * f }));
@@ -124,11 +132,11 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
           const on = hover === k.category;
           // number hangs off the word's outer end
           const labelPos =
-            b.arm === 'right' ? 'left-full ml-[0.5cqw] top-0'
-            : b.arm === 'left' ? 'right-full mr-[0.5cqw] top-0'
-            : b.arm === 'top' ? 'bottom-full mb-[0.4cqw] left-0'
-            : b.arm === 'bottom' ? 'top-full mt-[0.4cqw] left-0'
-            : 'left-full ml-[0.15cqw] bottom-0';
+            b.arm === 'right' ? 'left-full ml-[0.9cqw] top-0'
+            : b.arm === 'left' ? 'right-full mr-[0.9cqw] top-0'
+            : b.arm === 'top' ? 'bottom-full mb-[0.8cqw] left-0'
+            : b.arm === 'bottom' ? 'top-full mt-[0.8cqw] left-0'
+            : 'left-full ml-[0.9cqw] bottom-0';
           return (
             <div key={b.name} className={`absolute transition-opacity duration-300 ${hover && !on ? 'opacity-[0.18]' : ''}`} style={{ left: `${b.x}cqw`, top: `${b.y}cqw` }}>
               <motion.button
@@ -137,8 +145,8 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
                 onMouseLeave={() => setHover(null)}
                 onFocus={() => setHover(k.category)}
                 onBlur={() => setHover(null)}
-                className={`block font-bebas uppercase leading-[0.8] tracking-[0.01em] whitespace-nowrap text-[#0A0A0A] text-left transition-[background-color] duration-300 ${b.v ? '[writing-mode:vertical-rl] rotate-180' : ''} ${hover && on ? 'bg-[#6CE5E8]' : ''}`}
-                style={{ fontSize: `${b.s}cqw` }}
+                className={`block font-bebas uppercase leading-[0.8] tracking-[0.01em] whitespace-nowrap text-left ${b.v ? '[writing-mode:vertical-rl] rotate-180' : ''} `}
+                style={{ fontSize: `${b.s}cqw`, color: TONE[k.category].fg, backgroundColor: TONE[k.category].bg, boxShadow: `0 0 0 0.5cqw ${TONE[k.category].bg}` }}
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: isReady ? 1 : 0, scale: isReady ? 1 : 0.94 }}
                 transition={t(0.3 + i * 0.05)}
@@ -153,7 +161,7 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
 
       <ul className="md:hidden flex flex-wrap items-baseline gap-x-5 gap-y-2 font-bebas uppercase leading-none text-[#0A0A0A]">
         {skills.map((skill) => (
-          <li key={skill.name} style={{ fontSize: `${1.6 + (skill.level - 70) * 0.12}rem` }}>
+          <li key={skill.name} className="px-1.5" style={{ fontSize: `${1.6 + (skill.level - 70) * 0.12}rem`, color: TONE[skill.category].fg, backgroundColor: TONE[skill.category].bg }}>
             {skill.name}
             <span className="align-top ml-1 text-[12px] text-black/45 tabular-nums">{skill.level}</span>
           </li>
@@ -164,6 +172,7 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-[#0A0A0A] pt-2 font-bebas text-[15px] leading-none tracking-[0.06em] text-black/50">
         {categories.map((c, ci) => (
           <span key={c} onMouseEnter={() => setHover(c)} onMouseLeave={() => setHover(null)} className={`transition-colors duration-300 ${hover === c ? 'text-[#0A0A0A]' : ''}`}>
+            <span className="mr-2 inline-block h-2.5 w-2.5 align-baseline border border-[#0A0A0A]" style={{ backgroundColor: TONE[c].bg }} />
             <span className="mr-2 text-black/40 tabular-nums">{pad(ci + 1)}</span>
             {c}
           </span>
