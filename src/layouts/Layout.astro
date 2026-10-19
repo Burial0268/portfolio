@@ -142,8 +142,8 @@ const topo = topoPath();
 					a=document.querySelector('.ld-accent-fill'),
 					bt=document.querySelector('.ld-bottom'),
 					lg=document.querySelector('.ld-log');
-				// percentage starts below the TTY log, then rides down the accent bar
-				var y0=lg?lg.offsetTop+lg.offsetHeight+32:24;
+				// percentage starts below the TTY log (phones) or at the top (desktop), then rides down the accent bar
+				var y0=lg&&lg.offsetTop<window.innerHeight/2?lg.offsetTop+lg.offsetHeight+32:24;
 				(function tick(){
 					var t=Math.min((Date.now()-s)/d, 1),
 						e=1-Math.pow(1-t, 3),
@@ -257,6 +257,7 @@ const topo = topoPath();
 		background: #6ce5e8;
 	}
 
+	/* Desktop: a quiet block in the bottom-right corner, clear of the wordmark and the percentage; phones keep it top-left */
 	.ld-log {
 		position: absolute;
 		top: 24px;
@@ -266,6 +267,18 @@ const topo = topoPath();
 		font-size: 11px;
 		line-height: 1.7;
 		color: rgba(255, 255, 255, 0.35);
+	}
+
+	@media (min-width: 768px) {
+		.ld-log {
+			top: auto;
+			left: auto;
+			bottom: 28px;
+			right: 28px;
+			width: min(540px, 45vw);
+			font-size: 10px;
+			color: rgba(255, 255, 255, 0.28);
+		}
 	}
 
 	.ld-log p {
@@ -338,6 +351,18 @@ const topo = topoPath();
 	}
 
 	/* Dot matrix fills with load progress */
+	@media (max-width: 640px) {
+		.ld-lock {
+			width: clamp(260px, 76vw, 460px);
+		}
+
+		.ld-meta {
+			gap: 10px;
+			letter-spacing: 0.05em;
+			white-space: nowrap;
+		}
+	}
+
 	.ld-dots {
 		display: flex;
 		gap: 3px;
