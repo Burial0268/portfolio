@@ -81,10 +81,12 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
       zh="影集"
       isDark={true}
       isReady={isReady}
-      // The sub-index is the photo picker (AK's boxed list)
+      // The sub-index is the photo picker: numbers only, the title/tag sit in the caption row
+      subIndexCompact
       subIndex={photos.map((photo, i) => ({
         key: photo.src,
-        label: `${pad(i + 1)}  ${photo.title} · ${photo.tag}`,
+        label: pad(i + 1),
+        title: `${photo.title} · ${photo.tag}`,
         active: i === index,
         onSelect: () => navigate(i),
       }))}
@@ -192,7 +194,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
         </div>
 
         {/* Segmented progress */}
-        <div className="flex gap-1.5 mt-6 short:mt-4">
+        <div className="flex gap-1.5 mt-6 short:mt-4 lg:hidden">{/* the numbered picker covers this on lg+ */}
           {photos.map((photo, i) => (
             <span key={photo.src} className="relative flex-1 h-0.5 bg-white/15 overflow-hidden">
               <motion.span

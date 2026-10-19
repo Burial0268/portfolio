@@ -51,7 +51,6 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       zh="技能专长"
       isDark={false}
       isReady={isReady}
-      subIndex={categories.map((c, i) => ({ key: c, label: `${pad(i + 1)}  ${c}`, active: i === 0 }))}
       description="技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。"
     >
       {/* One category per column */}

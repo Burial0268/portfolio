@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 export interface SubIndexItem {
   key: string;
   label: string;
+  title?: string; // accessible name when `label` is just a number (compact grid)
   active?: boolean;
   onSelect?: () => void;
 }
@@ -14,6 +15,7 @@ interface SectionShellProps {
   description?: React.ReactNode;
   url?: string;
   subIndex?: SubIndexItem[];
+  subIndexCompact?: boolean; // numbered grid instead of a titled list — for long pickers whose titles are already shown elsewhere
   subIndexOnMobile?: boolean; // phones show the sub-index only when it is a real picker people need
   isDark: boolean;
   isReady: boolean;
@@ -38,6 +40,7 @@ export default function SectionShell({
   url = 'HTTPS://GITHUB.COM/BURIAL0268',
   subIndex,
   subIndexOnMobile = false,
+  subIndexCompact = false,
   isDark,
   isReady,
   aside,
@@ -94,7 +97,28 @@ export default function SectionShell({
             </motion.p>
           )}
 
-          {subIndex && (
+          {subIndex && subIndexCompact && (
+            <ul className={`hidden lg:grid mt-8 short:mt-6 border-t pt-4 grid-cols-4 gap-1.5 ${rule}`}>
+              {subIndex.map((item, i) => (
+                <motion.li key={item.key} initial={{ y: 8, opacity: 0 }} animate={isReady ? { y: 0, opacity: 1 } : { y: 8, opacity: 0 }} transition={t(0.45 + i * 0.03)}>
+                  <button
+                    onClick={item.onSelect}
+                    aria-pressed={!!item.active}
+                    aria-label={item.title ?? item.label}
+                    title={item.title}
+                    className={`w-full h-9 border font-bebas text-[15px] leading-none tracking-[0.06em] tabular-nums transition-colors duration-300 ${
+                      item.active
+                        ? 'bg-[#6CE5E8] border-[#6CE5E8] text-black'
+                        : `${isDark ? 'border-white/20 text-white/45 hover:text-white' : 'border-black/20 text-black/45 hover:text-black'} hover:border-[#6CE5E8]`
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                </motion.li>
+              ))}
+            </ul>
+          )}
+          {subIndex && !subIndexCompact && (
             <ul className={`mt-8 short:mt-6 border-t pt-4 ${rule} ${subIndexOnMobile ? '' : 'hidden lg:block'}`}>
               {subIndex.map((item, i) => {
                 const Tag = item.onSelect ? 'button' : 'div';

@@ -47,11 +47,6 @@ export default function AboutSection({ isReady = false }: AboutSectionProps) {
       zh="关于我"
       isDark={false}
       isReady={isReady}
-      subIndex={[
-        { key: 'profile', label: 'PROFILE / 简介', active: true },
-        { key: 'numbers', label: 'KEY NUMBERS / 数据' },
-        { key: 'stack', label: 'TECH STACK / 技术栈' },
-      ]}
       description="对动效设计和 3D 可视化有浓厚兴趣，致力于将创意转化为令人惊叹的数字体验。相信优秀的设计与技术实现应该完美结合。"
     >
       {/* Statement */}

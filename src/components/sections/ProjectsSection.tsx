@@ -145,24 +145,11 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
           )}
         </AnimatePresence>
 
-        {/* Segmented progress — one segment per project */}
-        <div className="flex gap-1.5 mt-12 short:mt-8">
-          {projects.map((project, i) => (
-            <span key={project.slug} className="relative flex-1 h-0.5 bg-white/15 overflow-hidden">
-              <motion.span
-                className="absolute inset-0 bg-[#6CE5E8] origin-left"
-                initial={false}
-                animate={{ scaleX: i === featuredIndex ? 1 : 0 }}
-                transition={swap}
-              />
-            </span>
-          ))}
-        </div>
         <a
           href="https://github.com/Burial0268"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block mt-4 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/50 hover:text-[#6CE5E8] transition-colors duration-300"
+          className="inline-block mt-12 short:mt-8 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/50 hover:text-[#6CE5E8] transition-colors duration-300"
         >
           GITHUB / 查看更多 ↗
         </a>

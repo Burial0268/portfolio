@@ -119,7 +119,6 @@ function RightRail({ index, isDark, progress }: { index: number; isDark: boolean
     prevRef.current = index;
   }
   const dir = dirRef.current;
-  const muted = isDark ? 'text-white/40' : 'text-black/40';
   return (
     <div
       className={`fixed top-(--nav-h) bottom-0 right-0 w-(--rail) z-30 hidden lg:block border-l pointer-events-none transition-colors duration-500 ${
@@ -131,10 +130,7 @@ function RightRail({ index, isDark, progress }: { index: number; isDark: boolean
       <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-6">
         {/* Number rolls like a counter; its lower part is cropped (AK) */}
         <Roll k={index} dir={dir} box="h-[4.2rem]" className="font-bebas text-[6.5rem] leading-[0.8] text-[#6CE5E8]">{pad2(index)}</Roll>
-        <Roll k={index} dir={dir} box="mt-1" delay={0.06} className={`font-mono text-[10px] tracking-[0.1em] transition-colors duration-500 ${muted}`}>
-          // {pad2(index)} / {pad2(SECTIONS.length - 1)}
-        </Roll>
-        <Roll k={index} dir={dir} delay={0.1} className={`font-bebas text-[18px] tracking-[0.14em] transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
+        <Roll k={index} dir={dir} delay={0.06} box="mt-2" className={`font-bebas text-[18px] tracking-[0.14em] transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
           {SECTIONS[index].name}
         </Roll>
         <div className="mt-10">
@@ -149,7 +145,7 @@ function RightRail({ index, isDark, progress }: { index: number; isDark: boolean
 function SectionProgress({ current, total }: { current: number; total: number }) {
   const progress = ((current + 1) / total) * 100;
   return (
-    <div className="fixed top-0 left-0 right-0 z-55 h-0.5 bg-transparent">
+    <div className="fixed top-0 left-0 right-0 z-55 h-0.5 bg-transparent lg:hidden"> {/* lg+ has the right rail */}
       <motion.div
         className="h-full bg-[#6CE5E8]"
         animate={{ width: `${progress}%` }}
