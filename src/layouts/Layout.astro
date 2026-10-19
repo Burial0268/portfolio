@@ -92,7 +92,14 @@ const topo = topoPath();
 						>system ready</span>
 				</p>
 			</div>
-			<svg class="ld-brand" viewBox="0 0 212 50"></svg>
+			<div class="ld-lock">
+				<div class="ld-wm"><svg class="ld-brand" viewBox="-4 0 220 50"></svg></div>
+				<div class="ld-meta">
+					<span class="ld-dots"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+					<span>FULL-STACK / MOTION / 3D</span>
+					<span>2026</span>
+				</div>
+			</div>
 			<div class="ld-bottom">
 				<div class="ld-pipe"></div>
 				<div class="ld-pct">0%</div>
@@ -110,39 +117,26 @@ const topo = topoPath();
 				if(dm)dm.textContent='[    0.039817] drm: framebuffer ['+screen.width+'x'+screen.height+'] initialized at 0xfe000000';
 				if(hw)hw.textContent='[    0.014903] smpboot: Bringing up '+ hwConcurrency +' CPUs / ' + hwConcurrency + ' threads';
 			
+				// Wordmark: chamfered monoline caps on a 20×40 cell, 32 pitch (B stays distinct from 8)
 				var G={
-					B:[[0,0,0,40],[0,0,20,0],[20,0,20,20],[0,20,20,20],[20,20,20,40],[0,40,20,40]],
-					A:[[0,40,10,0],[10,0,20,40],[5,24,15,24]],
-					E:[[0,0,0,40],[0,0,20,0],[0,20,16,20],[0,40,20,40]],
-					S:[[0,0,20,0],[0,0,0,20],[0,20,20,20],[20,20,20,40],[0,40,20,40]],
-					O:[[0,0,20,0],[0,0,0,40],[20,0,20,40],[0,40,20,40]],
-					R:[[0,0,0,40],[0,0,20,0],[20,0,20,20],[0,20,20,20],[10,20,20,40]],
-					Y:[[0,0,10,20],[20,0,10,20],[10,20,10,40]]
+					B:'M0 0V40M0 0H14L20 6V14L14 20H0M14 20L20 26V34L14 40H0',
+					A:'M0 40L10 0L20 40M5 26H15',
+					E:'M20 0H0V40H20M0 20H16',
+					S:'M20 0H5L0 5V15L5 20H15L20 25V35L15 40H0',
+					O:'M5 0H15L20 5V35L15 40H5L0 35V5Z',
+					R:'M0 40V0H14L20 6V14L14 20H0M10 20L20 40',
+					Y:'M0 0L10 20L20 0M10 20V40'
 				};
-				var ns='http://www.w3.org/2000/svg', sv=document.querySelector('.ld-brand'),
-					tx='BAESORY', xO=0;
+				var ns='http://www.w3.org/2000/svg', sv=document.querySelector('.ld-brand'), tx='BAESORY';
 				for(var c=0; c<tx.length; c++){
-					var sg=G[tx[c]];
-					for(var j=0; j<sg.length; j++){
-						var ln=document.createElementNS(ns,'line');
-						var x1 = xO+sg[j][0];
-						var y1 = 5+sg[j][1];
-						var x2 = xO+sg[j][2];
-						var y2 = 5+sg[j][3];
-						ln.setAttribute('x1', x1);
-						ln.setAttribute('y1', y1);
-						ln.setAttribute('x2', x2);
-						ln.setAttribute('y2', y2);
-						// plotter-style: strokes are drawn in order, letter by letter (pathLength=1 so one dash length fits every line)
-						ln.setAttribute('pathLength','1');
-						ln.style.setProperty('--d', (c*0.13 + j*0.06)+'s');
-
-						sv.appendChild(ln);
-					}
-					xO+=32;
+					var pa=document.createElementNS(ns,'path');
+					pa.setAttribute('d',G[tx[c]]);
+					pa.setAttribute('transform','translate('+(c*32)+' 5)');
+					sv.appendChild(pa);
 				}
 			
 				// 进度条逻辑
+				var dots=document.querySelectorAll('.ld-dots i');
 				var s=Date.now(), d=1800,
 					p=document.querySelector('.ld-pct'),
 					a=document.querySelector('.ld-accent-fill'),
@@ -156,6 +150,7 @@ const topo = topoPath();
 						v=Math.round(e*100);
 					if(p)p.textContent=v+'%';
 					if(a)a.style.height=(e*100)+'%';
+					for(var k=0;k<dots.length;k++)dots[k].classList.toggle('on',e*dots.length>k);
 					if(bt)bt.style.transform='translateY('+(y0+e*(window.innerHeight-y0-bt.offsetHeight-40))+'px)';
 					if(t<1)requestAnimationFrame(tick);
 					else{
@@ -288,23 +283,74 @@ const topo = topoPath();
 		transition: opacity 0.1s ease;
 	}
 
-	.ld-brand {
+	.ld-lock {
 		position: absolute;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
 		width: clamp(240px, 50vw, 460px);
-		overflow: visible;
 	}
 
-	.ld-brand line {
-		stroke: rgba(255, 255, 255, 0.85);
-		stroke-width: 2;
-		stroke-linecap: square;
-		stroke-dasharray: 1 1;
-		stroke-dashoffset: 1;
-		animation: ld-draw 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-		animation-delay: calc(0.25s + var(--d));
+	/* Block reveal (same cyan panel as the exit wipe): the panel sweeps across and the mark appears behind it */
+	.ld-wm {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.ld-wm::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: #6ce5e8;
+		clip-path: inset(0 100% 0 0);
+		animation: ld-wipe 0.8s cubic-bezier(0.7, 0, 0.3, 1) 0.3s forwards;
+	}
+
+	.ld-brand {
+		display: block;
+		width: 100%;
+		fill: none;
+		stroke: #fff;
+		stroke-width: 5;
+		stroke-linejoin: miter;
+		stroke-miterlimit: 2;
+		opacity: 0;
+		animation: ld-show 0.8s step-end 0.3s forwards;
+	}
+
+	.ld-meta {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		margin-top: 16px;
+		padding-top: 10px;
+		border-top: 1px solid rgba(255, 255, 255, 0.18);
+		font-family: "Courier New", Consolas, monospace;
+		font-size: 10px;
+		letter-spacing: 0.15em;
+		color: rgba(255, 255, 255, 0.5);
+		opacity: 0;
+		animation: ld-type 0.5s ease 1.1s forwards;
+	}
+
+	.ld-meta span:last-child {
+		margin-left: auto;
+	}
+
+	/* Dot matrix fills with load progress */
+	.ld-dots {
+		display: flex;
+		gap: 3px;
+	}
+
+	.ld-dots i {
+		width: 5px;
+		height: 5px;
+		background: rgba(255, 255, 255, 0.18);
+	}
+
+	.ld-dots i.on {
+		background: #6ce5e8;
 	}
 
 	.ld-bottom {
@@ -361,9 +407,10 @@ const topo = topoPath();
 		}
 	}
 
-	@keyframes ld-draw {
-		to {
-			stroke-dashoffset: 0;
+	@keyframes ld-show {
+		55%,
+		100% {
+			opacity: 1;
 		}
 	}
 
