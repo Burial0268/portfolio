@@ -33,24 +33,34 @@ const skills: Skill[] = [
 ];
 
 const categories = [...new Set(skills.map((s) => s.category))];
-// Hand-set composition on a 100 × 54 frame (all units cqw, so it scales as one picture).
-// s = type size, v = set vertically (reads bottom → top). Sizes follow level loosely; art direction wins.
-const layout: Record<string, { x: number; y: number; s: number; v?: boolean }> = {
-  // focal word: everything else steps down from it in size, and hangs off one of three shared lines (x = 0 / 48 / verticals on the right)
-  React: { x: 0, y: 0, s: 22 },
-  Motion: { x: 0, y: 20, s: 11 },
-  Tauri: { x: 0, y: 31, s: 9 },
-  PHP: { x: 22, y: 31, s: 6, v: true },
-  Docker: { x: 0, y: 41, s: 6 },
-  Rust: { x: 17, y: 48, s: 4.5 },
-  'Vue.js': { x: 49, y: 0, s: 8 },
-  GSAP: { x: 49, y: 9, s: 6 },
-  WebGL: { x: 49, y: 15, s: 4 },
-  'CSS Animations': { x: 49, y: 20, s: 4 },
-  'Node.js': { x: 49, y: 38, s: 7 },
-  Astro: { x: 74, y: 4, s: 7, v: true },
-  TailwindCSS: { x: 82.5, y: 20, s: 8, v: true },
-  TypeScript: { x: 93, y: 0, s: 8, v: true },
+// Radial composition on a 100 × 54 frame (cqw, so it scales as one picture). React is the centre; every other skill
+// sits on an elliptical ring whose distance from the centre grows as its level drops (rings = 100 / 90 / 80), at its
+// own angle (deg, 0 = right, 90 = down). Long names run horizontally, short names vertically, and both grow outward
+// from the ring point. s = type size.
+const CX = 50, CY = 27.5, XS = 1.45, YS = 0.62;
+const ringR = (level: number) => 15 + (100 - level) * 0.5;
+const ring = { 100: ringR(100), 90: ringR(90), 80: ringR(80) };
+const placed: Record<string, { a: number; s: number }> = {
+  TypeScript: { a: 180, s: 5.5 },
+  TailwindCSS: { a: -8, s: 5 },
+  'Vue.js': { a: -150, s: 8 },
+  Motion: { a: -40, s: 8 },
+  Docker: { a: 155, s: 6 },
+  'Node.js': { a: 42, s: 6 },
+  'CSS Animations': { a: 14, s: 3.8 },
+  Astro: { a: -118, s: 4.5 },
+  GSAP: { a: -68, s: 5 },
+  WebGL: { a: -90, s: 4.2 },
+  Tauri: { a: 105, s: 5 },
+  PHP: { a: 75, s: 6 },
+  Rust: { a: 128, s: 4.5 },
+};
+const REACT_S = 13;
+const isLong = (name: string) => name.length >= 6; // long → horizontal, short → vertical
+const anchor = (name: string, level: number) => {
+  const { a } = placed[name];
+  const r = ringR(level), th = (a * Math.PI) / 180;
+  return { x: CX + XS * r * Math.cos(th), y: CY + YS * r * Math.sin(th), cos: Math.cos(th), sin: Math.sin(th) };
 };
 
 export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
@@ -73,36 +83,53 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       {/* Typographic composition: names set in Bebas at very different sizes, some turned 90°, spaced by eye rather than by grid.
           Size ≈ proficiency (the small number is the level). Phones fall back to a wrapped line of the same words. */}
       <div className="hidden md:block relative w-full aspect-[100/54] [container-type:inline-size]">
-        {/* One spine between the focal word and the rest, with its origin marked in cyan */}
-        <motion.span
-          aria-hidden="true"
-          className="absolute left-[46.5cqw] top-0 h-full w-px bg-[#0A0A0A]/25 origin-top"
-          initial={{ scaleY: 0 }}
-          animate={{ scaleY: isReady ? 1 : 0 }}
-          transition={t(0.2, 1)}
-        />
-        <span aria-hidden="true" className="absolute left-[46.5cqw] top-0 h-[2.4cqw] w-[3px] -translate-x-px bg-[#6CE5E8]" />
+        {/* Plane, line, point: a cyan disc under the centre word, dashed rings by level, hairline spokes to every word */}
+        <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 100 54" aria-hidden="true">
+          <motion.circle cx={CX} cy={CY} r="9.5" fill="#6CE5E8" initial={{ scale: 0 }} animate={{ scale: isReady ? 1 : 0 }} style={{ transformOrigin: `${CX}px ${CY}px`, transformBox: 'view-box' }} transition={t(0.2, 0.9)} />
+          {Object.entries(ring).map(([lv, r]) => (
+            <g key={lv}>
+              <ellipse cx={CX} cy={CY} rx={XS * r} ry={YS * r} fill="none" stroke="#0A0A0A" strokeOpacity="0.22" strokeWidth="1" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" />
+              <text x={CX + XS * r + 0.8} y={CY - 0.8} fontSize="1.5" fill="#0A0A0A" fillOpacity="0.4" className="font-bebas">{lv}</text>
+            </g>
+          ))}
+          {skills.filter((k) => k.name !== 'React').map((k) => {
+            const p = anchor(k.name, k.level);
+            return (
+              <g key={k.name}>
+                <motion.line x1={CX} y1={CY} x2={p.x} y2={p.y} stroke="#0A0A0A" strokeOpacity="0.35" strokeWidth="0.12" initial={{ pathLength: 0 }} animate={{ pathLength: isReady ? 1 : 0 }} transition={t(0.4, 0.9)} />
+                <circle cx={p.x} cy={p.y} r="0.55" fill="#0A0A0A" />
+              </g>
+            );
+          })}
+        </svg>
+
         {skills.map((skill, i) => {
-          const l = layout[skill.name];
+          const react = skill.name === 'React';
+          const v = react || !isLong(skill.name);
+          const s = react ? REACT_S : placed[skill.name].s;
+          const p = react ? { x: CX, y: CY, cos: 0, sin: 0 } : anchor(skill.name, skill.level);
+          // the word grows outward from its ring point: horizontal words go left/right of it, vertical ones up/down
+          const tx = react || v ? '-50%' : p.cos < 0 ? '-100%' : '0%';
+          const ty = react ? '-50%' : v ? (p.sin < 0 ? '-100%' : '0%') : '-50%';
           const on = hover === skill.category;
-          const self = hover && on;
           return (
-            <motion.button
-              type="button"
-              key={skill.name}
-              onMouseEnter={() => setHover(skill.category)}
-              onMouseLeave={() => setHover(null)}
-              onFocus={() => setHover(skill.category)}
-              onBlur={() => setHover(null)}
-              className={`absolute font-bebas uppercase leading-[0.8] tracking-[0.01em] whitespace-nowrap text-[#0A0A0A] text-left transition-[opacity,box-shadow] duration-300 ${l.v ? '[writing-mode:vertical-rl] rotate-180' : ''} ${hover && !on ? 'opacity-[0.18]' : ''} ${self ? 'shadow-[inset_0_-0.14em_0_#6CE5E8]' : ''}`}
-              style={{ left: `${l.x}cqw`, top: `${l.y}cqw`, fontSize: `${l.s}cqw` }}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: isReady ? 1 : 0, y: isReady ? 0 : 14 }}
-              transition={t(0.3 + i * 0.05)}
-            >
-              {skill.name}
-              <span className="align-top ml-[0.25em] font-bebas text-[clamp(9px,1.5cqw,14px)] leading-none tracking-normal tabular-nums text-black/45">{skill.level}</span>
-            </motion.button>
+            <div key={skill.name} className={`absolute transition-opacity duration-300 ${hover && !on ? 'opacity-[0.18]' : ''}`} style={{ left: `${p.x}cqw`, top: `${p.y}cqw`, transform: `translate(${tx}, ${ty})`, zIndex: react ? 2 : 1 }}>
+              <motion.button
+                type="button"
+                onMouseEnter={() => setHover(skill.category)}
+                onMouseLeave={() => setHover(null)}
+                onFocus={() => setHover(skill.category)}
+                onBlur={() => setHover(null)}
+                className={`block font-bebas uppercase leading-[0.8] tracking-[0.01em] whitespace-nowrap text-[#0A0A0A] text-left transition-[background-color] duration-300 ${v ? '[writing-mode:vertical-rl] rotate-180' : ''} ${hover && on ? 'bg-[#6CE5E8]' : ''}`}
+                style={{ fontSize: `${s}cqw` }}
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: isReady ? 1 : 0, scale: isReady ? 1 : 0.92 }}
+                transition={t(0.45 + i * 0.05)}
+              >
+                {skill.name}
+                <span className="align-top ml-[0.25em] font-bebas text-[clamp(9px,1.5cqw,14px)] leading-none tracking-normal tabular-nums text-black/45">{skill.level}</span>
+              </motion.button>
+            </div>
           );
         })}
       </div>
