@@ -121,8 +121,6 @@ const topo = topoPath();
 				};
 				var ns='http://www.w3.org/2000/svg', sv=document.querySelector('.ld-brand'),
 					tx='BAESORY', xO=0;
-				var centerX = (tx.length * 32) / 2; 
-				var centerY = 25;
 				for(var c=0; c<tx.length; c++){
 					var sg=G[tx[c]];
 					for(var j=0; j<sg.length; j++){
@@ -135,41 +133,10 @@ const topo = topoPath();
 						ln.setAttribute('y1', y1);
 						ln.setAttribute('x2', x2);
 						ln.setAttribute('y2', y2);
-						var isH = Math.abs(y1 - y2) < 0.1; // 是否是横线
-						var isV = Math.abs(x1 - x2) < 0.1; // 是否是竖线
-						
-						// 计算当前线条的几何中心
-						var midX = (x1 + x2) / 2;
-						var midY = (y1 + y2) / 2;
-			
-						var dx = 0, dy = 0;
-						// 偏移量：设置大一点，确保从屏幕外飞入
-						var dist = 300; 
-			
-						if(isH) {
-							// 如果是横线：
-							// 在中心左边 -> 从左侧(-dist)飞入
-							// 在中心右边 -> 从右侧(+dist)飞入
-							dx = (midX < centerX ? -1 : 1) * dist;
-							dy = 0; // 锁定 Y 轴，只平移
-						} else if (isV) {
-							// 如果是竖线：
-							// 在中心上边 -> 从上方(-dist)飞入
-							// 在中心下边 -> 从下方(+dist)飞入
-							dx = 0; // 锁定 X 轴
-							dy = (midY < centerY ? -1 : 1) * dist;
-						} else {
-							// 斜线 (如 A, R, Y 的部分)：同时受 X 和 Y 影响
-							dx = (midX < centerX ? -1 : 1) * dist;
-							dy = (midY < centerY ? -1 : 1) * dist;
-						}
-			
-						ln.style.setProperty('--dx', dx+'px');
-						ln.style.setProperty('--dy', dy+'px');
-			
-						// 范围 0.1s ~ 0.5s 之间随机
-						ln.style.setProperty('--d', (0.1 + Math.random() * 0.4) + 's');
-						
+						// plotter-style: strokes are drawn in order, letter by letter (pathLength=1 so one dash length fits every line)
+						ln.setAttribute('pathLength','1');
+						ln.style.setProperty('--d', (c*0.13 + j*0.06)+'s');
+
 						sv.appendChild(ln);
 					}
 					xO+=32;
@@ -334,10 +301,10 @@ const topo = topoPath();
 		stroke: rgba(255, 255, 255, 0.85);
 		stroke-width: 2;
 		stroke-linecap: square;
-		opacity: 0;
-		transform: translate(var(--dx), var(--dy));
-		animation: ld-assemble 0.6s cubic-bezier(0.2, 1, 0.3, 1) forwards;
-		animation-delay: var(--d);
+		stroke-dasharray: 1 1;
+		stroke-dashoffset: 1;
+		animation: ld-draw 0.32s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+		animation-delay: calc(0.25s + var(--d));
 	}
 
 	.ld-bottom {
@@ -394,10 +361,9 @@ const topo = topoPath();
 		}
 	}
 
-	@keyframes ld-assemble {
+	@keyframes ld-draw {
 		to {
-			opacity: 1;
-			transform: translate(0, 0);
+			stroke-dashoffset: 0;
 		}
 	}
 
