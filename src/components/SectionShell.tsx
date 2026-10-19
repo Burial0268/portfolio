@@ -49,14 +49,21 @@ export default function SectionShell({
           </motion.div>
 
           <div className="mt-6 overflow-hidden">
-            <motion.h2
-              className={`text-display uppercase text-[2rem] tracking-[0.01em] ${text}`}
-              initial={{ y: '105%' }}
-              animate={{ y: isReady ? '0%' : '105%' }}
-              transition={t(0.2, 0.7)}
-            >
-              {en}
-            </motion.h2>
+            {/* Letters rise one after another (GSAP SplitText feel); the row stays masked */}
+            <h2 aria-label={en} className={`text-display uppercase text-[2rem] tracking-[0.01em] ${text}`}>
+              {[...en].map((ch, i) => (
+                <motion.span
+                  key={i}
+                  aria-hidden="true"
+                  className="inline-block"
+                  initial={{ y: '105%' }}
+                  animate={{ y: isReady ? '0%' : '105%' }}
+                  transition={t(0.2 + i * 0.03, 0.6)}
+                >
+                  {ch === ' ' ? '\u00A0' : ch}
+                </motion.span>
+              ))}
+            </h2>
           </div>
           <div className="overflow-hidden">
             <motion.div
@@ -68,12 +75,18 @@ export default function SectionShell({
               {zh}
             </motion.div>
           </div>
-          <motion.div
-            className="mt-4 h-1.5 w-40 bg-[#6CE5E8] origin-left"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: isReady ? 1 : 0 }}
-            transition={t(0.4, 0.8)}
-          />
+          {/* Three-segment rule (Endfield's split colour line): accent / ink / faint */}
+          <div className="mt-4 flex gap-1 w-40">
+            {[['w-[5.5rem] bg-[#6CE5E8]', 0.4], [`w-10 ${isDark ? 'bg-white' : 'bg-black'}`, 0.5], [`flex-1 ${isDark ? 'bg-white/25' : 'bg-black/25'}`, 0.6]].map(([cls, d]) => (
+              <motion.span
+                key={cls as string}
+                className={`h-1.5 origin-left ${cls}`}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: isReady ? 1 : 0 }}
+                transition={t(d as number, 0.6)}
+              />
+            ))}
+          </div>
 
           {description && (
             <motion.p className={`mt-6 text-[13px] leading-relaxed max-w-[300px] ${muted}`} initial={{ opacity: 0 }} animate={fade} transition={t(0.45, 0.5)}>

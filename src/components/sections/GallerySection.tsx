@@ -106,7 +106,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
                       key={photo.src}
                       src={seen.current.has(i) ? `${PHOTO_CDN_PERFIX}${photo.src}` : undefined}
                       alt={photo.title}
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className={`absolute inset-0 w-full h-full object-cover transition-[filter] duration-700 motion-reduce:transition-none ${ratios[photo.src] ? 'blur-0' : 'blur-xl'}`}
                       ref={(el) => recordRatio(photo.src, el)}
                       onLoad={(e) => recordRatio(photo.src, e.currentTarget)}
                       initial={false}
@@ -207,8 +207,20 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
           ))}
         </div>
 
-        {/* Footer — under the image, on the content column */}
-        <div className="mt-6 short:mt-4 flex flex-wrap gap-x-6 gap-y-1 font-mono text-[10px] text-white/30">
+        {/* Colophon (Figma Config footer): stacked caps links + legal line; the way out of the last page */}
+        <div className="mt-6 short:mt-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-t border-white/15 pt-3 font-mono text-[10px] text-white/30">
+          <div className="flex flex-col gap-1.5 tracking-[0.2em] uppercase text-white/55">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('navigate-section', { detail: 'home' }))}
+              className="text-left hover:text-[#6CE5E8] transition-colors duration-300"
+            >
+              ↑ Back to top
+            </button>
+            <a href="https://github.com/Burial0268" target="_blank" rel="noopener noreferrer" className="hover:text-[#6CE5E8] transition-colors duration-300">
+              GitHub ↗
+            </a>
+          </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-1">
         <p>&copy; {new Date().getFullYear()} BURIAL0268 · BUILT WITH ASTRO</p>
         <p className="flex flex-wrap gap-x-4">
           <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-[#6CE5E8] transition-colors duration-300">
@@ -223,6 +235,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
             粤公网安备44162302000035号
           </a>
         </p>
+          </div>
         </div>
       </motion.div>
       {portalReady && createPortal(
@@ -240,6 +253,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
 function Lightbox({ photo, index, total, onNavigate, onClose }: {
   photo: Photo; index: number; total: number; onNavigate: (i: number) => void; onClose: () => void;
 }) {
+  const [okSrc, setOkSrc] = useState(''); // blur-up: the photo that has finished loading
   const prevIndex = useRef(index);
   const settled = useRef(false); // first render opens via the shutter, later ones wipe by direction
   const dir = index >= prevIndex.current ? 1 : -1;
@@ -298,7 +312,9 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
               key={photo.src}
               src={`${PHOTO_CDN_PERFIX}${photo.src}`}
               alt={photo.title}
-              className="block w-auto h-auto max-w-[calc(100vw-2*var(--mx))] max-h-[calc(100dvh-11rem)]"
+              className={`block w-auto h-auto max-w-[calc(100vw-2*var(--mx))] max-h-[calc(100dvh-11rem)] transition-[filter] duration-700 motion-reduce:transition-none ${okSrc === photo.src ? 'blur-0' : 'blur-xl'}`}
+              ref={(el) => { if (el?.complete && el.naturalWidth) setOkSrc(photo.src); }}
+              onLoad={() => setOkSrc(photo.src)}
               initial={settled.current ? { clipPath: dir > 0 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)' } : false}
               animate={{ clipPath: 'inset(0 0 0 0)' }}
               transition={{ duration: 0.6, ease }}
