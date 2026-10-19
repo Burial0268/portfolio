@@ -170,7 +170,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               onClick={handlePrev}
               disabled={index === 0}
               aria-label="Previous photo"
-              className="w-11 h-11 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
+              className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               ‹
             </button>
@@ -178,7 +178,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               onClick={handleNext}
               disabled={index === photos.length - 1}
               aria-label="Next photo"
-              className="w-11 h-11 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
+              className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               ›
             </button>
@@ -213,7 +213,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
           <div className="flex flex-col gap-1.5 tracking-[0.2em] uppercase text-white/55">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('navigate-section', { detail: 'home' }))}
-              className="text-left hover:text-[#6CE5E8] transition-colors duration-300"
+              className="text-left uppercase hover:text-[#6CE5E8] transition-colors duration-300"
             >
               ↑ Back to top
             </button>
