@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import SectionShell, { pad } from '../SectionShell';
 
@@ -33,25 +33,31 @@ const skills: Skill[] = [
 ];
 
 const categories = [...new Set(skills.map((s) => s.category))];
-const groups = categories.map((c) => skills.filter((s) => s.category === c));
-// Bars are drawn on a 60–100 scale so 75 and 95 read as clearly different
-const pctOf = (level: number) => ((level - 60) / 40) * 100;
+// Hand-set composition on a 100 × 54 frame (all units cqw, so it scales as one picture).
+// s = type size, v = set vertically (reads bottom → top). Sizes follow level loosely; art direction wins.
+const layout: Record<string, { x: number; y: number; s: number; v?: boolean }> = {
+  React: { x: 0, y: 0, s: 15 },
+  'Vue.js': { x: 35, y: 1, s: 9 },
+  Astro: { x: 63, y: 0, s: 7, v: true },
+  TypeScript: { x: 91, y: 0, s: 11, v: true },
+  TailwindCSS: { x: 80, y: 0, s: 9, v: true },
+  Motion: { x: 0, y: 17, s: 13 },
+  GSAP: { x: 36, y: 18, s: 6 },
+  WebGL: { x: 36, y: 25, s: 3.6 },
+  'CSS Animations': { x: 52, y: 21, s: 5, v: false },
+  Tauri: { x: 0, y: 36, s: 12 },
+  PHP: { x: 28, y: 34, s: 9, v: true },
+  'Node.js': { x: 38, y: 41, s: 8.5 },
+  Docker: { x: 62, y: 35, s: 6 },
+  Rust: { x: 66, y: 46, s: 4.5 },
+};
 
 export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
   const t = (delay: number, duration = 0.7) =>
     isReady ? { duration, delay, ease: EASE } : { duration: 0.3, delay: 0 };
 
-  // Bars rise from the baseline on desktop and extend from the left on phones
-  const [wide, setWide] = useState(true);
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 768px)');
-    setWide(mq.matches);
-    const on = (e: MediaQueryListEvent) => setWide(e.matches);
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
-  }, []);
-
-  let n = 0;
+  // Hovering a word (or a legend label) lights its whole category and pulls the rest back
+  const [hover, setHover] = useState<string | null>(null);
 
   return (
     <SectionShell
@@ -63,69 +69,51 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       isReady={isReady}
       description="技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。"
     >
-      {/* Skyline: every skill is a solid ink block whose height is its level, name set up the side of the bar.
-          Heavy black mass against white; hover turns one bar cyan and pulls the rest back. Phones turn it 90° (bars grow rightwards). */}
-      <div className="md:[--H:min(52vh,480px)] short:md:[--H:min(42vh,330px)]">
-        <div className="relative md:h-(--H)">
-          {/* Reference lines — only visible above the shorter bars */}
-          <div className="hidden md:block absolute inset-0 pointer-events-none" aria-hidden="true">
-            {[70, 80, 90, 100].map((v) => (
-              <div key={v} className="absolute inset-x-0 border-t border-dashed border-black/20" style={{ bottom: `${pctOf(v)}%` }}>
-                <span className="absolute right-0 -top-4 font-bebas text-[13px] leading-none text-black/40 tabular-nums">{v}</span>
-              </div>
-            ))}
-          </div>
+      {/* Typographic composition: names set in Bebas at very different sizes, some turned 90°, spaced by eye rather than by grid.
+          Size ≈ proficiency (the small number is the level). Phones fall back to a wrapped line of the same words. */}
+      <div className="hidden md:block relative w-full aspect-[100/54] [container-type:inline-size]">
+        {skills.map((skill, i) => {
+          const l = layout[skill.name];
+          const on = hover === skill.category;
+          const self = hover && on;
+          return (
+            <motion.button
+              type="button"
+              key={skill.name}
+              onMouseEnter={() => setHover(skill.category)}
+              onMouseLeave={() => setHover(null)}
+              onFocus={() => setHover(skill.category)}
+              onBlur={() => setHover(null)}
+              className={`absolute font-bebas uppercase leading-[0.8] tracking-[0.01em] whitespace-nowrap text-[#0A0A0A] text-left transition-[opacity,box-shadow] duration-300 ${l.v ? '[writing-mode:vertical-rl] rotate-180' : ''} ${hover && !on ? 'opacity-[0.18]' : ''} ${self ? 'shadow-[inset_0_-0.14em_0_#6CE5E8]' : ''}`}
+              style={{ left: `${l.x}cqw`, top: `${l.y}cqw`, fontSize: `${l.s}cqw` }}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: isReady ? 1 : 0, y: isReady ? 0 : 14 }}
+              transition={t(0.3 + i * 0.05)}
+            >
+              {skill.name}
+              <span className="align-top ml-[0.25em] font-bebas text-[clamp(9px,1.5cqw,14px)] leading-none tracking-normal tabular-nums text-black/45">{skill.level}</span>
+            </motion.button>
+          );
+        })}
+      </div>
 
-          <div className="relative md:h-full flex flex-col gap-8 md:flex-row md:items-end md:gap-4 [&:has(.bar:hover)_.bar:not(:hover)]:opacity-40">
-            {groups.map((group, gi) => (
-              <div key={categories[gi]} className="flex flex-col gap-2 md:contents">
-                <div className="md:hidden font-bebas text-[15px] leading-none tracking-[0.06em] text-black/50 border-t border-[#0A0A0A] pt-2">
-                  <span className="text-black/40 mr-2 tabular-nums">{pad(gi + 1)}</span>
-                  {categories[gi]}
-                </div>
-                <ul className="flex flex-col gap-1 md:h-full md:basis-0 md:min-w-0 md:flex-row md:items-end" style={{ flexGrow: group.length }}>
-                  {group.map((skill) => {
-                    const i = n++;
-                    const p = pctOf(skill.level);
-                    return (
-                      <li
-                        key={skill.name}
-                        className="bar group/b relative h-10 md:h-(--p) md:flex-1 md:min-w-0 transition-opacity duration-300"
-                        style={{ '--p': `${p}%`, width: wide ? undefined : `${Math.max(p, 40)}%` } as React.CSSProperties}
-                      >
-                        <motion.span
-                          className="absolute inset-0 bg-[#0A0A0A] group-hover/b:bg-[#6CE5E8] transition-colors duration-300 origin-left md:origin-bottom"
-                          initial={{ scaleX: wide ? 1 : 0, scaleY: wide ? 0 : 1 }}
-                          animate={{ scaleX: wide || isReady ? 1 : 0, scaleY: !wide || isReady ? 1 : 0 }}
-                          transition={t(0.3 + i * 0.045)}
-                        />
-                        <motion.div
-                          className="relative z-10 flex h-full items-center justify-between px-3 md:flex-col md:items-center md:px-0 md:py-3 text-white group-hover/b:text-[#0A0A0A] transition-colors duration-300"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: isReady ? 1 : 0 }}
-                          transition={t(0.6 + i * 0.045, 0.5)}
-                        >
-                          <span className="font-bebas text-[22px] leading-none tabular-nums text-[#6CE5E8] group-hover/b:text-[#0A0A0A] transition-colors duration-300 md:order-first">{skill.level}</span>
-                          <span className="font-bold text-[15px] md:text-[18px] leading-none whitespace-nowrap md:[writing-mode:vertical-rl] md:rotate-180">{skill.name}</span>
-                        </motion.div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
+      <ul className="md:hidden flex flex-wrap items-baseline gap-x-5 gap-y-2 font-bebas uppercase leading-none text-[#0A0A0A]">
+        {skills.map((skill) => (
+          <li key={skill.name} style={{ fontSize: `${1.6 + (skill.level - 70) * 0.12}rem` }}>
+            {skill.name}
+            <span className="align-top ml-1 text-[12px] text-black/45 tabular-nums">{skill.level}</span>
+          </li>
+        ))}
+      </ul>
 
-        {/* Category labels under the baseline, each spanning its own bars */}
-        <div className="hidden md:flex gap-4 border-t border-[#0A0A0A] mt-0">
-          {groups.map((group, gi) => (
-            <div key={categories[gi]} className="min-w-0 pt-2 font-bebas text-[15px] leading-none tracking-[0.06em] text-black/50 whitespace-nowrap overflow-hidden" style={{ flexGrow: group.length, flexBasis: 0 }}>
-              <span className="text-black/40 mr-2 tabular-nums">{pad(gi + 1)}</span>
-              {categories[gi]}
-            </div>
-          ))}
-        </div>
+      {/* Legend — also drives the highlight */}
+      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 border-t border-[#0A0A0A] pt-2 font-bebas text-[15px] leading-none tracking-[0.06em] text-black/50">
+        {categories.map((c, ci) => (
+          <span key={c} onMouseEnter={() => setHover(c)} onMouseLeave={() => setHover(null)} className={`transition-colors duration-300 ${hover === c ? 'text-[#0A0A0A]' : ''}`}>
+            <span className="mr-2 text-black/40 tabular-nums">{pad(ci + 1)}</span>
+            {c}
+          </span>
+        ))}
       </div>
     </SectionShell>
   );
