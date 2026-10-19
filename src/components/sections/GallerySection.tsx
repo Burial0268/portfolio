@@ -81,15 +81,6 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
       zh="影集"
       isDark={true}
       isReady={isReady}
-      // The sub-index is the photo picker: numbers only, the title/tag sit in the caption row
-      subIndexCompact
-      subIndex={photos.map((photo, i) => ({
-        key: photo.src,
-        label: pad(i + 1),
-        title: `${photo.title} · ${photo.tag}`,
-        active: i === index,
-        onSelect: () => navigate(i),
-      }))}
       description="Through the lens — 用镜头记录的风景与街头。"
     >
       <motion.div initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.25)}>
@@ -173,7 +164,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               </AnimatePresence>
             </div>
           </div>
-          <div className="flex items-center gap-2 pb-1 lg:hidden">
+          <div className="flex items-center gap-2 pb-1">
             <button
               onClick={handlePrev}
               disabled={index === 0}
@@ -193,17 +184,26 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
           </div>
         </div>
 
-        {/* Segmented progress */}
-        <div className="flex gap-1.5 mt-6 short:mt-4 lg:hidden">{/* the numbered picker covers this on lg+ */}
+        {/* Indicator: one clickable segment per photo */}
+        <div className="flex gap-1.5 mt-6 short:mt-4">
           {photos.map((photo, i) => (
-            <span key={photo.src} className="relative flex-1 h-0.5 bg-white/15 overflow-hidden">
-              <motion.span
-                className="absolute inset-0 bg-[#6CE5E8] origin-left"
-                initial={false}
-                animate={{ scaleX: i <= index ? 1 : 0 }}
-                transition={swap}
-              />
-            </span>
+            <button
+              key={photo.src}
+              onClick={() => navigate(i)}
+              aria-label={`${photo.title} · ${photo.tag}`}
+              title={`${photo.title} · ${photo.tag}`}
+              aria-current={i === index}
+              className="group flex-1 h-4 flex items-center"
+            >
+              <span className="relative block w-full h-0.5 bg-white/15 group-hover:bg-white/35 transition-colors duration-300 overflow-hidden">
+                <motion.span
+                  className="absolute inset-0 bg-[#6CE5E8] origin-left"
+                  initial={false}
+                  animate={{ scaleX: i <= index ? 1 : 0 }}
+                  transition={swap}
+                />
+              </span>
+            </button>
           ))}
         </div>
 

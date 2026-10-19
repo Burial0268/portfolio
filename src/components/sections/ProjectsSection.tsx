@@ -33,7 +33,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
     if (isReady) setFeaturedIndex(0);
   }, [isReady]);
 
-  // ←/→ browse projects on desktop (the arrows only show below lg)
+  // ←/→ browse projects
   useEffect(() => {
     if (!isReady) return;
     const onKey = (e: KeyboardEvent) => {
@@ -57,18 +57,34 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
       zh="精选项目"
       isDark={true}
       isReady={isReady}
-      // The sub-index is the project picker (AK's boxed list); below lg the arrows next to the CTA take over
-      subIndex={projects.map((project, i) => ({
-        key: project.slug,
-        label: `${pad(i + 1)}  ${project.title}`,
-        active: i === featuredIndex,
-        onSelect: () => setFeaturedIndex(i),
-      }))}
       description="开源作品与个人项目，涵盖播放器、桌面工具、Flarum 插件与 API 服务。"
     >
       <motion.div initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.3)}>
+        {/* Indicator = the content's top rule: one clickable segment per project */}
+        <div className="flex gap-1.5">
+          {projects.map((project, i) => (
+            <button
+              key={project.slug}
+              onClick={() => setFeaturedIndex(i)}
+              aria-label={project.title}
+              title={project.title}
+              aria-current={i === featuredIndex}
+              className="group flex-1 h-4 flex items-start"
+            >
+              <span className="relative block w-full h-0.5 bg-white/20 group-hover:bg-white/40 transition-colors duration-300 overflow-hidden">
+                <motion.span
+                  className="absolute inset-0 bg-[#6CE5E8] origin-left"
+                  initial={false}
+                  animate={{ scaleX: i === featuredIndex ? 1 : 0 }}
+                  transition={swap}
+                />
+              </span>
+            </button>
+          ))}
+        </div>
+
         {/* Case meta row */}
-        <div className="flex items-center justify-between gap-6 border-t border-white/80 pt-3 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/45">
+        <div className="flex items-center justify-between gap-6 pt-1 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/45">
           <span className="text-white shrink-0">CASE <span className="text-white/40">/ {pad(projects.length)}</span></span>
           <span className="truncate">{featured?.tags.join(' / ')}</span>
         </div>
@@ -133,7 +149,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                       <span className="transition-transform duration-300 group-hover:translate-x-1">›</span>
                     </a>
                   )}
-                  <div className="flex items-center gap-2 ml-auto lg:hidden">
+                  <div className="flex items-center gap-2 ml-auto">
                     <button
                       onClick={handlePrev}
                       aria-label="Previous project"
