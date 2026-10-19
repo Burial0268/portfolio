@@ -67,25 +67,35 @@ export default function SectionShell({
               ))}
             </h2>
           </div>
-          <div className="overflow-hidden">
+          {/* Frosted-glass cover (RhineLabUI): sits over the ZH title + ruler and clears top→bottom with a feathered edge */}
+          <div className="relative overflow-hidden">
+            <div className="overflow-hidden">
+              <motion.div
+                className={`text-[3rem] short:text-[2.5rem] font-bold leading-[1.15] ${text}`}
+                initial={{ y: '105%' }}
+                animate={{ y: isReady ? '0%' : '105%' }}
+                transition={t(0.27, 0.7)}
+              >
+                {zh}
+              </motion.div>
+            </div>
+            {/* Ruler with a cyan block that sits at this section's slot (0–4 of 5): same bar, but each section reads differently */}
+            <div className={`relative mt-4 w-40 ${text}`}>
+              <div className="ruler" />
+              <motion.span
+                className="absolute top-0 h-1.5 w-8 bg-[#6CE5E8] origin-left"
+                style={{ left: no * 32 }}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: isReady ? 1 : 0 }}
+                transition={t(0.4, 0.6)}
+              />
+            </div>
             <motion.div
-              className={`text-[3rem] short:text-[2.5rem] font-bold leading-[1.15] ${text}`}
-              initial={{ y: '105%' }}
-              animate={{ y: isReady ? '0%' : '105%' }}
-              transition={t(0.27, 0.7)}
-            >
-              {zh}
-            </motion.div>
-          </div>
-          {/* Ruler with a cyan block that sits at this section's slot (0–4 of 5): same bar, but each section reads differently */}
-          <div className={`relative mt-4 w-40 ${text}`}>
-            <div className="ruler" />
-            <motion.span
-              className="absolute top-0 h-1.5 w-8 bg-[#6CE5E8] origin-left"
-              style={{ left: no * 32 }}
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: isReady ? 1 : 0 }}
-              transition={t(0.4, 0.6)}
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-x-0 top-0 h-[130%] backdrop-blur-md ${isDark ? 'bg-[#0A0A0A]/40' : 'bg-white/40'} [mask-image:linear-gradient(to_bottom,#000_76%,transparent)]`}
+              initial={{ y: 0 }}
+              animate={{ y: isReady ? '100%' : 0 }}
+              transition={t(0.35, 0.9)}
             />
           </div>
 
