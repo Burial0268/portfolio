@@ -9,7 +9,6 @@ interface Project {
   tags: string[];
   link?: string;
   github?: string;
-  featured: boolean;
   order: number;
 }
 

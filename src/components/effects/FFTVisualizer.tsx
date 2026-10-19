@@ -18,6 +18,7 @@ export default function FFTVisualizer({ analyser, playing }: FFTVisualizerProps)
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
   const heightsRef = useRef<number[]>(new Array(BAR_COUNT).fill(MIN_HEIGHT));
+  const dataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -39,7 +40,7 @@ export default function FFTVisualizer({ analyser, playing }: FFTVisualizerProps)
     const heights = heightsRef.current;
 
     if (analyser && playing) {
-      const data = new Uint8Array(analyser.frequencyBinCount);
+      const data = (dataRef.current ??= new Uint8Array(analyser.frequencyBinCount));
       analyser.getByteFrequencyData(data);
 
       // Pick bins spread across the lower-mid range (most musical content)

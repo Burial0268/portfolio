@@ -89,7 +89,14 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
         <motion.div
           className="relative overflow-hidden bg-[#111] touch-pan-y aspect-(--ar) transition-[aspect-ratio] duration-500 lg:aspect-auto lg:h-[min(50vh,560px)] lg:short:h-[40vh]"
           style={{ '--ar': Math.min(Math.max(ratios[current.src] ?? 4 / 3, 0.8), 16 / 9) } as React.CSSProperties}
+          role="button"
+          tabIndex={0}
+          aria-label={`查看大图 · ${current.title}`}
           onTap={() => setOpen(true)}
+          onKeyDown={(e) => {
+            // Enter only: Space would open on keydown, then its keyup lands on the focused Close button and shuts it again
+            if (e.key === 'Enter') setOpen(true);
+          }}
           initial={{ clipPath: 'inset(0 0 100% 0)' }}
           animate={{ clipPath: isReady ? 'inset(0 0 0% 0)' : 'inset(0 0 100% 0)' }}
           transition={t(0.2)}
@@ -118,7 +125,12 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
                       }}
                       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                       style={{ pointerEvents: isActive ? 'auto' : 'none' }}
-                      onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        // one cache-busted retry for a transient CDN error, then give up
+                        if (img.dataset.retried) img.style.visibility = 'hidden';
+                        else { img.dataset.retried = '1'; img.src = `${img.src.split('?')[0]}?r=${Date.now()}`; }
+                      }}
                       draggable={false}
                     />
                   );
@@ -260,10 +272,25 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
   const dir = index >= prevIndex.current ? 1 : -1;
   useEffect(() => { prevIndex.current = index; settled.current = true; });
 
+  // Modal focus: start on Close, keep Tab inside, hand focus back to the photo frame on exit
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const prev = document.activeElement as HTMLElement | null;
+    dialogRef.current?.querySelector<HTMLElement>('[aria-label="Close"]')?.focus();
+    return () => prev?.focus();
+  }, []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       e.stopImmediatePropagation();
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Tab') {
+        const btns = dialogRef.current?.querySelectorAll<HTMLElement>('button');
+        const first = btns?.[0], last = btns?.[btns.length - 1];
+        if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+          e.preventDefault();
+          (e.shiftKey ? last : first)?.focus();
+        }
+      } else if (e.key === 'Escape') onClose();
       else if (e.key === 'ArrowLeft') onNavigate(index - 1);
       else if (e.key === 'ArrowRight') onNavigate(index + 1);
     };
@@ -291,6 +318,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
 
   return (
     <motion.div
+      ref={dialogRef}
       className="fixed inset-0 z-[9000] bg-[#0A0A0A]/95 flex flex-col"
       role="dialog"
       aria-modal="true"

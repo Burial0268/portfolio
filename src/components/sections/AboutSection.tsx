@@ -3,13 +3,13 @@ import { useCountUp } from '@/hooks/useCountUp';
 import SectionShell from '../SectionShell';
 
 function StatCounter({ value, label, suffix, isReady }: { value: number; label: string; suffix: string; isReady: boolean }) {
-  const { ref, value: count } = useCountUp(value, 1.2, isReady);
+  const count = useCountUp(value, 1.2, isReady);
 
   return (
     <div className="border-t border-[#0A0A0A] pt-3 pr-6">
       <div className="font-bebas text-[15px] tracking-[0.08em] text-black/45 leading-none">{label}</div>
       <div className="mt-4 text-display text-[clamp(3rem,5.2vw,5rem)] short:text-[clamp(2.75rem,4vw,3.75rem)] text-[#0A0A0A] tabular-nums">
-        <span ref={ref}>{count}</span>
+        <span>{count}</span>
         <span className="text-[#6CE5E8]">{suffix}</span>
       </div>
     </div>

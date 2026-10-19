@@ -16,7 +16,6 @@ interface Project {
   tags: string[];
   link?: string;
   github?: string;
-  featured: boolean;
   order: number;
 }
 
@@ -238,10 +237,15 @@ export default function App({ projects }: AppProps) {
         const el = document.getElementById('loader');
         if (el) {
           el.classList.add('loader-exit');
-          el.addEventListener('transitionend', () => {
+          let done = false;
+          const finish = () => {
+            if (done) return;
+            done = true;
             el.remove();
             setContentReady(true);
-          }, { once: true });
+          };
+          el.addEventListener('transitionend', finish, { once: true });
+          setTimeout(finish, 1500); // exit takes ~0.8s; if transitionend never fires the page must not stay blank
         } else {
           setContentReady(true);
         }
@@ -416,7 +420,7 @@ export default function App({ projects }: AppProps) {
     const THRESHOLD = 80;
 
     const handleWheel = (e: WheelEvent) => {
-      if (isMobileRef.current) return;
+      if (isMobileRef.current || e.ctrlKey) return; // ctrl+wheel / pinch is the browser's zoom, not a page turn
       e.preventDefault(); // Always prevent — we handle all scrolling manually
 
       if (lockedRef.current) return;

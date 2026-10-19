@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 /* Short laptop screens (1366×768, 1280×720): tighten the fullpage layout */
@@ -124,27 +123,11 @@
 }
 
 @layer utilities {
-  .accent-text {
-    color: #6CE5E8;
-  }
-  .section-light {
-    background-color: #FAFAFA;
-    color: #0A0A0A;
-  }
-  .section-dark {
-    background-color: #0A0A0A;
-    color: #F0F0F0;
-  }
   .text-display {
     font-family: 'Space Grotesk', "HarmonyOS_Regular", system-ui, sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 0.9;
-  }
-  .vertical-text {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    text-orientation: mixed;
   }
 }
 
@@ -178,51 +161,6 @@
   html:focus-within {
     scroll-behavior: smooth;
   }
-}
-
-/* Prevent text selection highlighting on UI elements */
-.no-select {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* Page transition */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-/* Delay utilities */
-.delay-100 {
-  animation-delay: 100ms;
-}
-
-.delay-200 {
-  animation-delay: 200ms;
-}
-
-.delay-300 {
-  animation-delay: 300ms;
-}
-
-.delay-500 {
-  animation-delay: 500ms;
-}
-
-.delay-1000 {
-  animation-delay: 1000ms;
 }
 
 /* Fullpage mode — desktop/tablet only; phones scroll natively (Endfield H5 style) */
@@ -284,11 +222,4 @@ body:has(#loader) {
 
 .animate-blink {
   animation: blink 0.8s infinite;
-}
-
-/* Hero scroll hint pulsing line */
-@keyframes hero-flow {
-  0%, 100% { transform: scaleY(0); transform-origin: top; }
-  50% { transform: scaleY(1); transform-origin: top; }
-  51% { transform: scaleY(1); transform-origin: bottom; }
 }

@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import SectionShell, { pad } from '../SectionShell';
 
+type Arm = 'left' | 'right' | 'top' | 'bottom';
+
 interface Skill {
   name: string;
   level: number;
   category: string;
+  arm: Arm | 'center'; // desktop pinwheel arm; list order within an arm = order here
 }
 
 interface SkillsSectionProps {
@@ -15,20 +18,20 @@ interface SkillsSectionProps {
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const skills: Skill[] = [
-  { name: 'React', level: 95, category: 'FRONTEND' },
-  { name: 'TypeScript', level: 90, category: 'FRONTEND' },
-  { name: 'Vue.js', level: 88, category: 'FRONTEND' },
-  { name: 'Astro', level: 85, category: 'FRONTEND' },
-  { name: 'Motion', level: 90, category: 'ANIMATION & 3D' },
-  { name: 'GSAP', level: 82, category: 'ANIMATION & 3D' },
-  { name: 'WebGL', level: 75, category: 'ANIMATION & 3D' },
-  { name: 'TailwindCSS', level: 92, category: 'STYLING' },
-  { name: 'CSS Animations', level: 88, category: 'STYLING' },
-  { name: 'Node.js', level: 80, category: 'TOOLS & BACKEND' },
-  { name: 'PHP', level: 85, category: 'TOOLS & BACKEND' },
-  { name: 'Tauri', level: 88, category: 'TOOLS & BACKEND' },
-  { name: 'Rust', level: 75, category: 'TOOLS & BACKEND' },
-  { name: 'Docker', level: 78, category: 'TOOLS & BACKEND' },
+  { name: 'React', level: 95, category: 'FRONTEND', arm: 'center' },
+  { name: 'TypeScript', level: 90, category: 'FRONTEND', arm: 'left' },
+  { name: 'Vue.js', level: 88, category: 'FRONTEND', arm: 'left' },
+  { name: 'Astro', level: 85, category: 'FRONTEND', arm: 'top' },
+  { name: 'Motion', level: 90, category: 'ANIMATION & 3D', arm: 'right' },
+  { name: 'GSAP', level: 82, category: 'ANIMATION & 3D', arm: 'top' },
+  { name: 'WebGL', level: 75, category: 'ANIMATION & 3D', arm: 'top' },
+  { name: 'TailwindCSS', level: 92, category: 'STYLING', arm: 'right' },
+  { name: 'CSS Animations', level: 88, category: 'STYLING', arm: 'right' },
+  { name: 'Node.js', level: 80, category: 'TOOLS & BACKEND', arm: 'right' },
+  { name: 'PHP', level: 85, category: 'TOOLS & BACKEND', arm: 'bottom' },
+  { name: 'Tauri', level: 88, category: 'TOOLS & BACKEND', arm: 'bottom' },
+  { name: 'Rust', level: 75, category: 'TOOLS & BACKEND', arm: 'bottom' },
+  { name: 'Docker', level: 78, category: 'TOOLS & BACKEND', arm: 'left' },
 ];
 
 const categories = [...new Set(skills.map((s) => s.category))];
@@ -47,11 +50,12 @@ const TONE: Record<string, { bg: string; fg: string }> = {
  * long names run horizontally to the left and right, short names vertically above and below.
  * Every arm is justified — each word is sized so its length equals the arm's length — so the arms read as solid blocks of type.
  */
+const armNames = (arm: Arm) => skills.filter((k) => k.arm === arm).map((k) => k.name);
 const ARMS = {
-  left: { w: 33, names: ['TypeScript', 'Vue.js', 'Docker'] },          // right edge on React, bottom on React's bottom, grows up
-  right: { w: 38, names: ['Motion', 'TailwindCSS', 'CSS Animations', 'Node.js'] }, // left edge on React, top on React's top, grows down
-  top: { w: 15, names: ['Astro', 'GSAP', 'WebGL'] },                  // bottom on React, left edge on React's left, grows right
-  bottom: { w: 15, names: ['PHP', 'Tauri', 'Rust'] },                 // top on React, right edge on React, grows left
+  left: { w: 33, names: armNames('left') },     // right edge on React, bottom on React's bottom, grows up
+  right: { w: 38, names: armNames('right') },   // left edge on React, top on React's top, grows down
+  top: { w: 15, names: armNames('top') },       // bottom on React, left edge on React's left, grows right
+  bottom: { w: 15, names: armNames('bottom') }, // top on React, right edge on React, grows left
 };
 const REACT_LEN = 25, GAP = 1.4, ARM_GAP = 2.8, LEAD = 0.8, FRAME_W = 100, FRAME_H = 54;
 
@@ -98,7 +102,7 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
   const [em, setEm] = useState<Em>({});
   useEffect(() => {
     let live = true;
-    document.fonts.load('100px "Bebas Neue"').then(() => {
+    const measure = () => {
       if (!live) return;
       const ctx = document.createElement('canvas').getContext('2d');
       if (!ctx) return;
@@ -107,8 +111,11 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
         const u = k.name.toUpperCase();
         return [k.name, ctx.measureText(u).width / 100 + u.length * 0.01]; // + the 0.01em tracking
       })));
-    }).catch(() => {});
-    return () => { live = false; };
+    };
+    // The font stylesheet loads late (media=print swap): load() can resolve before its @font-face exists, so measure again when fonts finish loading
+    document.fonts.load('100px "Bebas Neue"').then(measure).catch(() => {});
+    document.fonts.addEventListener('loadingdone', measure);
+    return () => { live = false; document.fonts.removeEventListener('loadingdone', measure); };
   }, []);
 
   // Hovering a word (or a legend label) lights its whole category and pulls the rest back
