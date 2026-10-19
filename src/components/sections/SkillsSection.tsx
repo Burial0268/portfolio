@@ -34,10 +34,10 @@ const skills: Skill[] = [
 
 const categories = [...new Set(skills.map((s) => s.category))];
 // Radial composition on a 100 × 54 frame (cqw, so it scales as one picture). React is the centre; every other skill
-// sits on an elliptical ring whose distance from the centre grows as its level drops (rings = 100 / 90 / 80), at its
+// sits on a rectangular ring whose distance from the centre grows as its level drops (rings = 100 / 90 / 80), at its
 // own angle (deg, 0 = right, 90 = down). Long names run horizontally, short names vertically, and both grow outward
 // from the ring point. s = type size.
-const CX = 50, CY = 27.5, XS = 1.45, YS = 0.62;
+const CX = 50, CY = 27.5, XS = 1.25, YS = 0.62;
 const ringR = (level: number) => 15 + (100 - level) * 0.5;
 const ring = { 100: ringR(100), 90: ringR(90), 80: ringR(80) };
 const placed: Record<string, { a: number; s: number }> = {
@@ -55,12 +55,15 @@ const placed: Record<string, { a: number; s: number }> = {
   PHP: { a: 75, s: 6 },
   Rust: { a: 128, s: 4.5 },
 };
-const REACT_S = 13;
+const REACT_S = 11;
 const isLong = (name: string) => name.length >= 6; // long → horizontal, short → vertical
 const anchor = (name: string, level: number) => {
   const { a } = placed[name];
   const r = ringR(level), th = (a * Math.PI) / 180;
-  return { x: CX + XS * r * Math.cos(th), y: CY + YS * r * Math.sin(th), cos: Math.cos(th), sin: Math.sin(th) };
+  const cos = Math.cos(th), sin = Math.sin(th);
+  // where the ray from the centre meets the ring's rectangle
+  const t = Math.min((XS * r) / Math.max(Math.abs(cos), 1e-6), (YS * r) / Math.max(Math.abs(sin), 1e-6));
+  return { x: CX + cos * t, y: CY + sin * t, cos, sin };
 };
 
 export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
@@ -83,12 +86,14 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       {/* Typographic composition: names set in Bebas at very different sizes, some turned 90°, spaced by eye rather than by grid.
           Size ≈ proficiency (the small number is the level). Phones fall back to a wrapped line of the same words. */}
       <div className="hidden md:block relative w-full aspect-[100/54] [container-type:inline-size]">
-        {/* Plane, line, point: a cyan disc under the centre word, dashed rings by level, hairline spokes to every word */}
+        {/* Plane, line, point — all straight: a cyan square under the centre word, rectangular rings by level, a crosshair, hairline spokes to every word */}
         <svg className="absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 100 54" aria-hidden="true">
-          <motion.circle cx={CX} cy={CY} r="9.5" fill="#6CE5E8" initial={{ scale: 0 }} animate={{ scale: isReady ? 1 : 0 }} style={{ transformOrigin: `${CX}px ${CY}px`, transformBox: 'view-box' }} transition={t(0.2, 0.9)} />
+          <motion.rect x={CX - 8} y={CY - 8} width="16" height="16" fill="#6CE5E8" initial={{ scale: 0 }} animate={{ scale: isReady ? 1 : 0 }} style={{ transformOrigin: `${CX}px ${CY}px`, transformBox: 'view-box' }} transition={t(0.2, 0.9)} />
+          <line x1="0" x2="100" y1={CY} y2={CY} stroke="#0A0A0A" strokeOpacity="0.2" strokeWidth="0.1" />
+          <line y1="0" y2="54" x1={CX} x2={CX} stroke="#0A0A0A" strokeOpacity="0.2" strokeWidth="0.1" />
           {Object.entries(ring).map(([lv, r]) => (
             <g key={lv}>
-              <ellipse cx={CX} cy={CY} rx={XS * r} ry={YS * r} fill="none" stroke="#0A0A0A" strokeOpacity="0.22" strokeWidth="1" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" />
+              <rect x={CX - XS * r} y={CY - YS * r} width={2 * XS * r} height={2 * YS * r} fill="none" stroke="#0A0A0A" strokeOpacity="0.3" strokeWidth="1" strokeDasharray="3 4" vectorEffect="non-scaling-stroke" />
               <text x={CX + XS * r + 0.8} y={CY - 0.8} fontSize="1.5" fill="#0A0A0A" fillOpacity="0.4" className="font-bebas">{lv}</text>
             </g>
           ))}
@@ -97,7 +102,7 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
             return (
               <g key={k.name}>
                 <motion.line x1={CX} y1={CY} x2={p.x} y2={p.y} stroke="#0A0A0A" strokeOpacity="0.35" strokeWidth="0.12" initial={{ pathLength: 0 }} animate={{ pathLength: isReady ? 1 : 0 }} transition={t(0.4, 0.9)} />
-                <circle cx={p.x} cy={p.y} r="0.55" fill="#0A0A0A" />
+                <rect x={p.x - 0.55} y={p.y - 0.55} width="1.1" height="1.1" fill="#0A0A0A" />
               </g>
             );
           })}
