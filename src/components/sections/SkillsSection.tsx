@@ -36,20 +36,21 @@ const categories = [...new Set(skills.map((s) => s.category))];
 // Hand-set composition on a 100 × 54 frame (all units cqw, so it scales as one picture).
 // s = type size, v = set vertically (reads bottom → top). Sizes follow level loosely; art direction wins.
 const layout: Record<string, { x: number; y: number; s: number; v?: boolean }> = {
-  React: { x: 0, y: 0, s: 15 },
-  'Vue.js': { x: 35, y: 1, s: 9 },
-  Astro: { x: 63, y: 0, s: 7, v: true },
-  TypeScript: { x: 91, y: 0, s: 11, v: true },
-  TailwindCSS: { x: 80, y: 0, s: 9, v: true },
-  Motion: { x: 0, y: 17, s: 13 },
-  GSAP: { x: 36, y: 18, s: 6 },
-  WebGL: { x: 36, y: 25, s: 3.6 },
-  'CSS Animations': { x: 52, y: 21, s: 5, v: false },
-  Tauri: { x: 0, y: 36, s: 12 },
-  PHP: { x: 28, y: 34, s: 9, v: true },
-  'Node.js': { x: 38, y: 41, s: 8.5 },
-  Docker: { x: 62, y: 35, s: 6 },
-  Rust: { x: 66, y: 46, s: 4.5 },
+  // focal word: everything else steps down from it in size, and hangs off one of three shared lines (x = 0 / 48 / verticals on the right)
+  React: { x: 0, y: 0, s: 22 },
+  Motion: { x: 0, y: 20, s: 11 },
+  Tauri: { x: 0, y: 31, s: 9 },
+  PHP: { x: 22, y: 31, s: 6, v: true },
+  Docker: { x: 0, y: 41, s: 6 },
+  Rust: { x: 17, y: 48, s: 4.5 },
+  'Vue.js': { x: 49, y: 0, s: 8 },
+  GSAP: { x: 49, y: 9, s: 6 },
+  WebGL: { x: 49, y: 15, s: 4 },
+  'CSS Animations': { x: 49, y: 20, s: 4 },
+  'Node.js': { x: 49, y: 38, s: 7 },
+  Astro: { x: 74, y: 4, s: 7, v: true },
+  TailwindCSS: { x: 82.5, y: 20, s: 8, v: true },
+  TypeScript: { x: 93, y: 0, s: 8, v: true },
 };
 
 export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
@@ -72,6 +73,15 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       {/* Typographic composition: names set in Bebas at very different sizes, some turned 90°, spaced by eye rather than by grid.
           Size ≈ proficiency (the small number is the level). Phones fall back to a wrapped line of the same words. */}
       <div className="hidden md:block relative w-full aspect-[100/54] [container-type:inline-size]">
+        {/* One spine between the focal word and the rest, with its origin marked in cyan */}
+        <motion.span
+          aria-hidden="true"
+          className="absolute left-[46.5cqw] top-0 h-full w-px bg-[#0A0A0A]/25 origin-top"
+          initial={{ scaleY: 0 }}
+          animate={{ scaleY: isReady ? 1 : 0 }}
+          transition={t(0.2, 1)}
+        />
+        <span aria-hidden="true" className="absolute left-[46.5cqw] top-0 h-[2.4cqw] w-[3px] -translate-x-px bg-[#6CE5E8]" />
         {skills.map((skill, i) => {
           const l = layout[skill.name];
           const on = hover === skill.category;
