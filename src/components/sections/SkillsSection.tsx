@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import SectionShell, { pad } from '../SectionShell';
 
@@ -33,15 +33,25 @@ const skills: Skill[] = [
 ];
 
 const categories = [...new Set(skills.map((s) => s.category))];
+const groups = categories.map((c) => skills.filter((s) => s.category === c));
+// Bars are drawn on a 60–100 scale so 75 and 95 read as clearly different
+const pctOf = (level: number) => ((level - 60) / 40) * 100;
 
 export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
-  const t = (delay: number, duration = 0.6) =>
+  const t = (delay: number, duration = 0.7) =>
     isReady ? { duration, delay, ease: EASE } : { duration: 0.3, delay: 0 };
 
-  // Legend ↔ cells: hovering (or tapping) a category lights its cells and dims the rest
-  const [hover, setHover] = useState<string | null>(null);
-  const [pin, setPin] = useState<string | null>(null);
-  const focus = hover ?? pin;
+  // Bars rise from the baseline on desktop and extend from the left on phones
+  const [wide, setWide] = useState(true);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    setWide(mq.matches);
+    const on = (e: MediaQueryListEvent) => setWide(e.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+
+  let n = 0;
 
   return (
     <SectionShell
@@ -53,58 +63,69 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       isReady={isReady}
       description="技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。"
     >
-      {/* Periodic table of skills: a strict hairline grid, one cell per skill — number, level, symbol, name, level bar (60–100 scale).
-          The legend is the filter. */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: isReady ? 1 : 0 }} transition={t(0.3, 0.5)} className="flex flex-wrap gap-x-6 gap-y-2 font-bebas text-[15px] leading-none tracking-[0.06em]">
-        {categories.map((c, ci) => (
-          <button
-            key={c}
-            onMouseEnter={() => setHover(c)}
-            onMouseLeave={() => setHover(null)}
-            onClick={() => setPin((p) => (p === c ? null : c))}
-            aria-pressed={pin === c}
-            className={`flex items-baseline gap-2 pb-1 border-b-2 transition-colors duration-300 ${focus === c ? 'border-[#6CE5E8] text-[#0A0A0A]' : 'border-transparent text-black/45 hover:text-[#0A0A0A]'}`}
-          >
-            <span className="tabular-nums text-black/40">{pad(ci + 1)}</span>
-            {c}
-            <span className="text-black/40 tabular-nums">{pad(skills.filter((s) => s.category === c).length)}</span>
-          </button>
-        ))}
-      </motion.div>
-
-      <div className="mt-4 grid grid-cols-3 md:grid-cols-5 xl:grid-cols-7 gap-px bg-black/20 border border-black/20 [--cell:13rem] short:[--cell:10rem]">
-        {skills.map((skill, i) => {
-          const dim = focus && focus !== skill.category;
-          return (
-            <motion.div
-              key={skill.name}
-              className={`group/c relative flex flex-col justify-between h-(--cell) p-3 bg-white hover:bg-[#0A0A0A] transition-colors duration-300 `}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: isReady ? 1 : 0, y: isReady ? 0 : 8 }}
-              transition={t(0.35 + (i % 7) * 0.05 + Math.floor(i / 7) * 0.04, 0.5)}
-            >
-              {/* dimming lives on an inner layer so it isn't delayed by the entrance transition */}
-              <div className={`flex h-full flex-col justify-between p-3 transition-opacity duration-300 ${dim ? 'opacity-30' : ''}`}>
-                <div className="flex justify-between font-bebas text-[13px] leading-none tabular-nums text-black/40 group-hover/c:text-white/50 transition-colors duration-300">
-                  <span>{pad(i + 1)}</span>
-                  <span>{skill.level}</span>
-                </div>
-                <div>
-                  <div className="font-bebas text-[4.5rem] short:text-[3.5rem] leading-[0.85] text-[#0A0A0A] group-hover/c:text-[#6CE5E8] transition-colors duration-300">{skill.sym}</div>
-                  <div className="mt-2 text-[12px] md:text-[13px] font-bold leading-tight text-[#0A0A0A] group-hover/c:text-white transition-colors duration-300">{skill.name}</div>
-                </div>
+      {/* Skyline: every skill is a solid ink block whose height is its level, name set up the side of the bar.
+          Heavy black mass against white; hover turns one bar cyan and pulls the rest back. Phones turn it 90° (bars grow rightwards). */}
+      <div className="md:[--H:min(52vh,480px)] short:md:[--H:min(42vh,330px)]">
+        <div className="relative md:h-(--H)">
+          {/* Reference lines — only visible above the shorter bars */}
+          <div className="hidden md:block absolute inset-0 pointer-events-none" aria-hidden="true">
+            {[70, 80, 90, 100].map((v) => (
+              <div key={v} className="absolute inset-x-0 border-t border-dashed border-black/20" style={{ bottom: `${pctOf(v)}%` }}>
+                <span className="absolute right-0 -top-4 font-bebas text-[13px] leading-none text-black/40 tabular-nums">{v}</span>
               </div>
-              <motion.span
-                className="absolute left-0 bottom-0 h-[3px] w-full bg-[#0A0A0A] group-hover/c:bg-[#6CE5E8] origin-left transition-colors duration-300"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: isReady ? (skill.level - 60) / 40 : 0 }}
-                transition={t(0.6 + (i % 7) * 0.05, 0.8)}
-              />
-            </motion.div>
-          );
-        })}
-        {/* 14 skills: one blank cell squares off the 3- and 5-column grids */}
-        <div className="bg-white xl:hidden" aria-hidden="true" />
+            ))}
+          </div>
+
+          <div className="relative md:h-full flex flex-col gap-8 md:flex-row md:items-end md:gap-4 [&:has(.bar:hover)_.bar:not(:hover)]:opacity-40">
+            {groups.map((group, gi) => (
+              <div key={categories[gi]} className="flex flex-col gap-2 md:contents">
+                <div className="md:hidden font-bebas text-[15px] leading-none tracking-[0.06em] text-black/50 border-t border-[#0A0A0A] pt-2">
+                  <span className="text-black/40 mr-2 tabular-nums">{pad(gi + 1)}</span>
+                  {categories[gi]}
+                </div>
+                <ul className="flex flex-col gap-1 md:h-full md:basis-0 md:min-w-0 md:flex-row md:items-end" style={{ flexGrow: group.length }}>
+                  {group.map((skill) => {
+                    const i = n++;
+                    const p = pctOf(skill.level);
+                    return (
+                      <li
+                        key={skill.name}
+                        className="bar group/b relative h-10 md:h-(--p) md:flex-1 md:min-w-0 transition-opacity duration-300"
+                        style={{ '--p': `${p}%`, width: wide ? undefined : `${Math.max(p, 40)}%` } as React.CSSProperties}
+                      >
+                        <motion.span
+                          className="absolute inset-0 bg-[#0A0A0A] group-hover/b:bg-[#6CE5E8] transition-colors duration-300 origin-left md:origin-bottom"
+                          initial={{ scaleX: wide ? 1 : 0, scaleY: wide ? 0 : 1 }}
+                          animate={{ scaleX: wide || isReady ? 1 : 0, scaleY: !wide || isReady ? 1 : 0 }}
+                          transition={t(0.3 + i * 0.045)}
+                        />
+                        <motion.div
+                          className="relative z-10 flex h-full items-center justify-between px-3 md:flex-col md:items-center md:px-0 md:py-3 text-white group-hover/b:text-[#0A0A0A] transition-colors duration-300"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: isReady ? 1 : 0 }}
+                          transition={t(0.6 + i * 0.045, 0.5)}
+                        >
+                          <span className="font-bebas text-[22px] leading-none tabular-nums text-[#6CE5E8] group-hover/b:text-[#0A0A0A] transition-colors duration-300 md:order-first">{skill.level}</span>
+                          <span className="font-bold text-[15px] md:text-[18px] leading-none whitespace-nowrap md:[writing-mode:vertical-rl] md:rotate-180">{skill.name}</span>
+                        </motion.div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Category labels under the baseline, each spanning its own bars */}
+        <div className="hidden md:flex gap-4 border-t border-[#0A0A0A] mt-0">
+          {groups.map((group, gi) => (
+            <div key={categories[gi]} className="min-w-0 pt-2 font-bebas text-[15px] leading-none tracking-[0.06em] text-black/50 whitespace-nowrap overflow-hidden" style={{ flexGrow: group.length, flexBasis: 0 }}>
+              <span className="text-black/40 mr-2 tabular-nums">{pad(gi + 1)}</span>
+              {categories[gi]}
+            </div>
+          ))}
+        </div>
       </div>
     </SectionShell>
   );
