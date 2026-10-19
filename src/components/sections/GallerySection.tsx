@@ -76,6 +76,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
 
   return (
     <SectionShell
+      no={4}
       label="PHOTOGRAPHY"
       en="Gallery"
       zh="影集"

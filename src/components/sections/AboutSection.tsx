@@ -42,6 +42,7 @@ export default function AboutSection({ isReady = false }: AboutSectionProps) {
 
   return (
     <SectionShell
+      no={1}
       label="PROFILE"
       en="About Me"
       zh="关于我"

@@ -51,6 +51,7 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
 
   return (
     <SectionShell
+      no={3}
       label="TOOLKIT"
       en="Skills"
       zh="技能专长"

@@ -52,6 +52,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
 
   return (
     <SectionShell
+      no={2}
       label="SELECTED WORKS"
       en="Projects"
       zh="精选项目"

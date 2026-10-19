@@ -6,6 +6,7 @@ interface SectionShellProps {
   zh: string;             // CJK title, e.g. 关于我
   description?: React.ReactNode;
   url?: string;
+  no: number;             // section slot 1–4 (rail number); places the cyan block on the title ruler
   isDark: boolean;
   isReady: boolean;
   aside?: React.ReactNode; // extra block at the foot of the left column (e.g. footer)
@@ -17,7 +18,7 @@ export const pad = (n: number) => String(n).padStart(2, '0');
 
 /*
  * Arknights #media layout on a 12-column grid: a 3-column left column read top-down
- * (label → titles → cyan bar → description → url) and 9 columns of
+ * (label → titles → ruler → description → url) and 9 columns of
  * content, both starting on the same line. Edges come from the layout variables
  * (--mx / --pr / --nav-h / --band); the giant typewriter watermark sits behind, in App.
  */
@@ -27,6 +28,7 @@ export default function SectionShell({
   zh,
   description,
   url = 'HTTPS://GITHUB.COM/BURIAL0268',
+  no,
   isDark,
   isReady,
   aside,
@@ -75,17 +77,16 @@ export default function SectionShell({
               {zh}
             </motion.div>
           </div>
-          {/* Three-segment rule (Endfield's split colour line): accent / ink / faint */}
-          <div className="mt-4 flex gap-1 w-40">
-            {[['w-[5.5rem] bg-[#6CE5E8]', 0.4], [`w-10 ${isDark ? 'bg-white' : 'bg-black'}`, 0.5], [`flex-1 ${isDark ? 'bg-white/25' : 'bg-black/25'}`, 0.6]].map(([cls, d]) => (
-              <motion.span
-                key={cls as string}
-                className={`h-1.5 origin-left ${cls}`}
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: isReady ? 1 : 0 }}
-                transition={t(d as number, 0.6)}
-              />
-            ))}
+          {/* Ruler with a cyan block that sits at this section's slot (0–4 of 5): same bar, but each section reads differently */}
+          <div className={`relative mt-4 w-40 ${text}`}>
+            <div className="ruler" />
+            <motion.span
+              className="absolute top-0 h-1.5 w-8 bg-[#6CE5E8] origin-left"
+              style={{ left: no * 32 }}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: isReady ? 1 : 0 }}
+              transition={t(0.4, 0.6)}
+            />
           </div>
 
           {description && (
@@ -96,7 +97,6 @@ export default function SectionShell({
 
           <motion.div className="mt-8 short:mt-6 hidden lg:block" initial={{ opacity: 0 }} animate={fade} transition={t(0.6, 0.5)}>
             <div className={`font-mono text-[10px] tracking-[0.15em] ${text}`}>{url}</div>
-            <div className={`ruler mt-2 w-24 ${text}`} />
             {aside}
           </motion.div>
         </aside>
