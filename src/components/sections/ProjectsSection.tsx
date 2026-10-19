@@ -33,6 +33,17 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
     if (isReady) setFeaturedIndex(0);
   }, [isReady]);
 
+  // ←/→ browse projects on desktop (the arrows only show below lg)
+  useEffect(() => {
+    if (!isReady) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') handlePrev();
+      else if (e.key === 'ArrowRight') handleNext();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isReady, projects.length]);
+
   const featured = projects[featuredIndex];
   const featuredHref = featured?.link || featured?.github;
 
@@ -46,8 +57,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
       zh="精选项目"
       isDark={true}
       isReady={isReady}
-      // The sub-index is the project picker (AK's boxed list) — useful on phones too
-      subIndexOnMobile
+      // The sub-index is the project picker (AK's boxed list); below lg the arrows next to the CTA take over
       subIndex={projects.map((project, i) => ({
         key: project.slug,
         label: `${pad(i + 1)}  ${project.title}`,
@@ -59,7 +69,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
       <motion.div initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.3)}>
         {/* Case meta row */}
         <div className="flex items-center justify-between gap-6 border-t border-white/80 pt-3 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/45">
-          <span className="text-white shrink-0">CASE {pad(featuredIndex + 1)} <span className="text-white/40">/ {pad(projects.length)}</span></span>
+          <span className="text-white shrink-0">CASE <span className="text-white/40">/ {pad(projects.length)}</span></span>
           <span className="truncate">{featured?.tags.join(' / ')}</span>
         </div>
 
@@ -123,18 +133,18 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                       <span className="transition-transform duration-300 group-hover:translate-x-1">›</span>
                     </a>
                   )}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ml-auto lg:hidden">
                     <button
                       onClick={handlePrev}
                       aria-label="Previous project"
-                      className="w-11 h-11 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
+                      className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
                     >
                       ‹
                     </button>
                     <button
                       onClick={handleNext}
                       aria-label="Next project"
-                      className="w-11 h-11 border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
+                      className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
                     >
                       ›
                     </button>

@@ -173,7 +173,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               </AnimatePresence>
             </div>
           </div>
-          <div className="flex items-center gap-2 pb-1">
+          <div className="flex items-center gap-2 pb-1 lg:hidden">
             <button
               onClick={handlePrev}
               disabled={index === 0}
