@@ -110,10 +110,12 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                 </motion.div>
               </div>
 
-              <div className="md:col-span-6 min-w-0">
+              <div className="md:col-span-6 min-w-0 [--fs:clamp(1.75rem,3vw,3rem)]">
+                {/* Reserve room for a 2-line title + longest description so the CTA row and arrows never move between projects */}
+                <div className="min-h-[calc(var(--fs)*2.3+1rem+6.2rem)] md:min-h-[calc(var(--fs)*2.3+1rem+4.6rem)]">
                 <div className="overflow-hidden">
                   <motion.h3
-                    className="text-[clamp(1.75rem,3vw,3rem)] font-bold leading-[1.15] text-[#F0F0F0]"
+                    className="text-(length:--fs) font-bold leading-[1.15] text-[#F0F0F0] line-clamp-2"
                     variants={{ hidden: { y: '110%' }, shown: { y: '0%' } }}
                     transition={swap}
                   >
@@ -122,12 +124,13 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                 </div>
 
                 <motion.p
-                  className="mt-4 text-[15px] text-white/55 leading-relaxed max-w-[32em]"
+                  className="mt-4 text-[15px] text-white/55 leading-relaxed max-w-[32em] line-clamp-4 md:line-clamp-3"
                   variants={{ hidden: { opacity: 0 }, shown: { opacity: 1 } }}
                   transition={swap}
                 >
                   {featured.description}
                 </motion.p>
+                </div>
 
                 <motion.div
                   className="flex flex-wrap items-center gap-x-6 gap-y-4 mt-8 short:mt-6"
