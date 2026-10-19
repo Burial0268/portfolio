@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 
 export default function Cursor() {
@@ -49,7 +50,8 @@ export default function Cursor() {
   // Don't render on touch devices
   if (!hasFinePointer) return null;
 
-  return (
+  // Portal to body: App's fixed wrapper is its own stacking context, which would put the cursor under body-level overlays (lightbox)
+  return createPortal(
     <motion.div
       className="fixed left-0 top-0 w-4 h-4 border border-[#6CE5E8] pointer-events-none z-[9999] mix-blend-difference"
       style={{ x: springX, y: springY, translateX: '-50%', translateY: '-50%' }}
@@ -61,6 +63,7 @@ export default function Cursor() {
         backgroundColor: hovering ? 'rgba(108,229,232,0.2)' : 'rgba(108,229,232,0)',
       }}
       transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-    />
+    />,
+    document.body,
   );
 }

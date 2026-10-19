@@ -2,7 +2,6 @@
 title: GMPlayer 音乐播放器
 description: 基于 imsyy/SPlayer 修改而来的播放器，具有优雅的界面和良好的移动端适配
 tags: ['Vue', 'Player', 'TypeScript', 'NaiveUI']
-featured: true
 github: https://github.com/Burial0268/GMPlayer
 order: 1
 ---

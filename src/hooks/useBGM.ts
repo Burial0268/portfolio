@@ -27,9 +27,13 @@ export function useBGM() {
 
   useEffect(() => {
     const audio = new Audio('/bgm.mp3');
+    audio.preload = 'none'; // 7.5MB: fetch on first play, not at page load
     audio.loop = true;
     audio.volume = 0.3;
     audioRef.current = audio;
+    // The OS can pause/resume on its own (call, media key): keep the button and visualizer in step
+    audio.addEventListener('play', () => setPlaying(true));
+    audio.addEventListener('pause', () => setPlaying(false));
 
     const startOnInteraction = (e: Event) => {
       if (hasInteracted.current) return;

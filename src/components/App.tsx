@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, MotionConfig, useMotionValue, useSpring } from 'motion/react';
+import { motion, AnimatePresence, MotionConfig, useMotionValue, useSpring, type MotionValue } from 'motion/react';
 import Navigation from './Navigation';
 import { useBGM } from '@/hooks/useBGM';
 import HeroSection from './sections/HeroSection';
@@ -16,7 +16,6 @@ interface Project {
   tags: string[];
   link?: string;
   github?: string;
-  featured: boolean;
   order: number;
 }
 
@@ -93,36 +92,46 @@ function SectionDots({ current, total, isDark }: { current: number; total: numbe
 }
 
 /* ── Right rail — Arknights-style section index ─────────────────── */
-function RightRail({ index, isDark }: { index: number; isDark: boolean }) {
-  const ease = [0.22, 1, 0.36, 1] as const;
+// Masked vertical roll; direction follows travel (forward rolls up, back rolls down). Module-level: an inline component would remount every render.
+const rollVariants = {
+  initial: (d: number) => ({ y: d > 0 ? '100%' : '-100%' }),
+  animate: { y: '0%' },
+  exit: (d: number) => ({ y: d > 0 ? '-100%' : '100%' }),
+};
+function Roll({ k, dir, children, delay = 0, className = '', box = '' }: { k: number; dir: number; children: React.ReactNode; delay?: number; className?: string; box?: string }) {
+  return (
+    <div className={`relative overflow-hidden ${box}`}>
+      <AnimatePresence mode="popLayout" initial={false} custom={dir}>
+        <motion.div key={k} custom={dir} variants={rollVariants} initial="initial" animate="animate" exit="exit" className={className} transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}>
+          {children}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+function RightRail({ index, isDark, progress }: { index: number; isDark: boolean; progress: MotionValue<number> }) {
+  // Rolls follow the direction of travel: forward rolls up, going back rolls down
+  const prevRef = useRef(index);
+  const dirRef = useRef(1);
+  if (index !== prevRef.current) {
+    dirRef.current = index > prevRef.current ? 1 : -1;
+    prevRef.current = index;
+  }
+  const dir = dirRef.current;
   return (
     <div
       className={`fixed top-(--nav-h) bottom-0 right-0 w-(--rail) z-30 hidden lg:block border-l pointer-events-none transition-colors duration-500 ${
         isDark ? 'border-white/10' : 'border-black/10'
       }`}
     >
+      {/* How far the active section has scrolled inside itself (empty when it fits on one screen) */}
+      <motion.span className="absolute -left-px top-0 bottom-0 w-px bg-[#6CE5E8] origin-top" style={{ scaleY: progress }} />
       <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-6">
         {/* Number rolls like a counter; its lower part is cropped (AK) */}
-        <div className="h-[4.2rem] overflow-hidden">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div
-              key={index}
-              className="font-bebas text-[6.5rem] leading-[0.8] text-[#6CE5E8]"
-              initial={{ y: '100%' }}
-              animate={{ y: '0%' }}
-              exit={{ y: '-100%' }}
-              transition={{ duration: 0.6, ease }}
-            >
-              {pad2(index)}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-        <div className={`font-mono text-[10px] tracking-[0.1em] mt-1 transition-colors duration-500 ${isDark ? 'text-white/40' : 'text-black/40'}`}>
-          // {pad2(index)} / {pad2(SECTIONS.length - 1)}
-        </div>
-        <div className={`font-bebas text-[18px] tracking-[0.14em] transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
+        <Roll k={index} dir={dir} box="h-[4.2rem]" className="font-bebas text-[6.5rem] leading-[0.8] text-[#6CE5E8]">{pad2(index)}</Roll>
+        <Roll k={index} dir={dir} delay={0.06} box="mt-2" className={`font-bebas text-[18px] tracking-[0.14em] transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
           {SECTIONS[index].name}
-        </div>
+        </Roll>
         <div className="mt-10">
           <SectionDots current={index} total={SECTIONS.length} isDark={isDark} />
         </div>
@@ -131,11 +140,11 @@ function RightRail({ index, isDark }: { index: number; isDark: boolean }) {
   );
 }
 
-/* ── Progress Bar ────────────────────────────────────────────────── */
+/* ── Top progress bar ───────────────────────────────────────────── */
 function SectionProgress({ current, total }: { current: number; total: number }) {
   const progress = ((current + 1) / total) * 100;
   return (
-    <div className="fixed top-0 left-0 right-0 z-55 h-0.5 bg-transparent">
+    <div className="fixed top-0 left-0 right-0 z-55 h-0.5 bg-transparent lg:hidden"> {/* lg+ has the right rail */}
       <motion.div
         className="h-full bg-[#6CE5E8]"
         animate={{ width: `${progress}%` }}
@@ -166,6 +175,17 @@ export default function App({ projects }: AppProps) {
   // Watermark drifts sideways as the active section scrolls (Endfield-style scroll-linked type)
   const drift = useMotionValue(0);
   const driftSmooth = useSpring(drift, { stiffness: 120, damping: 24 });
+  // How far the active section has scrolled inside itself → rail line
+  const scrollProgress = useMotionValue(0);
+  const scrollProgressSmooth = useSpring(scrollProgress, { stiffness: 200, damping: 30 });
+  // Rubber-band pull on the active layer while the wheel pushes against a section edge
+  const pull = useMotionValue(0);
+  const pullSmooth = useSpring(pull, { stiffness: 260, damping: 28 });
+  const pullTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Eased in-section wheel scrolling (target + rAF), instead of jumping scrollTop by the raw delta
+  const scrollTarget = useRef<number | null>(null);
+  const scrollRaf = useRef(0);
+  const wheelGestureInside = useRef(false); // this wheel gesture already scrolled the section's own content
 
   // Phones scroll natively like Endfield's H5 site; fullpage transitions are desktop/tablet only
   const [isMobile, setIsMobile] = useState(false);
@@ -217,10 +237,15 @@ export default function App({ projects }: AppProps) {
         const el = document.getElementById('loader');
         if (el) {
           el.classList.add('loader-exit');
-          el.addEventListener('transitionend', () => {
+          let done = false;
+          const finish = () => {
+            if (done) return;
+            done = true;
             el.remove();
             setContentReady(true);
-          }, { once: true });
+          };
+          el.addEventListener('transitionend', finish, { once: true });
+          setTimeout(finish, 1500); // exit takes ~0.8s; if transitionend never fires the page must not stay blank
         } else {
           setContentReady(true);
         }
@@ -241,6 +266,8 @@ export default function App({ projects }: AppProps) {
     const toWatermark = SECTIONS[targetIndex].watermark;
 
     lockedRef.current = true;
+    cancelAnimationFrame(scrollRaf.current); scrollRaf.current = 0; scrollTarget.current = null;
+    pull.set(0);
     typeToken.current++; // cancel a phone-side retype that may still be running
     setTransitioning(true);
     wheelAccum.current = 0;
@@ -307,17 +334,22 @@ export default function App({ projects }: AppProps) {
     // Post-transition cooldown — absorbs trackpad momentum
     wheelAccum.current = 0;
     setTimeout(() => { lockedRef.current = false; }, 600);
-  }, [drift, showWatermark]); // stable — uses refs and a motion value, not state
+  }, [drift, pull, showWatermark]); // stable — uses refs and a motion value, not state
 
   /* ── Scroll-linked watermark drift (desktop: active section's own scroll) ── */
   useEffect(() => {
     if (isMobile) return;
     const el = sectionRefs.current[activeIndex];
     if (!el) return;
-    const onScroll = () => drift.set(-el.scrollTop * 0.5);
+    const onScroll = () => {
+      drift.set(-el.scrollTop * 0.5);
+      const max = el.scrollHeight - el.clientHeight;
+      scrollProgress.set(max > 2 ? el.scrollTop / max : 0);
+    };
+    onScroll();
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
-  }, [activeIndex, isMobile, drift]);
+  }, [activeIndex, isMobile, drift, scrollProgress]);
 
   /* ── Mobile: native scroll drives the active section ─────────── */
   const typeToken = useRef(0);
@@ -388,7 +420,7 @@ export default function App({ projects }: AppProps) {
     const THRESHOLD = 80;
 
     const handleWheel = (e: WheelEvent) => {
-      if (isMobileRef.current) return;
+      if (isMobileRef.current || e.ctrlKey) return; // ctrl+wheel / pinch is the browser's zoom, not a page turn
       e.preventDefault(); // Always prevent — we handle all scrolling manually
 
       if (lockedRef.current) return;
@@ -401,34 +433,61 @@ export default function App({ projects }: AppProps) {
       const now = Date.now();
       if (now - lastWheelTime.current > 200) {
         wheelAccum.current = 0;
+        wheelGestureInside.current = false; // a pause starts a new gesture
       }
       lastWheelTime.current = now;
 
       const idx = activeIndexRef.current;
       const wrapper = sectionRefs.current[idx];
 
-      // Handle internal section scroll
+      // Handle internal section scroll (eased toward a target, clamped to the section)
       if (wrapper && delta !== 0 && hasRoom(wrapper, Math.sign(delta))) {
-        wrapper.scrollTop += delta;
+        wheelGestureInside.current = true;
         wheelAccum.current = 0;
+        pull.set(0);
+        const max = wrapper.scrollHeight - wrapper.clientHeight;
+        scrollTarget.current = Math.min(max, Math.max(0, (scrollTarget.current ?? wrapper.scrollTop) + delta));
+        if (!scrollRaf.current) {
+          const step = () => {
+            const d = (scrollTarget.current ?? wrapper.scrollTop) - wrapper.scrollTop;
+            if (Math.abs(d) < 1) {
+              if (scrollTarget.current !== null) wrapper.scrollTop = scrollTarget.current;
+              scrollTarget.current = null;
+              scrollRaf.current = 0;
+              return;
+            }
+            // at least 1px a frame, or integer scrollTop would round small steps to nothing
+            wrapper.scrollTop += Math.abs(d * 0.2) < 1 ? Math.sign(d) : d * 0.2;
+            scrollRaf.current = requestAnimationFrame(step);
+          };
+          scrollRaf.current = requestAnimationFrame(step);
+        }
         return;
       }
 
-      // At boundary or no internal scroll — accumulate for page transition
+      // Momentum from a gesture that was scrolling the section must not carry on into the next page
+      if (wheelGestureInside.current) return;
+
+      // At boundary or no internal scroll — accumulate for page transition, and pull the layer against it
       wheelAccum.current += delta;
+      pull.set(Math.max(-24, Math.min(24, -wheelAccum.current * 0.3)));
+      clearTimeout(pullTimer.current);
+      pullTimer.current = setTimeout(() => { wheelAccum.current = 0; pull.set(0); }, 220);
 
       if (wheelAccum.current > THRESHOLD) {
         wheelAccum.current = 0;
+        pull.set(0);
         navigateToSection(idx + 1);
       } else if (wheelAccum.current < -THRESHOLD) {
         wheelAccum.current = 0;
+        pull.set(0);
         navigateToSection(idx - 1);
       }
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
-  }, [navigateToSection]);
+  }, [navigateToSection, pull]);
 
   /* ── Keyboard handler ────────────────────────────────────────── */
   useEffect(() => {
@@ -579,7 +638,7 @@ export default function App({ projects }: AppProps) {
           </div>
         )}
 
-        <RightRail index={frameIndex} isDark={bgIsDark} />
+        <RightRail index={frameIndex} isDark={bgIsDark} progress={scrollProgressSmooth} />
 
         <Navigation currentSection={SECTIONS[activeIndex].id} isDark={bgIsDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} />
         <SectionProgress current={activeIndex} total={SECTIONS.length} />
@@ -600,7 +659,7 @@ export default function App({ projects }: AppProps) {
                 opacity: isMobile || (isActive && sectionVisible) ? 1 : 0,
               }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              style={isMobile ? { backgroundColor: section.bg } : { visibility: isActive ? 'visible' : 'hidden' }}
+              style={isMobile ? { backgroundColor: section.bg } : { visibility: isActive ? 'visible' : 'hidden', y: isActive ? pullSmooth : 0 }}
             >
               {i === 0 && <HeroSection isReady={ready} />}
               {i === 1 && <AboutSection isReady={ready} />}

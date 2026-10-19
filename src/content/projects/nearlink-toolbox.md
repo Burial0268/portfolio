@@ -2,7 +2,6 @@
 title: 星闪工具箱
 description: 专业的星闪 (Nearlink) 串口通信、固件管理、设备调试解决方案。基于 Rust 和 Tauri 构建，提供高性能的跨平台体验。华为鸿蒙星闪技术解决方案。华为开发者盛典获奖项目。
 tags: ['Rust', 'Tauri', 'Nearlink', 'Development']
-featured: true
 link: https://nearlink.haohanyh.com/
 order: 3
 ---
