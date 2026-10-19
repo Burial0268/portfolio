@@ -53,29 +53,30 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       isReady={isReady}
       description="技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。"
     >
-      {/* One category per column */}
-      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-12">
+      {/* Type specimen: one row per category. Words start on the same column as Works' titles;
+          size = proficiency (--lv 0…1 over levels 75…95), sorted high to low */}
+      <div className="border-b border-black/15">
         {categories.map((category, ci) => (
-          <motion.div key={category} initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.3 + ci * 0.08)}>
-            <div className="flex items-baseline justify-between border-t border-[#0A0A0A] pt-3 mb-2">
-              <span className="font-bebas text-[20px] leading-none tracking-[0.05em] text-[#0A0A0A]">{category}</span>
-              <span className="font-bebas text-[15px] leading-none text-black/40">({pad(grouped[category].length)})</span>
+          <motion.div
+            key={category}
+            className="grid md:grid-cols-9 gap-x-12 gap-y-4 border-t border-[#0A0A0A] pt-3 pb-12 short:pb-7"
+            initial={{ y: 15, opacity: 0 }}
+            animate={showY}
+            transition={t(0.3 + ci * 0.08)}
+          >
+            <div className="md:col-span-3 flex items-baseline gap-3 leading-none">
+              <span className="font-bebas text-[15px] text-black/40 tabular-nums">{pad(ci + 1)}</span>
+              <span className="font-bebas text-[20px] tracking-[0.05em] text-[#0A0A0A]">{category}</span>
             </div>
-            <ul>
-              {grouped[category].map((skill, si) => (
-                <li key={skill.name} className="relative py-3 short:py-2 border-b border-black/10">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-[clamp(1rem,1.3vw,1.25rem)] font-bold text-[#0A0A0A]">{skill.name}</span>
-                    <span className="font-bebas text-[15px] text-black/40 tabular-nums">{skill.level}</span>
-                  </div>
-                  {/* Proficiency hairline grows in once the section is ready */}
-                  <motion.span
-                    className="absolute left-0 -bottom-px h-px bg-[#6CE5E8] origin-left"
-                    style={{ width: `${skill.level}%` }}
-                    initial={{ scaleX: 0 }}
-                    animate={{ scaleX: isReady ? 1 : 0 }}
-                    transition={t(0.5 + ci * 0.08 + si * 0.05, 1)}
-                  />
+            <ul className="md:col-span-6 flex flex-wrap items-baseline gap-x-8 gap-y-4">
+              {[...grouped[category]].sort((x, y) => y.level - x.level).map((skill) => (
+                <li
+                  key={skill.name}
+                  className="font-bold leading-none text-[#0A0A0A] text-[calc(1.35rem_+_var(--lv)_*_0.9rem)] md:text-[calc(1.7rem_+_var(--lv)_*_1.5rem)] short:md:text-[calc(1.5rem_+_var(--lv)_*_1.2rem)] hover:underline decoration-[#6CE5E8] decoration-2 underline-offset-[0.25em]"
+                  style={{ '--lv': Math.min(1, Math.max(0, (skill.level - 75) / 20)) } as React.CSSProperties}
+                >
+                  {skill.name}
+                  <sup className="ml-1 align-top font-bebas text-[13px] font-normal text-black/40 tabular-nums no-underline">{skill.level}</sup>
                 </li>
               ))}
             </ul>
