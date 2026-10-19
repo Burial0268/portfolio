@@ -29,6 +29,49 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
     }
   }, [isReady]);
 
+  // Pointer lens + HUD readout: written straight to the DOM (CSS vars / textContent) so moving the mouse never re-renders React
+  const sectionRef = useRef<HTMLElement>(null);
+  const clockRef = useRef<HTMLSpanElement>(null);
+  const coordRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const clock = () => {
+      if (clockRef.current) clockRef.current.textContent = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Shanghai', hour12: false });
+    };
+    clock();
+    const timer = setInterval(clock, 1000);
+
+    if (!matchMedia('(pointer: fine)').matches) return () => clearInterval(timer);
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let tx = 0, ty = 0, x = 0, y = 0, raf = 0, first = true;
+    const tick = () => {
+      x += (tx - x) * (calm ? 1 : 0.14);
+      y += (ty - y) * (calm ? 1 : 0.14);
+      el.style.setProperty('--px', `${x}px`);
+      el.style.setProperty('--py', `${y}px`);
+      raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.5 ? requestAnimationFrame(tick) : 0;
+    };
+    const move = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      tx = e.clientX - r.left;
+      ty = e.clientY - r.top;
+      if (first) { x = tx; y = ty; first = false; }
+      el.style.setProperty('--lens', '1');
+      if (coordRef.current) coordRef.current.textContent = `X ${String(Math.round(e.clientX)).padStart(4, '0')}  Y ${String(Math.round(e.clientY)).padStart(4, '0')}`;
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    const leave = () => el.style.setProperty('--lens', '0');
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerleave', leave);
+    return () => {
+      clearInterval(timer);
+      cancelAnimationFrame(raf);
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerleave', leave);
+    };
+  }, []);
+
   // The landing title is the first typewriter moment: typed out, cursor blinks, then rests
   const [typed, setTyped] = useState(0);
   const [cursorOn, setCursorOn] = useState(false);
@@ -48,7 +91,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
   });
 
   return (
-    <section id="home" className="relative min-h-dvh w-full overflow-clip flex flex-col">
+    <section ref={sectionRef} id="home" className="relative min-h-dvh w-full overflow-clip flex flex-col">
       {/* ── Texture: contours (shared #topo symbol) + grain + vignette ── */}
       <svg className="absolute w-0 h-0" aria-hidden="true">
         <filter id="hero-grain">
@@ -68,6 +111,22 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
       >
         <use href="#topo" />
       </motion.svg>
+      {/* Pointer lens: the same contours, brighter, revealed only around the cursor */}
+      <svg
+        className="absolute inset-0 w-full h-full pointer-events-none text-[#6CE5E8]/70 transition-opacity duration-500"
+        style={{
+          zIndex: 1,
+          opacity: 'var(--lens, 0)',
+          strokeWidth: 1.25,
+          WebkitMaskImage: 'radial-gradient(circle 220px at var(--px, 50%) var(--py, 50%), #000 0%, transparent 100%)',
+          maskImage: 'radial-gradient(circle 220px at var(--px, 50%) var(--py, 50%), #000 0%, transparent 100%)',
+        }}
+        viewBox="0 0 160 100"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <use href="#topo" />
+      </svg>
       <div
         className="absolute inset-0 pointer-events-none"
         style={{ zIndex: 0, background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%)' }}
@@ -135,6 +194,10 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
             <span className="hidden md:block col-span-3 tracking-[0.2em] text-white/30">
               PORTFOLIO ©{new Date().getFullYear()}
             </span>
+            <span className="hidden md:block col-span-3 tracking-[0.2em] text-white/30 tabular-nums">
+              <span ref={clockRef}>--:--:--</span> GMT+8<br />
+              <span ref={coordRef}>X ----  Y ----</span>
+            </span>
           </motion.div>
         </div>
 
@@ -175,12 +238,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
         <div className="shrink-0 pointer-events-none">
           {/* Ruler divider: hairline + minor tick every 12px, major every 120px */}
           <motion.div
-            className="h-[9px] border-t border-white/20 origin-left"
-            style={{
-              backgroundImage: 'linear-gradient(90deg, rgba(255,255,255,.2) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.2) 1px, transparent 1px)',
-              backgroundSize: '12px 4px, 120px 9px',
-              backgroundRepeat: 'repeat-x',
-            }}
+            className="ruler text-white origin-left"
             initial={{ scaleX: 0 }}
             animate={{ scaleX: booted ? 1 : 0 }}
             transition={{ duration: 1, delay: 1.4, ease: EASE }}

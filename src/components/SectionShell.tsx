@@ -123,7 +123,7 @@ export default function SectionShell({
 
           <motion.div className="mt-8 short:mt-6 hidden lg:block" initial={{ opacity: 0 }} animate={fade} transition={t(0.6, 0.5)}>
             <div className={`font-mono text-[10px] tracking-[0.15em] ${text}`}>{url}</div>
-            <div className={`mt-2 w-24 border-t ${isDark ? 'border-white/40' : 'border-black/40'}`} />
+            <div className={`ruler mt-2 w-24 ${text}`} />
             {aside}
           </motion.div>
         </aside>

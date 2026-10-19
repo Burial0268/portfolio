@@ -257,6 +257,16 @@ body:has(#loader) {
   100% { opacity: 1; }
 }
 
+/* Ruler divider: hairline + minor tick / 12px + major tick / 120px, colored by currentColor (set the text color) */
+.ruler {
+  --tick: color-mix(in srgb, currentColor 20%, transparent);
+  height: 9px;
+  border-top: 1px solid var(--tick);
+  background-image: linear-gradient(90deg, var(--tick) 1px, transparent 1px), linear-gradient(90deg, var(--tick) 1px, transparent 1px);
+  background-size: 12px 4px, 120px 9px;
+  background-repeat: repeat-x;
+}
+
 /* Layout system — every edge on the page lines up with these:
    --mx    page margin (logo, section content, watermark all start here)
    --nav-h fixed nav height        --rail  right rail width (lg+)
