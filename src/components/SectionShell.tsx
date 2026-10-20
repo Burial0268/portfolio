@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import Scramble from './effects/Scramble';
 
 interface SectionShellProps {
   label: string;          // condensed label after "BAESORY ://", e.g. PROFILE
@@ -47,7 +48,7 @@ export default function SectionShell({
         {/* ── Left column (3/12) ───────────────────────────────── */}
         <aside className="lg:col-span-3">
           <motion.div className={`font-bebas text-[15px] tracking-[0.1em] leading-none ${muted}`} initial={{ opacity: 0 }} animate={fade} transition={t(0.1, 0.4)}>
-            BAESORY :// <span className={text}>{label}</span>
+            BAESORY :// <Scramble className={text} text={label} play={isReady} />
           </motion.div>
 
           <div className="mt-6 overflow-hidden">

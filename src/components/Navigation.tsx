@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X } from 'lucide-react';
 import FFTVisualizer from './effects/FFTVisualizer';
+import Scramble from './effects/Scramble';
 
 interface NavigationProps {
   currentSection?: string;
@@ -23,6 +24,7 @@ const sections = [
 export default function Navigation({ currentSection = 'home', isDark: sectionIsDark = true, onNavigate, bgmPlaying, onBGMToggle, bgmAnalyser }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [hov, setHov] = useState({ id: '', n: 0 }); // each hover replays that item's decode
   // The full-screen menu is dark, so the bar sitting on top of it goes dark too
   const isDark = sectionIsDark || isOpen;
   const currentIndex = Math.max(0, sections.findIndex(s => s.id === currentSection));
@@ -82,6 +84,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                 <button
                   key={section.id}
                   onClick={() => handleNavClick(section.id)}
+                  onMouseEnter={() => setHov(h => ({ id: section.id, n: h.n + 1 }))}
                   className={`relative px-4 py-2 text-left font-bebas text-[17px] leading-none tracking-[0.04em] transition-colors duration-300 ${
                     currentSection === section.id
                       ? isDark ? 'text-white' : 'text-[#0A0A0A]'
@@ -90,7 +93,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                         : 'text-gray-400 hover:text-[#0A0A0A]'
                   }`}
                 >
-                  <span className="block">{section.en}</span>
+                  <Scramble text={section.en} play={hov.id === section.id && hov.n} />
                   <span className="block font-sans text-[10px] tracking-normal opacity-50 mt-1">{section.zh}</span>
                   {currentSection === section.id && (
                     <motion.span
