@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import SectionShell, { pad } from '../SectionShell';
+import Typed from '../effects/Typed';
 
 interface GallerySectionProps {
   isReady?: boolean;
@@ -160,23 +161,13 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
             </AnimatePresence>
           </div>
           <div className="min-w-0 flex-1 pb-1">
-            <div className="font-bebas text-[13px] tracking-[0.1em] text-white/45">
-              {current.tag} · {current.subtitle}
+            <div className="font-bebas text-[13px] tracking-[0.1em] text-white/45 min-h-[1.5em]">
+              <Typed text={`${current.tag} · ${current.subtitle}`} play={isReady} delay={500} />
             </div>
-            <div className="overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.h3
-                  key={current.title}
-                  className="text-2xl md:text-3xl font-bold text-[#F0F0F0]"
-                  initial={{ y: '100%' }}
-                  animate={{ y: '0%' }}
-                  exit={{ y: '-100%' }}
-                  transition={swap}
-                >
-                  {current.title}
-                </motion.h3>
-              </AnimatePresence>
-            </div>
+            {/* Retyped on every photo, like the watermark */}
+            <h3 className="text-2xl md:text-3xl font-bold text-[#F0F0F0] min-h-[1.5em]">
+              <Typed text={current.title} play={isReady} delay={400} />
+            </h3>
           </div>
           <div className="flex items-center gap-2 pb-1">
             <button

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'motion/react';
-import Scramble from './Scramble';
+import Typed from './Typed';
 
 /*
  * HUD cursor: a square reticle that turns 45° over anything clickable. Elements can name their action with
- * `data-cursor="VIEW"` — the label rides beside the reticle in a cyan tag and decodes in.
+ * `data-cursor="VIEW"` — the label rides beside the reticle in an accent tag and is typed in, like everything else.
  * An empty `data-cursor=""` blocks a label inherited from an ancestor (e.g. the photo inside the closable lightbox).
  */
 export default function Cursor() {
@@ -84,20 +84,19 @@ export default function Cursor() {
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       />
-      {/* Action tag — hangs off the reticle's lower-right corner, opens as a wipe */}
+      {/* Action tag — hangs off the reticle's lower-right corner; the label is typed in */}
       <motion.div className="fixed left-0 top-0 pointer-events-none z-[9999]" style={{ x: springX, y: springY }}>
         <AnimatePresence>
           {visible && label && (
             <motion.div
               key={label}
-              className="absolute left-4 top-4 flex items-center gap-1.5 bg-[#6CE5E8] px-1.5 py-1 font-bebas text-[12px] leading-none tracking-[0.12em] text-[#0A0A0A]"
-              initial={{ clipPath: 'inset(0 100% 0 0)' }}
-              animate={{ clipPath: 'inset(0 0% 0 0)' }}
-              exit={{ clipPath: 'inset(0 0 0 100%)', transition: { duration: 0.18 } }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute left-4 top-4 bg-[#6CE5E8] px-1.5 py-1 font-bebas text-[12px] leading-none tracking-[0.12em] text-[#0A0A0A] whitespace-nowrap"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
             >
-              <span className="w-1 h-1 bg-[#0A0A0A]" />
-              <Scramble text={label} play={label} />
+              <Typed text={label} caretClass="bg-[#0A0A0A]" />
             </motion.div>
           )}
         </AnimatePresence>

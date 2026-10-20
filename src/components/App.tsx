@@ -8,6 +8,7 @@ import ProjectsSection from './sections/ProjectsSection';
 import SkillsSection from './sections/SkillsSection';
 import GallerySection from './sections/GallerySection';
 import Cursor from './effects/Cursor';
+import { TYPE_MS, DELETE_MS } from '@/lib/typewriter';
 
 interface Project {
   slug: string;
@@ -175,8 +176,6 @@ export default function App({ projects }: AppProps) {
   // Watermark drifts sideways as the active section scrolls (Endfield-style scroll-linked type)
   const drift = useMotionValue(0);
   const driftSmooth = useSpring(drift, { stiffness: 120, damping: 24 });
-  // Its cyan outline copy is printed slightly off-register and trails on a softer spring, so scrolling pulls the two plates apart
-  const driftLag = useSpring(drift, { stiffness: 50, damping: 16 });
   // How far the active section has scrolled inside itself → rail line
   const scrollProgress = useMotionValue(0);
   const scrollProgressSmooth = useSpring(scrollProgress, { stiffness: 200, damping: 30 });
@@ -289,7 +288,7 @@ export default function App({ projects }: AppProps) {
     if (fromWatermark) {
       for (let i = fromWatermark.length; i >= 0; i--) {
         showWatermark(fromWatermark.slice(0, i));
-        await delay(25);
+        await delay(DELETE_MS);
       }
     }
 
@@ -309,7 +308,7 @@ export default function App({ projects }: AppProps) {
     if (toWatermark) {
       for (let i = 0; i <= toWatermark.length; i++) {
         showWatermark(toWatermark.slice(0, i));
-        await delay(40);
+        await delay(TYPE_MS);
       }
 
       // Phase 6: Settle — watermark returns to subtle
@@ -362,11 +361,11 @@ export default function App({ projects }: AppProps) {
     setCursorVisible(true);
     while (watermarkRef.current && alive()) {
       showWatermark(watermarkRef.current.slice(0, -1));
-      await delay(25);
+      await delay(DELETE_MS);
     }
     for (let i = 1; i <= to.length && alive(); i++) {
       showWatermark(to.slice(0, i));
-      await delay(40);
+      await delay(TYPE_MS);
     }
     await delay(300);
     if (!alive()) return;
@@ -619,15 +618,6 @@ export default function App({ projects }: AppProps) {
                 </motion.span>
               )}
             </AnimatePresence>
-          </motion.div>
-          {/* Off-register plate: the same word as a cyan outline, nudged up-right and trailing on a softer spring (riso misprint) */}
-          <motion.div
-            className="absolute left-(--mx) -bottom-[0.11em] -ml-[0.01em] mb-[0.018em] font-bebas text-[46vw] md:text-[min(46vh,30vw)] leading-[0.8] whitespace-nowrap text-transparent"
-            style={{ x: driftLag, WebkitTextStroke: `1px ${bgIsDark ? '#6CE5E8' : '#3FBFC2'}` }}
-            animate={{ opacity: watermarkProminent ? 0.7 : bgIsDark ? 0.22 : 0.35 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {watermarkText}
           </motion.div>
         </div>
 

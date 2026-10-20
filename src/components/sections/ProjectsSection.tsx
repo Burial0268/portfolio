@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import SectionShell, { pad } from '../SectionShell';
+import Typed from '../effects/Typed';
 
 interface Project {
   slug: string;
@@ -18,79 +19,6 @@ interface ProjectsSectionProps {
 }
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-
-/*
- * Project signature: a constructivist strip of blocks seeded by the project's slug — every case gets its own
- * mark in the same vocabulary as the Skills composition (ink / cyan / outline / hatch). Deterministic, so SSR
- * and the client agree, and a project always draws the same strip.
- */
-const SIG_COLS = 36, SIG_ROWS = 3;
-type Cell = 'fill' | 'cyan' | 'line' | 'hatch';
-interface Seg { r: number; c: number; w: number; kind: Cell }
-
-const hash = (s: string) => {
-  let h = 2166136261; // FNV-1a
-  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
-  return h >>> 0;
-};
-const rng = (seed: number) => () => {
-  seed = (seed + 0x6d2b79f5) | 0; // mulberry32
-  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-};
-
-function signature(slug: string): Seg[] {
-  const rand = rng(hash(slug));
-  const segs: Seg[] = [];
-  for (let r = 0; r < SIG_ROWS; r++) {
-    let c = Math.floor(rand() * 3);
-    while (c < SIG_COLS) {
-      const w = 1 + Math.floor(rand() ** 1.6 * 7);
-      const p = rand();
-      // mostly ink and outline; cyan stays the accent
-      const kind: Cell = p < 0.34 ? 'fill' : p < 0.6 ? 'line' : p < 0.82 ? 'hatch' : 'cyan';
-      segs.push({ r, c, w: Math.min(w, SIG_COLS - c), kind });
-      c += w + 1 + Math.floor(rand() ** 2 * 4); // gaps of 1–4 cells
-    }
-  }
-  return segs;
-}
-
-const CELL: Record<Cell, string> = {
-  fill: 'bg-white/85',
-  cyan: 'bg-[#6CE5E8]',
-  line: 'border border-white/40',
-  hatch: 'bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.45)_0_1px,transparent_1px_5px)]',
-};
-
-function Signature({ slug, play }: { slug: string; play: boolean }) {
-  const segs = signature(slug);
-  return (
-    <div>
-      <div className="flex items-center justify-between pb-2 font-mono text-[10px] tracking-[0.2em] text-white/35">
-        <span>SIGNATURE // {slug.toUpperCase()}</span>
-        <span className="tabular-nums">0x{hash(slug).toString(16).toUpperCase().padStart(8, '0')}</span>
-      </div>
-      <div
-        className="grid gap-[3px] h-[72px] short:h-[52px]"
-        style={{ gridTemplateColumns: `repeat(${SIG_COLS}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIG_ROWS}, minmax(0, 1fr))` }}
-        aria-hidden="true"
-      >
-        {segs.map((s) => (
-          <motion.span
-            key={`${s.r}-${s.c}`}
-            className={`block origin-left ${CELL[s.kind]}`}
-            style={{ gridRow: s.r + 1, gridColumn: `${s.c + 1} / span ${s.w}` }}
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: play ? 1 : 0 }}
-            transition={play ? { duration: 0.5, delay: 0.3 + s.c * 0.012 + s.r * 0.04, ease: EASE } : { duration: 0.2 }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export default function ProjectsSection({ projects, isReady = false }: ProjectsSectionProps) {
   const showY = isReady ? { y: 0, opacity: 1 } : { y: 15, opacity: 0 };
@@ -160,7 +88,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
         {/* Case meta row */}
         <div className="flex items-center justify-between gap-6 pt-1 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/45">
           <span className="text-white shrink-0">CASE <span className="text-white/40">/ {pad(projects.length)}</span></span>
-          <span className="truncate">{featured?.tags.join(' / ')}</span>
+          <Typed className="truncate" text={featured?.tags.join(' / ') ?? ''} play={isReady} delay={400} />
         </div>
 
         {featured && (
@@ -184,17 +112,21 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
             <div className="md:col-span-6 min-w-0 [--fs:clamp(1.75rem,3vw,3rem)]">
               {/* Reserve room for a 2-line title + longest description so the CTA row and arrows never move between projects */}
               <div className="relative min-h-[calc(var(--fs)*2.3+1rem+6.2rem)] md:min-h-[calc(var(--fs)*2.3+1rem+4.6rem)]">
+                {/* Title is retyped (backspace to the common prefix, then type) — the watermark's typewriter at heading size */}
+                <h3 className="text-(length:--fs) font-bold leading-[1.15] text-[#F0F0F0] line-clamp-2">
+                  <Typed text={featured.title} play={isReady} delay={300} />
+                </h3>
                 <AnimatePresence mode="popLayout" initial={false}>
-                  <motion.div
+                  <motion.p
                     key={featured.slug}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 text-[15px] text-white/55 leading-relaxed max-w-[32em] line-clamp-4 md:line-clamp-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                    transition={swap}
+                    transition={{ ...swap, delay: 0.2 }}
                   >
-                    <h3 className="text-(length:--fs) font-bold leading-[1.15] text-[#F0F0F0] line-clamp-2">{featured.title}</h3>
-                    <p className="mt-4 text-[15px] text-white/55 leading-relaxed max-w-[32em] line-clamp-4 md:line-clamp-3">{featured.description}</p>
-                  </motion.div>
+                    {featured.description}
+                  </motion.p>
                 </AnimatePresence>
               </div>
 
@@ -236,17 +168,6 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Signature strip — redraws left → right on every case */}
-        {featured && (
-          <div className="mt-12 short:mt-8">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div key={featured.slug} exit={{ opacity: 0, transition: { duration: 0.12 } }}>
-                <Signature slug={featured.slug} play={isReady} />
-              </motion.div>
-            </AnimatePresence>
           </div>
         )}
 
