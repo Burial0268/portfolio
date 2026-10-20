@@ -140,6 +140,40 @@ function RightRail({ index, isDark, progress }: { index: number; isDark: boolean
   );
 }
 
+/* ── Page-turn wipe ─────────────────────────────────────────────────────── */
+// The next section's colour is pushed across from the direction of travel, led by a cyan edge that carries
+// the section's slate. One sweep per page turn (navigation is locked meanwhile) — never a flash.
+const WIPE_MS = 640;
+function Wipe({ wipe }: { wipe: { to: number; dir: number; key: number } | null }) {
+  if (!wipe) return null;
+  const s = SECTIONS[wipe.to];
+  const fwd = wipe.dir > 0;
+  return (
+    <div className="fixed inset-0 z-1 pointer-events-none overflow-hidden" aria-hidden="true">
+      <motion.div
+        key={wipe.key}
+        className="absolute inset-0"
+        style={{ backgroundColor: s.bg }}
+        initial={{ x: fwd ? '-100%' : '100%' }}
+        animate={{ x: '0%' }}
+        transition={{ duration: WIPE_MS / 1000, ease: [0.76, 0, 0.24, 1] }}
+      >
+        {/* leading edge sits just outside the panel, so it leaves the screen as the panel lands */}
+        <div className={`absolute inset-y-0 w-2 bg-[#6CE5E8] ${fwd ? 'left-full' : 'right-full'}`} />
+        <motion.div
+          className={`absolute bottom-[calc(var(--band)+24px)] ${fwd ? 'right-6' : 'left-6'} flex items-baseline gap-3 font-bebas leading-none whitespace-nowrap`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 1, 1, 0] }}
+          transition={{ duration: WIPE_MS / 1000, times: [0, 0.2, 0.7, 1] }}
+        >
+          <span className="text-[64px] text-[#6CE5E8]">{pad2(wipe.to)}</span>
+          <span className={`text-[18px] tracking-[0.14em] ${s.isDark ? 'text-white/70' : 'text-black/70'}`}>{s.name}</span>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
 /* ── Top progress bar ───────────────────────────────────────────── */
 function SectionProgress({ current, total }: { current: number; total: number }) {
   const progress = ((current + 1) / total) * 100;
@@ -175,6 +209,8 @@ export default function App({ projects }: AppProps) {
   // Watermark drifts sideways as the active section scrolls (Endfield-style scroll-linked type)
   const drift = useMotionValue(0);
   const driftSmooth = useSpring(drift, { stiffness: 120, damping: 24 });
+  // Its cyan outline copy is printed slightly off-register and trails on a softer spring, so scrolling pulls the two plates apart
+  const driftLag = useSpring(drift, { stiffness: 50, damping: 16 });
   // How far the active section has scrolled inside itself → rail line
   const scrollProgress = useMotionValue(0);
   const scrollProgressSmooth = useSpring(scrollProgress, { stiffness: 200, damping: 30 });
@@ -194,6 +230,8 @@ export default function App({ projects }: AppProps) {
 
   // Section the frame (rail) shows — flips with the background, before the content swaps in
   const [frameIndex, setFrameIndex] = useState(0);
+  // Page-turn wipe: the next section's colour pushes in from the direction of travel (desktop/tablet)
+  const [wipe, setWipe] = useState<{ to: number; dir: number; key: number } | null>(null);
 
   // Shared background state
   const [bgColor, setBgColor] = useState<string>(SECTIONS[0].bg);
@@ -297,11 +335,14 @@ export default function App({ projects }: AppProps) {
       setWatermarkProminent(false);
     }
 
-    // Phase 4: Background color + text color transition; rail number rolls
+    // Phase 4: the next section's colour wipes in from the direction of travel (cyan leading edge);
+    // the frame (nav / rail) flips as the edge passes the middle, the real bg swaps once it's covered
+    setWipe({ to: targetIndex, dir: targetIndex > currentIndex ? 1 : -1, key: Date.now() });
+    await delay(WIPE_MS / 2);
     setFrameIndex(targetIndex);
-    setBgColor(SECTIONS[targetIndex].bg);
     setBgIsDark(SECTIONS[targetIndex].isDark);
-    await delay(350);
+    await delay(WIPE_MS / 2);
+    setBgColor(SECTIONS[targetIndex].bg); // under the panel; the panel stays until the bg has finished fading
 
     // Phase 5: Type new watermark char by char + settle
     if (toWatermark) {
@@ -330,6 +371,7 @@ export default function App({ projects }: AppProps) {
     // Phase 8: Content entrance animations
     setContentReady(true);
     setTransitioning(false);
+    setWipe(null); // same colour as the bg by now
 
     // Post-transition cooldown — absorbs trackpad momentum
     wheelAccum.current = 0;
@@ -590,6 +632,8 @@ export default function App({ projects }: AppProps) {
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         />
 
+        <Wipe wipe={wipe} />
+
         {/* Typewriter watermark — the design's centrepiece: half the viewport tall, behind the
             content, starting on the page margin and bled off the bottom edge */}
         <div className={`fixed inset-0 ${isMobile ? 'z-3' : 'z-1'} pointer-events-none select-none overflow-hidden`} aria-hidden="true">
@@ -617,6 +661,15 @@ export default function App({ projects }: AppProps) {
                 </motion.span>
               )}
             </AnimatePresence>
+          </motion.div>
+          {/* Off-register plate: the same word as a cyan outline, nudged up-right and trailing on a softer spring (riso misprint) */}
+          <motion.div
+            className="absolute left-(--mx) -bottom-[0.11em] -ml-[0.01em] mb-[0.018em] font-bebas text-[46vw] md:text-[min(46vh,30vw)] leading-[0.8] whitespace-nowrap text-transparent"
+            style={{ x: driftLag, WebkitTextStroke: `1px ${bgIsDark ? '#6CE5E8' : '#3FBFC2'}` }}
+            animate={{ opacity: watermarkProminent ? 0.7 : bgIsDark ? 0.22 : 0.35 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {watermarkText}
           </motion.div>
         </div>
 
