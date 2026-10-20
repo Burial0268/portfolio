@@ -140,40 +140,6 @@ function RightRail({ index, isDark, progress }: { index: number; isDark: boolean
   );
 }
 
-/* ── Page-turn wipe ─────────────────────────────────────────────────────── */
-// The next section's colour is pushed across from the direction of travel, led by a cyan edge that carries
-// the section's slate. One sweep per page turn (navigation is locked meanwhile) — never a flash.
-const WIPE_MS = 640;
-function Wipe({ wipe }: { wipe: { to: number; dir: number; key: number } | null }) {
-  if (!wipe) return null;
-  const s = SECTIONS[wipe.to];
-  const fwd = wipe.dir > 0;
-  return (
-    <div className="fixed inset-0 z-1 pointer-events-none overflow-hidden" aria-hidden="true">
-      <motion.div
-        key={wipe.key}
-        className="absolute inset-0"
-        style={{ backgroundColor: s.bg }}
-        initial={{ x: fwd ? '-100%' : '100%' }}
-        animate={{ x: '0%' }}
-        transition={{ duration: WIPE_MS / 1000, ease: [0.76, 0, 0.24, 1] }}
-      >
-        {/* leading edge sits just outside the panel, so it leaves the screen as the panel lands */}
-        <div className={`absolute inset-y-0 w-2 bg-[#6CE5E8] ${fwd ? 'left-full' : 'right-full'}`} />
-        <motion.div
-          className={`absolute bottom-[calc(var(--band)+24px)] ${fwd ? 'right-6' : 'left-6'} flex items-baseline gap-3 font-bebas leading-none whitespace-nowrap`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 1, 0] }}
-          transition={{ duration: WIPE_MS / 1000, times: [0, 0.2, 0.7, 1] }}
-        >
-          <span className="text-[64px] text-[#6CE5E8]">{pad2(wipe.to)}</span>
-          <span className={`text-[18px] tracking-[0.14em] ${s.isDark ? 'text-white/70' : 'text-black/70'}`}>{s.name}</span>
-        </motion.div>
-      </motion.div>
-    </div>
-  );
-}
-
 /* ── Top progress bar ───────────────────────────────────────────── */
 function SectionProgress({ current, total }: { current: number; total: number }) {
   const progress = ((current + 1) / total) * 100;
@@ -230,8 +196,6 @@ export default function App({ projects }: AppProps) {
 
   // Section the frame (rail) shows — flips with the background, before the content swaps in
   const [frameIndex, setFrameIndex] = useState(0);
-  // Page-turn wipe: the next section's colour pushes in from the direction of travel (desktop/tablet)
-  const [wipe, setWipe] = useState<{ to: number; dir: number; key: number } | null>(null);
 
   // Shared background state
   const [bgColor, setBgColor] = useState<string>(SECTIONS[0].bg);
@@ -335,14 +299,11 @@ export default function App({ projects }: AppProps) {
       setWatermarkProminent(false);
     }
 
-    // Phase 4: the next section's colour wipes in from the direction of travel (cyan leading edge);
-    // the frame (nav / rail) flips as the edge passes the middle, the real bg swaps once it's covered
-    setWipe({ to: targetIndex, dir: targetIndex > currentIndex ? 1 : -1, key: Date.now() });
-    await delay(WIPE_MS / 2);
+    // Phase 4: Background color + text color transition; rail number rolls
     setFrameIndex(targetIndex);
+    setBgColor(SECTIONS[targetIndex].bg);
     setBgIsDark(SECTIONS[targetIndex].isDark);
-    await delay(WIPE_MS / 2);
-    setBgColor(SECTIONS[targetIndex].bg); // under the panel; the panel stays until the bg has finished fading
+    await delay(350);
 
     // Phase 5: Type new watermark char by char + settle
     if (toWatermark) {
@@ -371,7 +332,6 @@ export default function App({ projects }: AppProps) {
     // Phase 8: Content entrance animations
     setContentReady(true);
     setTransitioning(false);
-    setWipe(null); // same colour as the bg by now
 
     // Post-transition cooldown — absorbs trackpad momentum
     wheelAccum.current = 0;
@@ -631,8 +591,6 @@ export default function App({ projects }: AppProps) {
           animate={{ backgroundColor: bgColor }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         />
-
-        <Wipe wipe={wipe} />
 
         {/* Typewriter watermark — the design's centrepiece: half the viewport tall, behind the
             content, starting on the page margin and bled off the bottom edge */}
