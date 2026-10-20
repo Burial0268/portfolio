@@ -19,6 +19,79 @@ interface ProjectsSectionProps {
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+/*
+ * Project signature: a constructivist strip of blocks seeded by the project's slug — every case gets its own
+ * mark in the same vocabulary as the Skills composition (ink / cyan / outline / hatch). Deterministic, so SSR
+ * and the client agree, and a project always draws the same strip.
+ */
+const SIG_COLS = 36, SIG_ROWS = 3;
+type Cell = 'fill' | 'cyan' | 'line' | 'hatch';
+interface Seg { r: number; c: number; w: number; kind: Cell }
+
+const hash = (s: string) => {
+  let h = 2166136261; // FNV-1a
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+};
+const rng = (seed: number) => () => {
+  seed = (seed + 0x6d2b79f5) | 0; // mulberry32
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+
+function signature(slug: string): Seg[] {
+  const rand = rng(hash(slug));
+  const segs: Seg[] = [];
+  for (let r = 0; r < SIG_ROWS; r++) {
+    let c = Math.floor(rand() * 3);
+    while (c < SIG_COLS) {
+      const w = 1 + Math.floor(rand() ** 1.6 * 7);
+      const p = rand();
+      // mostly ink and outline; cyan stays the accent
+      const kind: Cell = p < 0.34 ? 'fill' : p < 0.6 ? 'line' : p < 0.82 ? 'hatch' : 'cyan';
+      segs.push({ r, c, w: Math.min(w, SIG_COLS - c), kind });
+      c += w + 1 + Math.floor(rand() ** 2 * 4); // gaps of 1–4 cells
+    }
+  }
+  return segs;
+}
+
+const CELL: Record<Cell, string> = {
+  fill: 'bg-white/85',
+  cyan: 'bg-[#6CE5E8]',
+  line: 'border border-white/40',
+  hatch: 'bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.45)_0_1px,transparent_1px_5px)]',
+};
+
+function Signature({ slug, play }: { slug: string; play: boolean }) {
+  const segs = signature(slug);
+  return (
+    <div>
+      <div className="flex items-center justify-between pb-2 font-mono text-[10px] tracking-[0.2em] text-white/35">
+        <span>SIGNATURE // {slug.toUpperCase()}</span>
+        <span className="tabular-nums">0x{hash(slug).toString(16).toUpperCase().padStart(8, '0')}</span>
+      </div>
+      <div
+        className="grid gap-[3px] h-[72px] short:h-[52px]"
+        style={{ gridTemplateColumns: `repeat(${SIG_COLS}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${SIG_ROWS}, minmax(0, 1fr))` }}
+        aria-hidden="true"
+      >
+        {segs.map((s) => (
+          <motion.span
+            key={`${s.r}-${s.c}`}
+            className={`block origin-left ${CELL[s.kind]}`}
+            style={{ gridRow: s.r + 1, gridColumn: `${s.c + 1} / span ${s.w}` }}
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: play ? 1 : 0 }}
+            transition={play ? { duration: 0.5, delay: 0.3 + s.c * 0.012 + s.r * 0.04, ease: EASE } : { duration: 0.2 }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectsSection({ projects, isReady = false }: ProjectsSectionProps) {
   const showY = isReady ? { y: 0, opacity: 1 } : { y: 15, opacity: 0 };
   const t = (delay: number) =>
@@ -69,6 +142,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
               aria-label={project.title}
               title={project.title}
               aria-current={i === featuredIndex}
+              data-cursor={`CASE ${pad(i + 1)}`}
               className="group flex-1 h-4 flex items-start"
             >
               <span className="relative block w-full h-0.5 bg-white/20 group-hover:bg-white/40 transition-colors duration-300 overflow-hidden">
@@ -132,6 +206,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                     href={featuredHref}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-cursor="OPEN"
                     className="group inline-flex items-center gap-12 pl-4 pr-4 py-2.5 bg-[#6CE5E8] text-black hover:bg-white transition-colors duration-300"
                   >
                     <span className="leading-none">
@@ -145,6 +220,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                   <button
                     onClick={handlePrev}
                     aria-label="Previous project"
+                    data-cursor="PREV"
                     className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
                   >
                     ‹
@@ -152,6 +228,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                   <button
                     onClick={handleNext}
                     aria-label="Next project"
+                    data-cursor="NEXT"
                     className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
                   >
                     ›
@@ -162,10 +239,22 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
           </div>
         )}
 
+        {/* Signature strip — redraws left → right on every case */}
+        {featured && (
+          <div className="mt-12 short:mt-8">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div key={featured.slug} exit={{ opacity: 0, transition: { duration: 0.12 } }}>
+                <Signature slug={featured.slug} play={isReady} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        )}
+
         <a
           href="https://github.com/Burial0268"
           target="_blank"
           rel="noopener noreferrer"
+          data-cursor="GITHUB"
           className="inline-block mt-12 short:mt-8 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/50 hover:text-[#6CE5E8] transition-colors duration-300"
         >
           GITHUB / 查看更多 ↗
