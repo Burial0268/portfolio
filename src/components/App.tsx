@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, MotionConfig, useMotionValue, useSpring, type MotionValue } from 'motion/react';
+import { flushSync } from 'react-dom';
+import { motion, AnimatePresence, MotionConfig, animate, useMotionValue, useSpring, type MotionValue } from 'motion/react';
 import Navigation from './Navigation';
 import { useBGM } from '@/hooks/useBGM';
 import HeroSection from './sections/HeroSection';
@@ -38,6 +39,11 @@ const SECTIONS = [
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 const delay = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+const nextFrame = () => new Promise<void>(r => requestAnimationFrame(() => r()));
+
+// Page turn = paper feed: the written sheet rolls up out of the machine, the next blank sheet follows it in
+const FEED_MS = 950;
+const FEED_EASE = [0.65, 0, 0.35, 1] as const; // a platen: eases off the stop, glides, eases onto the next line
 
 // Can this section's own scroll container move further in `dir` (1 = down, -1 = up)?
 const hasRoom = (el: HTMLElement | null | undefined, dir: number) => {
@@ -197,6 +203,9 @@ export default function App({ projects }: AppProps) {
 
   // Section the frame (rail) shows — flips with the background, before the content swaps in
   const [frameIndex, setFrameIndex] = useState(0);
+  // The paper: bg + watermark + section layers move as one sheet (y); `feed` is the blank sheet riding in behind it
+  const sheetY = useMotionValue(0);
+  const [feed, setFeed] = useState<{ to: number; dir: number } | null>(null);
 
   // Shared background state
   const [bgColor, setBgColor] = useState<string>(SECTIONS[0].bg);
@@ -265,7 +274,6 @@ export default function App({ projects }: AppProps) {
     if (targetIndex === activeIndexRef.current || targetIndex < 0 || targetIndex >= SECTIONS.length) return;
 
     const currentIndex = activeIndexRef.current;
-    const fromWatermark = SECTIONS[currentIndex].watermark;
     const toWatermark = SECTIONS[targetIndex].watermark;
 
     lockedRef.current = true;
@@ -275,69 +283,63 @@ export default function App({ projects }: AppProps) {
     setTransitioning(true);
     wheelAccum.current = 0;
 
-    // Phase 1: Fade out section content; drifted watermark glides home
-    setContentReady(false);
-    setSectionVisible(false);
-    drift.set(0);
-    await delay(300);
-
-    // Phase 2: Watermark becomes prominent
-    setWatermarkProminent(true);
-    setCursorVisible(true);
-    await delay(150);
-
-    // Phase 3: Delete old watermark char by char
-    if (fromWatermark) {
-      for (let i = fromWatermark.length; i >= 0; i--) {
-        showWatermark(fromWatermark.slice(0, i));
-        await delay(DELETE_MS);
-      }
-    }
-
-    // If nothing to type next, dismiss cursor before bg transition
-    if (!toWatermark) {
-      setCursorVisible(false);
-      setWatermarkProminent(false);
-    }
-
-    // Phase 4: Background color + text color transition; rail number rolls
+    // Phase 1: Paper feed. The written sheet — content, watermark and all — rolls up out of the machine and the
+    // next blank sheet follows it in from below (going back reverse-feeds: down, new sheet from above).
+    // The machine (nav, rail, bottom rule) stays put and takes the new paper's tone as it passes the middle.
+    const dir = targetIndex > currentIndex ? 1 : -1;
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    flushSync(() => setFeed({ to: targetIndex, dir }));
+    await nextFrame();
+    const roll = animate(sheetY, -dir * window.innerHeight, { duration: calm ? 0 : FEED_MS / 1000, ease: FEED_EASE });
+    await delay(calm ? 0 : FEED_MS * 0.5);
     setFrameIndex(targetIndex);
-    setBgColor(SECTIONS[targetIndex].bg);
     setBgIsDark(SECTIONS[targetIndex].isDark);
-    await delay(350);
+    await roll;
 
-    // Phase 5: Type new watermark char by char + settle
+    // Phase 2: The blank sheet is the page now — swap everything underneath it, then drop the sheet back to 0 (no visible change)
+    flushSync(() => {
+      setContentReady(false);
+      setSectionVisible(false);
+      showWatermark('');
+      setBgColor(SECTIONS[targetIndex].bg);
+      activeIndexRef.current = targetIndex;
+      setActiveIndex(targetIndex);
+    });
+    drift.jump(0);
+    driftSmooth.jump(0);
+    const wrapper = sectionRefs.current[targetIndex];
+    if (wrapper) wrapper.scrollTop = 0;
+    sheetY.jump(0);
+    setFeed(null);
+    await delay(calm ? 0 : 120);
+
+    // Phase 3: Type the new watermark onto the fresh sheet, then let it settle back
     if (toWatermark) {
+      setWatermarkProminent(true);
+      setCursorVisible(true);
+      await delay(150);
       for (let i = 0; i <= toWatermark.length; i++) {
         showWatermark(toWatermark.slice(0, i));
         await delay(TYPE_MS);
       }
-
-      // Phase 6: Settle — watermark returns to subtle
       await delay(250);
       setCursorVisible(false);
       setWatermarkProminent(false);
       await delay(150);
     }
 
-    // Phase 7: Switch section + reveal
-    activeIndexRef.current = targetIndex;
-    setActiveIndex(targetIndex);
-    const wrapper = sectionRefs.current[targetIndex];
-    if (wrapper) wrapper.scrollTop = 0;
-    await delay(50);
-
+    // Phase 4: Content is set on the page
     setSectionVisible(true);
     await delay(300);
 
-    // Phase 8: Content entrance animations
+    // Phase 5: Content entrance animations
     setContentReady(true);
     setTransitioning(false);
 
     // Post-transition cooldown — absorbs trackpad momentum
     wheelAccum.current = 0;
     setTimeout(() => { lockedRef.current = false; }, 600);
-  }, [drift, pull, showWatermark]); // stable — uses refs and a motion value, not state
+  }, [drift, driftSmooth, pull, sheetY, showWatermark]); // stable — uses refs and motion values, not state
 
   /* ── Scroll-linked watermark drift (desktop: active section's own scroll) ── */
   useEffect(() => {
@@ -586,12 +588,11 @@ export default function App({ projects }: AppProps) {
   return (
     <MotionConfig reducedMotion="user">
       <div className={isMobile ? 'relative' : 'fixed inset-0 overflow-hidden'}>
-        {/* Background layer — transitions between section bg colors */}
-        <motion.div
-          className="fixed inset-0 z-0"
-          animate={{ backgroundColor: bgColor }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        />
+        {/* ── The paper ── bg, watermark and section layers are one sheet (desktop: moved by `sheetY` on a page turn).
+            Phones: `contents`, so nothing changes for the native-scroll layout. */}
+        <motion.div className={isMobile ? 'contents' : 'absolute inset-0'} style={isMobile ? undefined : { y: sheetY }}>
+        {/* Sheet colour — swaps instantly: a page turn hides the change under the incoming sheet */}
+        <div className="fixed inset-0 z-0" style={{ backgroundColor: bgColor }} />
 
         {/* Typewriter watermark — the design's centrepiece: half the viewport tall, behind the
             content, starting on the page margin and bled off the bottom edge */}
@@ -600,7 +601,8 @@ export default function App({ projects }: AppProps) {
             className="absolute left-(--mx) -bottom-[0.11em] -ml-[0.03em] font-bebas text-[46vw] md:text-[min(46vh,30vw)] leading-[0.8] whitespace-nowrap"
             style={{ x: driftSmooth }}
             animate={{
-              color: bgIsDark
+              // tone of the sheet it is printed on (not the frame, which flips while the sheet is still leaving)
+              color: SECTIONS[activeIndex].isDark
                 ? (watermarkProminent ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.045)')
                 : (watermarkProminent ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.04)')
             }}
@@ -623,6 +625,52 @@ export default function App({ projects }: AppProps) {
           </motion.div>
         </div>
 
+        {/* Section Layers — transparent bg, content only */}
+        {SECTIONS.map((section, i) => {
+          const isActive = i === activeIndex;
+          // Desktop: the active layer is shown; phones: every section stacks and reveals once seen
+          const ready = contentReady && (isMobile ? seen[i] : isActive);
+          return (
+            <motion.div
+              key={section.id}
+              ref={(el) => { sectionRefs.current[i] = el; }}
+              className={isMobile ? 'relative z-2 scroll-mt-16' : `absolute inset-0 z-2 section-scroll ${
+                isActive ? 'overflow-y-auto' : 'overflow-hidden pointer-events-none'
+              }`}
+              animate={{
+                opacity: isMobile || (isActive && sectionVisible) ? 1 : 0,
+              }}
+              // a layer that stops being the page goes at once (its sheet has already left); `transition-all` children would
+              // otherwise keep `visibility` through the fade and ghost onto the new sheet
+              transition={isActive ? { duration: 0.35, ease: [0.22, 1, 0.36, 1] } : { duration: 0 }}
+              style={{
+                '--sheet': section.bg, // veils inside the section (frosted cover, vignette) take their own paper's colour
+                ...(isMobile ? { backgroundColor: section.bg } : { visibility: isActive ? 'visible' : 'hidden', y: isActive ? pullSmooth : 0 }),
+              } as unknown as React.CSSProperties}
+            >
+              {i === 0 && <HeroSection isReady={ready} />}
+              {i === 1 && <AboutSection isReady={ready} />}
+              {i === 2 && <ProjectsSection projects={projects} isReady={ready} />}
+              {i === 3 && <SkillsSection isReady={ready} />}
+              {i === 4 && <GallerySection isReady={ready} />}
+            </motion.div>
+          );
+        })}
+
+        {/* The next blank sheet, fed in right behind the current one (below going forward, above going back) */}
+        {feed && !isMobile && (
+          <div
+            className="absolute inset-x-0 h-full z-3 pointer-events-none"
+            style={{
+              top: feed.dir > 0 ? '100%' : '-100%',
+              backgroundColor: SECTIONS[feed.to].bg,
+              boxShadow: `0 ${feed.dir > 0 ? -1 : 1}px 0 rgba(0,0,0,0.06), 0 ${feed.dir > 0 ? -16 : 16}px 36px -14px rgba(0,0,0,0.3)`,
+            }}
+          />
+        )}
+        </motion.div>
+
+        {/* ── The machine ── stays put while paper moves through it */}
         {/* Bottom hairline + AK-style scroll hint (desktop/tablet) */}
         {!isMobile && (
           <div
@@ -643,35 +691,8 @@ export default function App({ projects }: AppProps) {
 
         <RightRail index={frameIndex} isDark={bgIsDark} progress={scrollProgressSmooth} />
 
-        <Navigation currentSection={SECTIONS[activeIndex].id} isDark={bgIsDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} sheet={bgColor} />
+        <Navigation currentSection={SECTIONS[activeIndex].id} isDark={bgIsDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} sheet={SECTIONS[frameIndex].bg} />
         <SectionProgress current={activeIndex} total={SECTIONS.length} />
-
-        {/* Section Layers — transparent bg, content only */}
-        {SECTIONS.map((section, i) => {
-          const isActive = i === activeIndex;
-          // Desktop: the active layer is shown; phones: every section stacks and reveals once seen
-          const ready = contentReady && (isMobile ? seen[i] : isActive);
-          return (
-            <motion.div
-              key={section.id}
-              ref={(el) => { sectionRefs.current[i] = el; }}
-              className={isMobile ? 'relative z-2 scroll-mt-16' : `absolute inset-0 z-2 section-scroll ${
-                isActive ? 'overflow-y-auto' : 'overflow-hidden pointer-events-none'
-              }`}
-              animate={{
-                opacity: isMobile || (isActive && sectionVisible) ? 1 : 0,
-              }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              style={isMobile ? { backgroundColor: section.bg } : { visibility: isActive ? 'visible' : 'hidden', y: isActive ? pullSmooth : 0 }}
-            >
-              {i === 0 && <HeroSection isReady={ready} />}
-              {i === 1 && <AboutSection isReady={ready} />}
-              {i === 2 && <ProjectsSection projects={projects} isReady={ready} />}
-              {i === 3 && <SkillsSection isReady={ready} />}
-              {i === 4 && <GallerySection isReady={ready} />}
-            </motion.div>
-          );
-        })}
 
         <Cursor />
       </div>
