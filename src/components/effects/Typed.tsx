@@ -16,7 +16,7 @@ interface TypedProps {
  * common prefix and types the rest ("CASE 01" → "CASE 02" retypes one key), behind the
  * same accent caret. Screen readers get the full text at once.
  */
-export default function Typed({ text, play = true, delay = 0, className = '', caretClass = 'bg-[#6CE5E8]' }: TypedProps) {
+export default function Typed({ text, play = true, delay = 0, className = '', caretClass = 'bg-[#8FC6C1]' }: TypedProps) {
   const [shown, setShown] = useState('');
   const [caret, setCaret] = useState(false);
   const shownRef = useRef('');

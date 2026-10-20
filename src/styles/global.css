@@ -46,7 +46,7 @@
 
 :root {
   --radius: 0.25rem;
-  --background: #FAFAFA;
+  --background: #EDE9E2;
   --foreground: #0A0A0A;
   --card: #FFFFFF;
   --card-foreground: #0A0A0A;
@@ -58,12 +58,12 @@
   --secondary-foreground: #0A0A0A;
   --muted: #F5F5F5;
   --muted-foreground: #737373;
-  --accent: #6CE5E8;
+  --accent: #8FC6C1;
   --accent-foreground: #0A0A0A;
   --destructive: oklch(0.577 0.245 27.325);
   --border: #E5E5E5;
   --input: #E5E5E5;
-  --ring: #6CE5E8;
+  --ring: #8FC6C1;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -76,11 +76,11 @@
   --sidebar-accent: #F5F5F5;
   --sidebar-accent-foreground: #0A0A0A;
   --sidebar-border: #E5E5E5;
-  --sidebar-ring: #6CE5E8;
+  --sidebar-ring: #8FC6C1;
 }
 
 .dark {
-  --background: #0A0A0A;
+  --background: #1D1E20;
   --foreground: #F0F0F0;
   --card: #141414;
   --card-foreground: #F0F0F0;
@@ -92,12 +92,12 @@
   --secondary-foreground: #F0F0F0;
   --muted: #1A1A1A;
   --muted-foreground: #888888;
-  --accent: #6CE5E8;
+  --accent: #8FC6C1;
   --accent-foreground: #0A0A0A;
   --destructive: oklch(0.704 0.191 22.216);
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.1);
-  --ring: #6CE5E8;
+  --ring: #8FC6C1;
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -105,12 +105,12 @@
   --chart-5: oklch(0.645 0.246 16.439);
   --sidebar: #141414;
   --sidebar-foreground: #F0F0F0;
-  --sidebar-primary: #6CE5E8;
+  --sidebar-primary: #8FC6C1;
   --sidebar-primary-foreground: #0A0A0A;
   --sidebar-accent: #1A1A1A;
   --sidebar-accent-foreground: #F0F0F0;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #6CE5E8;
+  --sidebar-ring: #8FC6C1;
 }
 
 @layer base {
@@ -137,16 +137,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0A0A0A;
+  background: #1D1E20;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #6CE5E8;
+  background: #8FC6C1;
   border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #8AECEE;
+  background: #ABD6D2;
 }
 
 /* Hide default cursor on desktop */

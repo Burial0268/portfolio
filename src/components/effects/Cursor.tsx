@@ -73,14 +73,14 @@ export default function Cursor() {
   return createPortal(
     <>
       <motion.div
-        className="fixed left-0 top-0 w-4 h-4 border border-[#6CE5E8] pointer-events-none z-[9999] mix-blend-difference"
+        className="fixed left-0 top-0 w-4 h-4 border border-[#8FC6C1] pointer-events-none z-[9999]"
         style={{ x: springX, y: springY, translateX: '-50%', translateY: '-50%' }}
         initial={{ opacity: 0 }}
         animate={{
           opacity: visible ? 1 : 0,
           scale: hovering ? 1.6 : 1,
           rotate: hovering ? 45 : 0,
-          backgroundColor: hovering ? 'rgba(108,229,232,0.2)' : 'rgba(108,229,232,0)',
+          backgroundColor: hovering ? 'rgba(143,198,193,0.2)' : 'rgba(143,198,193,0)',
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 28 }}
       />
@@ -90,7 +90,7 @@ export default function Cursor() {
           {visible && label && (
             <motion.div
               key={label}
-              className="absolute left-4 top-4 bg-[#6CE5E8] px-1.5 py-1 font-bebas text-[12px] leading-none tracking-[0.12em] text-[#0A0A0A] whitespace-nowrap"
+              className="absolute left-4 top-4 bg-[#8FC6C1] px-1.5 py-1 font-bebas text-[12px] leading-none tracking-[0.12em] text-[#0A0A0A] whitespace-nowrap"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}

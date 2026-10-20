@@ -10,7 +10,7 @@ function StatCounter({ value, label, suffix, isReady }: { value: number; label: 
       <div className="font-bebas text-[15px] tracking-[0.08em] text-black/45 leading-none">{label}</div>
       <div className="mt-4 text-display text-[clamp(3rem,5.2vw,5rem)] short:text-[clamp(2.75rem,4vw,3.75rem)] text-[#0A0A0A] tabular-nums">
         <span>{count}</span>
-        <span className="text-[#6CE5E8]">{suffix}</span>
+        <span className="text-[#8FC6C1]">{suffix}</span>
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ export default function AboutSection({ isReady = false }: AboutSectionProps) {
         animate={showY}
         transition={t(0.3)}
       >
-        我是一名热爱技术的全栈开发工程师，专注于打造<span className="underline decoration-[#6CE5E8] decoration-[0.12em] underline-offset-[0.2em]">极致的用户体验</span>。擅长使用现代 Web 技术栈构建高性能、富交互的应用程序。
+        我是一名热爱技术的全栈开发工程师，专注于打造<span className="underline decoration-[#8FC6C1] decoration-[0.12em] underline-offset-[0.2em]">极致的用户体验</span>。擅长使用现代 Web 技术栈构建高性能、富交互的应用程序。
       </motion.p>
 
       <motion.div
@@ -67,9 +67,9 @@ export default function AboutSection({ isReady = false }: AboutSectionProps) {
         transition={t(0.36)}
       >
         <span>FRONTEND 前端开发</span>
-        <span className="w-1.5 h-1.5 bg-[#6CE5E8]" />
+        <span className="w-1.5 h-1.5 bg-[#8FC6C1]" />
         <span>MOTION 动效设计</span>
-        <span className="w-1.5 h-1.5 bg-[#6CE5E8]" />
+        <span className="w-1.5 h-1.5 bg-[#8FC6C1]" />
         <span>BACKEND 后端开发</span>
       </motion.div>
 
@@ -88,7 +88,7 @@ export default function AboutSection({ isReady = false }: AboutSectionProps) {
         <ul className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-x-6 gap-y-2.5 mt-4">
           {techStack.map((tech) => (
             <li key={tech} className="group flex items-center gap-2.5 text-[15px] font-medium text-[#0A0A0A] whitespace-nowrap">
-              <span className="w-[7px] h-[7px] border border-black/40 group-hover:bg-[#6CE5E8] group-hover:border-[#6CE5E8] transition-colors duration-300" />
+              <span className="w-[7px] h-[7px] border border-black/40 group-hover:bg-[#8FC6C1] group-hover:border-[#8FC6C1] transition-colors duration-300" />
               {tech}
             </li>
           ))}

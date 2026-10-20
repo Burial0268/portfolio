@@ -38,10 +38,10 @@ const categories = [...new Set(skills.map((s) => s.category))];
 
 // One treatment per category, on by default: ink block, cyan block, bare ink type, grey block
 const TONE: Record<string, { bg: string; fg: string }> = {
-  FRONTEND: { bg: '#0A0A0A', fg: '#FFFFFF' },
-  'ANIMATION & 3D': { bg: '#6CE5E8', fg: '#0A0A0A' },
+  FRONTEND: { bg: '#1D1E20', fg: '#F4F2EE' },
+  'ANIMATION & 3D': { bg: '#8FC6C1', fg: '#0A0A0A' },
   STYLING: { bg: 'transparent', fg: '#0A0A0A' },
-  'TOOLS & BACKEND': { bg: '#E6E6E6', fg: '#0A0A0A' },
+  'TOOLS & BACKEND': { bg: '#D2D6CD', fg: '#0A0A0A' },
 };
 
 /*

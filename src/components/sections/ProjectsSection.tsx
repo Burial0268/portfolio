@@ -75,7 +75,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
             >
               <span className="relative block w-full h-0.5 bg-white/20 group-hover:bg-white/40 transition-colors duration-300 overflow-hidden">
                 <motion.span
-                  className="absolute inset-0 bg-[#6CE5E8] origin-left"
+                  className="absolute inset-0 bg-[#8FC6C1] origin-left"
                   initial={false}
                   animate={{ scaleX: i === featuredIndex ? 1 : 0 }}
                   transition={swap}
@@ -98,7 +98,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
                   key={featured.slug}
-                  className="font-bebas text-[clamp(7rem,13vw,12rem)] short:text-[clamp(6rem,10vw,9rem)] leading-[0.8] text-[#6CE5E8] tabular-nums"
+                  className="font-bebas text-[clamp(7rem,13vw,12rem)] short:text-[clamp(6rem,10vw,9rem)] leading-[0.8] text-[#8FC6C1] tabular-nums"
                   initial={{ y: '100%' }}
                   animate={{ y: '0%' }}
                   exit={{ y: '-100%' }}
@@ -139,7 +139,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                     target="_blank"
                     rel="noopener noreferrer"
                     data-cursor="OPEN"
-                    className="group inline-flex items-center gap-12 pl-4 pr-4 py-2.5 bg-[#6CE5E8] text-black hover:bg-white transition-colors duration-300"
+                    className="group inline-flex items-center gap-12 pl-4 pr-4 py-2.5 bg-[#8FC6C1] text-black hover:bg-white transition-colors duration-300"
                   >
                     <span className="leading-none">
                       <span className="block font-bold text-[15px]">查看项目</span>
@@ -153,7 +153,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                     onClick={handlePrev}
                     aria-label="Previous project"
                     data-cursor="PREV"
-                    className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
+                    className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#8FC6C1] hover:text-[#8FC6C1] transition-colors duration-300"
                   >
                     ‹
                   </button>
@@ -161,7 +161,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                     onClick={handleNext}
                     aria-label="Next project"
                     data-cursor="NEXT"
-                    className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
+                    className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#8FC6C1] hover:text-[#8FC6C1] transition-colors duration-300"
                   >
                     ›
                   </button>
@@ -176,7 +176,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
           target="_blank"
           rel="noopener noreferrer"
           data-cursor="GITHUB"
-          className="inline-block mt-12 short:mt-8 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/50 hover:text-[#6CE5E8] transition-colors duration-300"
+          className="inline-block mt-12 short:mt-8 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/50 hover:text-[#8FC6C1] transition-colors duration-300"
         >
           GITHUB / 查看更多 ↗
         </a>

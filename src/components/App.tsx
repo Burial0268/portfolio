@@ -24,13 +24,15 @@ interface AppProps {
   projects: Project[];
 }
 
-// `watermark` is the typewriter word in the bottom band; `name` labels the right rail
+// `watermark` is the typewriter word in the bottom band; `name` labels the right rail.
+// Each section is a sheet fed into the typewriter: soft charcoal, or paper with its own muted tint (Morandi)
+const SHEET = { charcoal: '#1D1E20', paper: '#EDE9E2', sage: '#E5E7E1' };
 const SECTIONS = [
-  { id: 'home', name: 'HOMEPAGE', watermark: '', bg: '#0A0A0A', isDark: true }, // hero types its own title
-  { id: 'about', name: 'ABOUT', watermark: 'ABOUT', bg: '#FAFAFA', isDark: false },
-  { id: 'projects', name: 'WORKS', watermark: 'WORKS', bg: '#0A0A0A', isDark: true },
-  { id: 'skills', name: 'SKILLS', watermark: 'SKILLS', bg: '#FFFFFF', isDark: false },
-  { id: 'gallery', name: 'GALLERY', watermark: 'GALLERY', bg: '#0A0A0A', isDark: true },
+  { id: 'home', name: 'HOMEPAGE', watermark: '', bg: SHEET.charcoal, isDark: true }, // hero types its own title
+  { id: 'about', name: 'ABOUT', watermark: 'ABOUT', bg: SHEET.paper, isDark: false },
+  { id: 'projects', name: 'WORKS', watermark: 'WORKS', bg: SHEET.charcoal, isDark: true },
+  { id: 'skills', name: 'SKILLS', watermark: 'SKILLS', bg: SHEET.sage, isDark: false },
+  { id: 'gallery', name: 'GALLERY', watermark: 'GALLERY', bg: SHEET.charcoal, isDark: true },
 ] as const;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -79,7 +81,7 @@ function SectionDots({ current, total, isDark }: { current: number; total: numbe
         ))}
         {/* Active indicator — edges spring independently */}
         <motion.div
-          className="absolute inset-x-0 bg-[#6CE5E8]"
+          className="absolute inset-x-0 bg-[#8FC6C1]"
           initial={false}
           animate={{ top: topTarget, bottom: bottomTarget }}
           transition={{
@@ -126,10 +128,10 @@ function RightRail({ index, isDark, progress }: { index: number; isDark: boolean
       }`}
     >
       {/* How far the active section has scrolled inside itself (empty when it fits on one screen) */}
-      <motion.span className="absolute -left-px top-0 bottom-0 w-px bg-[#6CE5E8] origin-top" style={{ scaleY: progress }} />
+      <motion.span className="absolute -left-px top-0 bottom-0 w-px bg-[#8FC6C1] origin-top" style={{ scaleY: progress }} />
       <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 px-6">
         {/* Number rolls like a counter; its lower part is cropped (AK) */}
-        <Roll k={index} dir={dir} box="h-[4.2rem]" className="font-bebas text-[6.5rem] leading-[0.8] text-[#6CE5E8]">{pad2(index)}</Roll>
+        <Roll k={index} dir={dir} box="h-[4.2rem]" className="font-bebas text-[6.5rem] leading-[0.8] text-[#8FC6C1]">{pad2(index)}</Roll>
         <Roll k={index} dir={dir} delay={0.06} box="mt-2" className={`font-bebas text-[18px] tracking-[0.14em] transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
           {SECTIONS[index].name}
         </Roll>
@@ -147,7 +149,7 @@ function SectionProgress({ current, total }: { current: number; total: number })
   return (
     <div className="fixed top-0 left-0 right-0 z-55 h-0.5 bg-transparent lg:hidden"> {/* lg+ has the right rail */}
       <motion.div
-        className="h-full bg-[#6CE5E8]"
+        className="h-full bg-[#8FC6C1]"
         animate={{ width: `${progress}%` }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       />
@@ -614,7 +616,7 @@ export default function App({ projects }: AppProps) {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}
                 >
-                  <span className="block w-full h-full bg-[#6CE5E8] animate-blink" />
+                  <span className="block w-full h-full bg-[#8FC6C1] animate-blink" />
                 </motion.span>
               )}
             </AnimatePresence>
@@ -641,7 +643,7 @@ export default function App({ projects }: AppProps) {
 
         <RightRail index={frameIndex} isDark={bgIsDark} progress={scrollProgressSmooth} />
 
-        <Navigation currentSection={SECTIONS[activeIndex].id} isDark={bgIsDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} />
+        <Navigation currentSection={SECTIONS[activeIndex].id} isDark={bgIsDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} sheet={bgColor} />
         <SectionProgress current={activeIndex} total={SECTIONS.length} />
 
         {/* Section Layers — transparent bg, content only */}

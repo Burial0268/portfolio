@@ -84,7 +84,7 @@ export default function SectionShell({
             <div className={`relative mt-4 w-40 ${text}`}>
               <div className="ruler" />
               <motion.span
-                className="absolute top-0 h-1.5 w-8 bg-[#6CE5E8] origin-left"
+                className="absolute top-0 h-1.5 w-8 bg-[#8FC6C1] origin-left"
                 style={{ left: no * 32 }}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: isReady ? 1 : 0 }}
@@ -93,7 +93,7 @@ export default function SectionShell({
             </div>
             <motion.div
               aria-hidden="true"
-              className={`pointer-events-none absolute inset-x-0 top-0 h-[130%] backdrop-blur-md ${isDark ? 'bg-[#0A0A0A]/40' : 'bg-white/40'} [mask-image:linear-gradient(to_bottom,#000_76%,transparent)]`}
+              className={`pointer-events-none absolute inset-x-0 top-0 h-[130%] backdrop-blur-md ${isDark ? 'bg-[#1D1E20]/40' : 'bg-white/30'} [mask-image:linear-gradient(to_bottom,#000_76%,transparent)]`}
               initial={{ y: 0 }}
               animate={{ y: isReady ? '100%' : 0 }}
               transition={t(0.35, 0.9)}

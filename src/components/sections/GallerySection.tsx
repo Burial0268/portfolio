@@ -88,7 +88,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
       <motion.div initial={{ y: 15, opacity: 0 }} animate={showY} transition={t(0.25)}>
         {/* Image — directional clip-path wipe, swipe/drag to browse */}
         <motion.div
-          className="relative overflow-hidden bg-[#111] touch-pan-y aspect-(--ar) transition-[aspect-ratio] duration-500 lg:aspect-auto lg:h-[min(50vh,560px)] lg:short:h-[40vh]"
+          className="relative overflow-hidden bg-[#26272A] touch-pan-y aspect-(--ar) transition-[aspect-ratio] duration-500 lg:aspect-auto lg:h-[min(50vh,560px)] lg:short:h-[40vh]"
           style={{ '--ar': Math.min(Math.max(ratios[current.src] ?? 4 / 3, 0.8), 16 / 9) } as React.CSSProperties}
           role="button"
           tabIndex={0}
@@ -150,7 +150,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
             <AnimatePresence mode="wait">
               <motion.span
                 key={index}
-                className="block font-bebas text-[4.5rem] md:text-[6rem] leading-[0.8] text-[#6CE5E8] tabular-nums"
+                className="block font-bebas text-[4.5rem] md:text-[6rem] leading-[0.8] text-[#8FC6C1] tabular-nums"
                 initial={{ y: '100%' }}
                 animate={{ y: '0%' }}
                 exit={{ y: '-100%' }}
@@ -175,7 +175,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               disabled={index === 0}
               aria-label="Previous photo"
               data-cursor="PREV"
-              className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
+              className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#8FC6C1] hover:text-[#8FC6C1] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               ‹
             </button>
@@ -184,7 +184,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               disabled={index === photos.length - 1}
               aria-label="Next photo"
               data-cursor="NEXT"
-              className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
+              className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#8FC6C1] hover:text-[#8FC6C1] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               ›
             </button>
@@ -205,7 +205,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
             >
               <span className="relative block w-full h-0.5 bg-white/15 group-hover:bg-white/35 transition-colors duration-300 overflow-hidden">
                 <motion.span
-                  className="absolute inset-0 bg-[#6CE5E8] origin-left"
+                  className="absolute inset-0 bg-[#8FC6C1] origin-left"
                   initial={false}
                   animate={{ scaleX: i <= index ? 1 : 0 }}
                   transition={swap}
@@ -221,25 +221,25 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('navigate-section', { detail: 'home' }))}
               data-cursor="TOP"
-              className="text-left uppercase hover:text-[#6CE5E8] transition-colors duration-300"
+              className="text-left uppercase hover:text-[#8FC6C1] transition-colors duration-300"
             >
               ↑ Back to top
             </button>
-            <a href="https://github.com/Burial0268" data-cursor="GITHUB" target="_blank" rel="noopener noreferrer" className="hover:text-[#6CE5E8] transition-colors duration-300">
+            <a href="https://github.com/Burial0268" data-cursor="GITHUB" target="_blank" rel="noopener noreferrer" className="hover:text-[#8FC6C1] transition-colors duration-300">
               GitHub ↗
             </a>
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-1">
         <p>&copy; {new Date().getFullYear()} BURIAL0268 · BUILT WITH ASTRO</p>
         <p className="flex flex-wrap gap-x-4">
-          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-[#6CE5E8] transition-colors duration-300">
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-[#8FC6C1] transition-colors duration-300">
             粤ICP备2022073442号-1
           </a>
           <a
             href="https://beian.mps.gov.cn/#/query/webSearch?code=44162302000035"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-[#6CE5E8] transition-colors duration-300"
+            className="hover:text-[#8FC6C1] transition-colors duration-300"
           >
             粤公网安备44162302000035号
           </a>
@@ -315,7 +315,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
   return (
     <motion.div
       ref={dialogRef}
-      className="fixed inset-0 z-[9000] bg-[#0A0A0A]/95 flex flex-col"
+      className="fixed inset-0 z-[9000] bg-[#1D1E20]/95 flex flex-col"
       role="dialog"
       aria-modal="true"
       data-cursor="CLOSE"
@@ -348,7 +348,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
             />
             {/* one cyan scan line sweeps the frame as it opens */}
             <motion.span
-              className="absolute inset-x-0 h-px bg-[#6CE5E8] shadow-[0_0_12px_#6CE5E8] pointer-events-none"
+              className="absolute inset-x-0 h-px bg-[#8FC6C1] shadow-[0_0_12px_#8FC6C1] pointer-events-none"
               initial={{ top: '0%', opacity: 0 }}
               animate={{ top: '100%', opacity: [0, 1, 1, 0] }}
               transition={{ duration: 0.9, delay: 0.35, ease: 'linear' }}
@@ -357,7 +357,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
           {corners.map((c) => (
             <motion.span
               key={c}
-              className={`absolute w-3 h-3 border-[#6CE5E8] pointer-events-none ${c}`}
+              className={`absolute w-3 h-3 border-[#8FC6C1] pointer-events-none ${c}`}
               initial={{ opacity: 0, scale: 1.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
@@ -376,7 +376,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
         data-cursor=""
         onClick={(e) => e.stopPropagation()}
       >
-        <span className="overflow-hidden h-[1.4em] leading-[1.4em] text-[#6CE5E8] text-lg tabular-nums">
+        <span className="overflow-hidden h-[1.4em] leading-[1.4em] text-[#8FC6C1] text-lg tabular-nums">
           <AnimatePresence mode="wait" initial={false}>
             <motion.span key={index} className="block" initial={{ y: '100%' }} animate={{ y: '0%' }} exit={{ y: '-100%' }} transition={swap}>
               {pad(index + 1)}
@@ -395,10 +395,10 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
         <div className="ml-auto flex items-center gap-2">
           {[['‹', index - 1, 'Previous photo'], ['›', index + 1, 'Next photo']].map(([g, to, label]) => (
             <button key={label as string} onClick={() => onNavigate(to as number)} aria-label={label as string} data-cursor={g === '‹' ? 'PREV' : 'NEXT'}
-              className="w-11 h-11 border border-white/20 flex items-center justify-center hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300">{g}</button>
+              className="w-11 h-11 border border-white/20 flex items-center justify-center hover:border-[#8FC6C1] hover:text-[#8FC6C1] transition-colors duration-300">{g}</button>
           ))}
           <button onClick={onClose} aria-label="Close" data-cursor="CLOSE"
-            className="w-11 h-11 border border-white/20 flex items-center justify-center hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300">✕</button>
+            className="w-11 h-11 border border-white/20 flex items-center justify-center hover:border-[#8FC6C1] hover:text-[#8FC6C1] transition-colors duration-300">✕</button>
         </div>
       </motion.div>
     </motion.div>
