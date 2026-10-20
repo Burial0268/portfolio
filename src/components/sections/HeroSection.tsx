@@ -129,7 +129,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
       </svg>
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: 0, background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%)' }}
+        style={{ zIndex: 0, background: 'radial-gradient(ellipse at 50% 50%, transparent 45%, color-mix(in srgb, var(--sheet) 55%, #000) 100%)' }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2, filter: 'url(#hero-grain)', opacity: 0.06 }} />
 

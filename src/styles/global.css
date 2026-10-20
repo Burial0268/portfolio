@@ -210,6 +210,7 @@ body:has(#loader) {
    --nav-h fixed nav height        --rail  right rail width (lg+)
    --pr    content right edge (margin, or rail + gutter when the rail shows)
    --band  bottom strip under the hairline (scroll hint); content stops above it */
+:root { --sheet: #1D1E20; } /* current sheet colour; each section layer sets its own (App) so veils match their paper */
 :root { --mx: 24px; --nav-h: 64px; --rail: 0px; --pr: var(--mx); --band: 0px; }
 @media (width >= 48rem) { :root { --mx: 48px; --nav-h: 80px; --band: 80px; } }
 @media (width >= 64rem) { :root { --mx: 80px; --rail: 160px; --pr: calc(var(--rail) + 48px); } }

@@ -93,7 +93,7 @@ export default function SectionShell({
             </div>
             <motion.div
               aria-hidden="true"
-              className={`pointer-events-none absolute inset-x-0 top-0 h-[130%] backdrop-blur-md ${isDark ? 'bg-[#1D1E20]/40' : 'bg-white/30'} [mask-image:linear-gradient(to_bottom,#000_76%,transparent)]`}
+              className={`pointer-events-none absolute inset-x-0 top-0 h-[130%] backdrop-blur-md bg-[color-mix(in_srgb,var(--sheet)_45%,transparent)] [mask-image:linear-gradient(to_bottom,#000_76%,transparent)]`}
               initial={{ y: 0 }}
               animate={{ y: isReady ? '100%' : 0 }}
               transition={t(0.35, 0.9)}

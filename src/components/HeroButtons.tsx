@@ -8,7 +8,7 @@ export default function HeroButtons() {
       <button
         onClick={() => navigateTo('projects')}
         data-cursor="ENTER"
-        className="px-8 py-3 bg-[#8FC6C1] text-black font-bold text-sm uppercase tracking-wider hover:bg-white hover:-translate-y-0.5 transition-all duration-300"
+        className="px-8 py-3 bg-[#8FC6C1] text-black font-bold text-sm uppercase tracking-wider hover:bg-[#EDE9E2] hover:-translate-y-0.5 transition-all duration-300"
         style={{ clipPath: 'polygon(0 0, 100% 0, 100% 70%, 90% 100%, 0 100%)' }}
       >
         VIEW WORKS / 查看作品

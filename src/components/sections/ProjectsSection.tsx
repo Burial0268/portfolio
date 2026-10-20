@@ -139,7 +139,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                     target="_blank"
                     rel="noopener noreferrer"
                     data-cursor="OPEN"
-                    className="group inline-flex items-center gap-12 pl-4 pr-4 py-2.5 bg-[#8FC6C1] text-black hover:bg-white transition-colors duration-300"
+                    className="group inline-flex items-center gap-12 pl-4 pr-4 py-2.5 bg-[#8FC6C1] text-black hover:bg-[#EDE9E2] transition-colors duration-300"
                   >
                     <span className="leading-none">
                       <span className="block font-bold text-[15px]">查看项目</span>
