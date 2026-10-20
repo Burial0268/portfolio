@@ -148,6 +148,7 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
             <div key={b.name} className={`absolute transition-opacity duration-300 ${hover && !on ? 'opacity-[0.18]' : ''}`} style={{ left: `${b.x}cqw`, top: `${b.y}cqw` }}>
               <motion.button
                 type="button"
+                data-cursor={k.category}
                 onMouseEnter={() => setHover(k.category)}
                 onMouseLeave={() => setHover(null)}
                 onFocus={() => setHover(k.category)}

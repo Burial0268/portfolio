@@ -91,6 +91,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
           style={{ '--ar': Math.min(Math.max(ratios[current.src] ?? 4 / 3, 0.8), 16 / 9) } as React.CSSProperties}
           role="button"
           tabIndex={0}
+          data-cursor="VIEW"
           aria-label={`查看大图 · ${current.title}`}
           onTap={() => setOpen(true)}
           onKeyDown={(e) => {
@@ -182,6 +183,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               onClick={handlePrev}
               disabled={index === 0}
               aria-label="Previous photo"
+              data-cursor="PREV"
               className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               ‹
@@ -190,6 +192,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               onClick={handleNext}
               disabled={index === photos.length - 1}
               aria-label="Next photo"
+              data-cursor="NEXT"
               className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300 disabled:opacity-20 disabled:pointer-events-none"
             >
               ›
@@ -206,6 +209,7 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
               aria-label={`${photo.title} · ${photo.tag}`}
               title={`${photo.title} · ${photo.tag}`}
               aria-current={i === index}
+              data-cursor={`PHOTO ${pad(i + 1)}`}
               className="group flex-1 h-4 flex items-center"
             >
               <span className="relative block w-full h-0.5 bg-white/15 group-hover:bg-white/35 transition-colors duration-300 overflow-hidden">
@@ -225,11 +229,12 @@ export default function GallerySection({ isReady = false }: GallerySectionProps)
           <div className="flex flex-col gap-1.5 tracking-[0.2em] uppercase text-white/55">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('navigate-section', { detail: 'home' }))}
+              data-cursor="TOP"
               className="text-left uppercase hover:text-[#6CE5E8] transition-colors duration-300"
             >
               ↑ Back to top
             </button>
-            <a href="https://github.com/Burial0268" target="_blank" rel="noopener noreferrer" className="hover:text-[#6CE5E8] transition-colors duration-300">
+            <a href="https://github.com/Burial0268" data-cursor="GITHUB" target="_blank" rel="noopener noreferrer" className="hover:text-[#6CE5E8] transition-colors duration-300">
               GitHub ↗
             </a>
           </div>
@@ -322,6 +327,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
       className="fixed inset-0 z-[9000] bg-[#0A0A0A]/95 flex flex-col"
       role="dialog"
       aria-modal="true"
+      data-cursor="CLOSE"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -329,7 +335,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
       onClick={onClose}
     >
       <div className="flex-1 min-h-0 p-(--mx) pb-4 flex items-center justify-center">
-        <div className="relative" onClick={(e) => e.stopPropagation()}>
+        <div className="relative" data-cursor="" onClick={(e) => e.stopPropagation()}>
           <motion.div
             className="relative overflow-hidden"
             initial={{ clipPath: slit }}
@@ -376,6 +382,7 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 12, opacity: 0 }}
         transition={{ duration: 0.5, delay: 0.5, ease }}
+        data-cursor=""
         onClick={(e) => e.stopPropagation()}
       >
         <span className="overflow-hidden h-[1.4em] leading-[1.4em] text-[#6CE5E8] text-lg tabular-nums">
@@ -396,10 +403,10 @@ function Lightbox({ photo, index, total, onNavigate, onClose }: {
         <span className="text-[13px] text-white/45">{photo.tag} · {photo.subtitle}</span>
         <div className="ml-auto flex items-center gap-2">
           {[['‹', index - 1, 'Previous photo'], ['›', index + 1, 'Next photo']].map(([g, to, label]) => (
-            <button key={label as string} onClick={() => onNavigate(to as number)} aria-label={label as string}
+            <button key={label as string} onClick={() => onNavigate(to as number)} aria-label={label as string} data-cursor={g === '‹' ? 'PREV' : 'NEXT'}
               className="w-11 h-11 border border-white/20 flex items-center justify-center hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300">{g}</button>
           ))}
-          <button onClick={onClose} aria-label="Close"
+          <button onClick={onClose} aria-label="Close" data-cursor="CLOSE"
             className="w-11 h-11 border border-white/20 flex items-center justify-center hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300">✕</button>
         </div>
       </motion.div>

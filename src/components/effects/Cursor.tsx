@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, useMotionValue, useSpring } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'motion/react';
+import Scramble from './Scramble';
 
+/*
+ * HUD cursor: a square reticle that turns 45° over anything clickable. Elements can name their action with
+ * `data-cursor="VIEW"` — the label rides beside the reticle in a cyan tag and decodes in.
+ * An empty `data-cursor=""` blocks a label inherited from an ancestor (e.g. the photo inside the closable lightbox).
+ */
 export default function Cursor() {
   const [hasFinePointer, setHasFinePointer] = useState(false);
   const [visible, setVisible] = useState(false);
   const [hovering, setHovering] = useState(false);
+  const [label, setLabel] = useState('');
 
   const x = useMotionValue(-100);
   const y = useMotionValue(-100);
@@ -32,9 +39,20 @@ export default function Cursor() {
       setVisible(true);
     };
     const handleLeave = () => setVisible(false);
-    const handleOver = (e: Event) => {
-      setHovering(!!(e.target as HTMLElement).closest?.('a, button, .interactive'));
+    const read = (t: HTMLElement | null) => {
+      if (!t) return;
+      const action = t.closest?.('a, button, .interactive, [data-cursor]') as HTMLElement | null;
+      setHovering(!!action && !action.matches(':disabled'));
+      const tagged = t.closest?.('[data-cursor]') as HTMLElement | null;
+      setLabel(tagged && !tagged.matches(':disabled') ? tagged.dataset.cursor ?? '' : '');
     };
+    const handleOver = (e: Event) => read(e.target as HTMLElement);
+    // A page turn / slide swap can pull the element out from under a still pointer without any mouseover,
+    // so re-read whatever is under the pointer now and then
+    const recheck = setInterval(() => {
+      const px = x.get(), py = y.get();
+      if (px >= 0) read(document.elementFromPoint(px, py) as HTMLElement | null);
+    }, 300);
 
     window.addEventListener('pointermove', handleMove);
     document.documentElement.addEventListener('mouseleave', handleLeave);
@@ -44,6 +62,7 @@ export default function Cursor() {
       window.removeEventListener('pointermove', handleMove);
       document.documentElement.removeEventListener('mouseleave', handleLeave);
       document.removeEventListener('mouseover', handleOver);
+      clearInterval(recheck);
     };
   }, [hasFinePointer, x, y]);
 
@@ -52,18 +71,38 @@ export default function Cursor() {
 
   // Portal to body: App's fixed wrapper is its own stacking context, which would put the cursor under body-level overlays (lightbox)
   return createPortal(
-    <motion.div
-      className="fixed left-0 top-0 w-4 h-4 border border-[#6CE5E8] pointer-events-none z-[9999] mix-blend-difference"
-      style={{ x: springX, y: springY, translateX: '-50%', translateY: '-50%' }}
-      initial={{ opacity: 0 }}
-      animate={{
-        opacity: visible ? 1 : 0,
-        scale: hovering ? 1.6 : 1,
-        rotate: hovering ? 45 : 0,
-        backgroundColor: hovering ? 'rgba(108,229,232,0.2)' : 'rgba(108,229,232,0)',
-      }}
-      transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-    />,
+    <>
+      <motion.div
+        className="fixed left-0 top-0 w-4 h-4 border border-[#6CE5E8] pointer-events-none z-[9999] mix-blend-difference"
+        style={{ x: springX, y: springY, translateX: '-50%', translateY: '-50%' }}
+        initial={{ opacity: 0 }}
+        animate={{
+          opacity: visible ? 1 : 0,
+          scale: hovering ? 1.6 : 1,
+          rotate: hovering ? 45 : 0,
+          backgroundColor: hovering ? 'rgba(108,229,232,0.2)' : 'rgba(108,229,232,0)',
+        }}
+        transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+      />
+      {/* Action tag — hangs off the reticle's lower-right corner, opens as a wipe */}
+      <motion.div className="fixed left-0 top-0 pointer-events-none z-[9999]" style={{ x: springX, y: springY }}>
+        <AnimatePresence>
+          {visible && label && (
+            <motion.div
+              key={label}
+              className="absolute left-4 top-4 flex items-center gap-1.5 bg-[#6CE5E8] px-1.5 py-1 font-bebas text-[12px] leading-none tracking-[0.12em] text-[#0A0A0A]"
+              initial={{ clipPath: 'inset(0 100% 0 0)' }}
+              animate={{ clipPath: 'inset(0 0% 0 0)' }}
+              exit={{ clipPath: 'inset(0 0 0 100%)', transition: { duration: 0.18 } }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="w-1 h-1 bg-[#0A0A0A]" />
+              <Scramble text={label} play={label} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </>,
     document.body,
   );
 }
