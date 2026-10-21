@@ -44,6 +44,8 @@ const nextFrame = () => new Promise<void>(r => requestAnimationFrame(() => r()))
 // Page turn = paper feed: the written sheet rolls up out of the machine, the next blank sheet follows it in
 const FEED_MS = 950;
 const FEED_EASE = [0.65, 0, 0.35, 1] as const; // a platen: eases off the stop, glides, eases onto the next line
+const WM_AT = 0.5; // the new word starts typing on the incoming sheet this far into the feed (0 = together, 1 = after)
+const WM_CLASS = 'absolute left-(--mx) -bottom-[0.11em] -ml-[0.03em] font-bebas text-[46vw] md:text-[min(46vh,30vw)] leading-[0.8] whitespace-nowrap';
 
 // Can this section's own scroll container move further in `dir` (1 = down, -1 = up)?
 const hasRoom = (el: HTMLElement | null | undefined, dir: number) => {
@@ -206,6 +208,8 @@ export default function App({ projects }: AppProps) {
   // The paper: bg + watermark + section layers move as one sheet (y); `feed` is the blank sheet riding in behind it
   const sheetY = useMotionValue(0);
   const [feed, setFeed] = useState<{ to: number; dir: number } | null>(null);
+  const [feedText, setFeedText] = useState(''); // what is typed on the incoming sheet while it is still moving
+  const [wmSnap, setWmSnap] = useState(false); // the watermark takes the new sheet's tone at once when it hands over from the feed copy
 
   // Shared background state
   const [bgColor, setBgColor] = useState<string>(SECTIONS[0].bg);
@@ -291,37 +295,52 @@ export default function App({ projects }: AppProps) {
     flushSync(() => setFeed({ to: targetIndex, dir }));
     await nextFrame();
     const roll = animate(sheetY, -dir * window.innerHeight, { duration: calm ? 0 : FEED_MS / 1000, ease: FEED_EASE });
+
+    // The new word is typed while its sheet is still coming in: on the sheet's own copy first, then (after the hand-over
+    // below) on the real watermark — one run of keystrokes, no pause between the feed and the typing.
+    let typed = '';
+    let handedOver = false;
+    const typing = (async () => {
+      if (!toWatermark) return;
+      await delay(calm ? 0 : FEED_MS * WM_AT);
+      setCursorVisible(true);
+      for (let i = 0; i <= toWatermark.length; i++) {
+        typed = toWatermark.slice(0, i);
+        if (handedOver) showWatermark(typed); else setFeedText(typed);
+        await delay(TYPE_MS);
+      }
+    })();
+
     await delay(calm ? 0 : FEED_MS * 0.5);
     setFrameIndex(targetIndex);
     setBgIsDark(SECTIONS[targetIndex].isDark);
     await roll;
 
-    // Phase 2: The blank sheet is the page now — swap everything underneath it, then drop the sheet back to 0 (no visible change)
+    // Phase 2: The blank sheet is the page now — swap everything underneath it, then drop the sheet back to 0 (no visible change).
+    // The real watermark takes over from the sheet's copy exactly where the typing is.
+    handedOver = true;
     flushSync(() => {
       setContentReady(false);
       setSectionVisible(false);
-      showWatermark('');
+      showWatermark(typed);
+      setFeedText('');
+      setWmSnap(true);
+      if (toWatermark) setWatermarkProminent(true);
       setBgColor(SECTIONS[targetIndex].bg);
       activeIndexRef.current = targetIndex;
       setActiveIndex(targetIndex);
+      setFeed(null);
     });
+    nextFrame().then(() => setWmSnap(false));
     drift.jump(0);
     driftSmooth.jump(0);
     const wrapper = sectionRefs.current[targetIndex];
     if (wrapper) wrapper.scrollTop = 0;
     sheetY.jump(0);
-    setFeed(null);
-    await delay(calm ? 0 : 120);
 
-    // Phase 3: Type the new watermark onto the fresh sheet, then let it settle back
+    // Phase 3: Let the typing finish, then the watermark settles back
+    await typing;
     if (toWatermark) {
-      setWatermarkProminent(true);
-      setCursorVisible(true);
-      await delay(150);
-      for (let i = 0; i <= toWatermark.length; i++) {
-        showWatermark(toWatermark.slice(0, i));
-        await delay(TYPE_MS);
-      }
       await delay(250);
       setCursorVisible(false);
       setWatermarkProminent(false);
@@ -598,7 +617,7 @@ export default function App({ projects }: AppProps) {
             content, starting on the page margin and bled off the bottom edge */}
         <div className={`fixed inset-0 ${isMobile ? 'z-3' : 'z-1'} pointer-events-none select-none overflow-hidden`} aria-hidden="true">
           <motion.div
-            className="absolute left-(--mx) -bottom-[0.11em] -ml-[0.03em] font-bebas text-[46vw] md:text-[min(46vh,30vw)] leading-[0.8] whitespace-nowrap"
+            className={WM_CLASS}
             style={{ x: driftSmooth }}
             animate={{
               // tone of the sheet it is printed on (not the frame, which flips while the sheet is still leaving)
@@ -606,11 +625,11 @@ export default function App({ projects }: AppProps) {
                 ? (watermarkProminent ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.045)')
                 : (watermarkProminent ? 'rgba(0,0,0,0.13)' : 'rgba(0,0,0,0.04)')
             }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: wmSnap ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
             {watermarkText}
             <AnimatePresence>
-              {cursorVisible && (
+              {cursorVisible && !feed && (
                 <motion.span
                   className="inline-block w-[0.045em] h-[0.66em] ml-[0.05em]"
                   initial={{ opacity: 0 }}
@@ -666,7 +685,19 @@ export default function App({ projects }: AppProps) {
               backgroundColor: SECTIONS[feed.to].bg,
               boxShadow: `0 ${feed.dir > 0 ? -1 : 1}px 0 rgba(0,0,0,0.06), 0 ${feed.dir > 0 ? -16 : 16}px 36px -14px rgba(0,0,0,0.3)`,
             }}
-          />
+          >
+            {/* the word being typed on this sheet as it arrives (same box as the real watermark, which takes over at the stop) */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className={WM_CLASS} style={{ color: SECTIONS[feed.to].isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.13)' }}>
+                {feedText}
+                {cursorVisible && (
+                  <span className="inline-block w-[0.045em] h-[0.66em] ml-[0.05em]">
+                    <span className="block w-full h-full bg-[#8FC6C1] animate-blink" />
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
         )}
         </motion.div>
 
