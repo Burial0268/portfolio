@@ -218,6 +218,8 @@ export default function App({ projects }: AppProps) {
 
   // Section the frame (rail) shows — flips with the background, before the content swaps in
   const [frameIndex, setFrameIndex] = useState(0);
+  // The nav bar sits at the top edge, so it changes sheet when the paper's edge has passed *it*, not at the midpoint like the rail
+  const [navIndex, setNavIndex] = useState(0);
   // The paper: bg + watermark + section layers move as one sheet (y); `feed` is the blank sheet riding in behind it
   const sheetY = useMotionValue(0);
   const paperY = useTransform([sheetY, paperSmooth], ([a, b]: number[]) => a + b);
@@ -333,6 +335,8 @@ export default function App({ projects }: AppProps) {
     // below) on the real watermark — one run of keystrokes, no pause between the feed and the typing.
     let typed = '';
     let handedOver = false;
+    // forward the old sheet's tail leaves the top last (~0.95 of the travel); back, the new sheet covers the top first
+    setTimeout(() => setNavIndex(targetIndex), calm ? 0 : FEED_MS * (dir > 0 ? 0.77 : 0.2));
     const typing = (async () => {
       if (!toWatermark) return;
       await delay(calm ? 0 : FEED_MS * WM_AT);
@@ -444,6 +448,7 @@ export default function App({ projects }: AppProps) {
         activeIndexRef.current = i;
         setActiveIndex(i);
         setFrameIndex(i);
+        setNavIndex(i);
         setBgColor(SECTIONS[i].bg);
         setBgIsDark(SECTIONS[i].isDark);
         retypeWatermark(SECTIONS[i].watermark);
@@ -661,7 +666,6 @@ export default function App({ projects }: AppProps) {
         <motion.div className={isMobile ? 'contents' : 'absolute inset-0'} style={isMobile ? undefined : { y: paperY }}>
         {/* Sheet colour — swaps instantly: a page turn hides the change under the incoming sheet */}
         <div className="fixed inset-0 z-0" style={{ backgroundColor: bgColor }} />
-        <div className="grain fixed inset-0 z-0 pointer-events-none" aria-hidden="true" />
 
         {/* Typewriter watermark — the design's centrepiece: half the viewport tall, behind the
             content, starting on the page margin and bled off the bottom edge */}
@@ -726,6 +730,10 @@ export default function App({ projects }: AppProps) {
           );
         })}
 
+        {/* Paper grain lies over the sections (not under them): frosted veils blur whatever is beneath, and blurred grain
+            would show as a smooth patch in the paper */}
+        <div className="grain fixed inset-0 z-2 pointer-events-none max-md:hidden" aria-hidden="true" />
+
         {/* The next blank sheet, fed in right behind the current one (below going forward, above going back) */}
         {feed && !isMobile && (
           <div
@@ -773,7 +781,7 @@ export default function App({ projects }: AppProps) {
 
         <RightRail index={frameIndex} isDark={bgIsDark} progress={scrollProgressSmooth} />
 
-        <Navigation currentSection={SECTIONS[activeIndex].id} isDark={bgIsDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} sheet={SECTIONS[frameIndex].bg} />
+        <Navigation currentSection={SECTIONS[activeIndex].id} isDark={SECTIONS[navIndex].isDark} onNavigate={handleNavigate} bgmPlaying={bgmPlaying} onBGMToggle={toggleBGM} bgmAnalyser={bgmAnalyserRef} sheet={SECTIONS[navIndex].bg} />
         <SectionProgress current={activeIndex} total={SECTIONS.length} />
 
         <Cursor />

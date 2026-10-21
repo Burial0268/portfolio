@@ -162,7 +162,14 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
               >
                 {b.name}
               </motion.button>
-              <span className={`pointer-events-none absolute font-bebas text-[clamp(9px,1.4cqw,14px)] leading-none tabular-nums text-black/45 ${labelPos}`}>{k.level}</span>
+              <motion.span
+                className={`pointer-events-none absolute font-bebas text-[clamp(9px,1.4cqw,14px)] leading-none tabular-nums text-black/45 ${labelPos}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isReady ? 1 : 0 }}
+                transition={t(0.3 + i * 0.05)}
+              >
+                {k.level}
+              </motion.span>
             </div>
           );
         })}

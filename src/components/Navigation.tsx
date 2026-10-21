@@ -56,7 +56,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
     <>
       {/* Desktop Navigation */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md transition-[background-color,box-shadow] duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md transition-[background-color,box-shadow] duration-200 ${
           isDark ? 'shadow-[0_1px_0_rgba(255,255,255,0.06)]' : 'shadow-[0_1px_0_rgba(0,0,0,0.08)]'
         }`}
         style={{ backgroundColor: mounted ? `color-mix(in srgb, ${isOpen ? '#1D1E20' : sheet} 88%, transparent)` : 'transparent' }}
@@ -68,7 +68,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
               className="font-bold text-xl md:text-2xl transition-opacity hover:opacity-70"
               onClick={() => handleNavClick('home')}
             >
-              <span className={`transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
+              <span className={`transition-colors duration-200 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
                 BAESORY
               </span>
               <span className="text-[#8FC6C1]">拜瑞</span>
@@ -80,7 +80,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                 <button
                   key={section.id}
                   onClick={() => handleNavClick(section.id)}
-                  className={`relative px-4 py-2 text-left font-bebas text-[17px] leading-none tracking-[0.04em] transition-colors duration-300 ${
+                  className={`relative px-4 py-2 text-left font-bebas text-[17px] leading-none tracking-[0.04em] transition-colors duration-200 ${
                     currentSection === section.id
                       ? isDark ? 'text-white' : 'text-[#0A0A0A]'
                       : isDark
@@ -102,7 +102,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
             </div>
 
             <div
-              className={`flex items-center gap-1 lg:w-(--rail) lg:h-full lg:justify-center lg:border-l transition-colors duration-500 ${
+              className={`flex items-center gap-1 lg:w-(--rail) lg:h-full lg:justify-center lg:border-l transition-colors duration-200 ${
                 isDark ? 'lg:border-white/10' : 'lg:border-black/10'
               }`}
             >
@@ -178,7 +178,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                   >
                     <span className="font-mono text-[10px] text-white/30 w-6">{String(index + 1).padStart(2, '0')}</span>
                     <span
-                      className={`inline-block w-4 h-3 -skew-x-12 transition-colors duration-300 ${
+                      className={`inline-block w-4 h-3 -skew-x-12 transition-colors duration-200 ${
                         active ? 'bg-[#8FC6C1]' : 'bg-white/15 group-active:bg-[#8FC6C1]'
                       }`}
                     />
