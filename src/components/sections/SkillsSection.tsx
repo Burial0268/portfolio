@@ -133,7 +133,8 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       isReady={isReady}
       description="技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。"
     >
-      <div className="hidden md:block relative w-full aspect-[100/54] [container-type:inline-size]">
+      {/* max-w: the frame never grows taller than the page has room for (page padding + legend ≈ 72px), so a wide-but-short window doesn't scroll just to reach the bottom padding */}
+      <div className="hidden md:block relative w-full aspect-[100/54] [container-type:inline-size] max-w-[calc((100dvh-var(--nav-h)-var(--band)-96px-72px)*100/54)] short:max-w-[calc((100dvh-var(--nav-h)-var(--band)-56px-72px)*100/54)]">
         {boxes.map((b, i) => {
           const k = byName[b.name];
           const on = hover === k.category;
