@@ -209,6 +209,7 @@ export default function App({ projects }: AppProps) {
   const sheetY = useMotionValue(0);
   const [feed, setFeed] = useState<{ to: number; dir: number } | null>(null);
   const [feedText, setFeedText] = useState(''); // what is typed on the incoming sheet while it is still moving
+  const [wmDeleting, setWmDeleting] = useState(false); // the old word is being backspaced on the sheet that is leaving
   const [wmSnap, setWmSnap] = useState(false); // the watermark takes the new sheet's tone at once when it hands over from the feed copy
 
   // Shared background state
@@ -296,6 +297,22 @@ export default function App({ projects }: AppProps) {
     await nextFrame();
     const roll = animate(sheetY, -dir * window.innerHeight, { duration: calm ? 0 : FEED_MS / 1000, ease: FEED_EASE });
 
+    // As the feed starts the old word is backspaced away (done well before the sheet is out of sight)
+    const deleting = (async () => {
+      if (!watermarkRef.current) return;
+      if (!calm) {
+        setWatermarkProminent(true);
+        setWmDeleting(true);
+        setCursorVisible(true);
+        while (watermarkRef.current) {
+          showWatermark(watermarkRef.current.slice(0, -1));
+          await delay(DELETE_MS);
+        }
+        setWmDeleting(false);
+      }
+      showWatermark('');
+    })();
+
     // The new word is typed while its sheet is still coming in: on the sheet's own copy first, then (after the hand-over
     // below) on the real watermark — one run of keystrokes, no pause between the feed and the typing.
     let typed = '';
@@ -303,6 +320,7 @@ export default function App({ projects }: AppProps) {
     const typing = (async () => {
       if (!toWatermark) return;
       await delay(calm ? 0 : FEED_MS * WM_AT);
+      await deleting;
       setCursorVisible(true);
       for (let i = 0; i <= toWatermark.length; i++) {
         typed = toWatermark.slice(0, i);
@@ -325,7 +343,7 @@ export default function App({ projects }: AppProps) {
       showWatermark(typed);
       setFeedText('');
       setWmSnap(true);
-      if (toWatermark) setWatermarkProminent(true);
+      setWatermarkProminent(!!toWatermark);
       setBgColor(SECTIONS[targetIndex].bg);
       activeIndexRef.current = targetIndex;
       setActiveIndex(targetIndex);
@@ -345,6 +363,8 @@ export default function App({ projects }: AppProps) {
       setCursorVisible(false);
       setWatermarkProminent(false);
       await delay(150);
+    } else {
+      setCursorVisible(false); // home has no word, so no caret
     }
 
     // Phase 4: Content is set on the page
@@ -629,7 +649,7 @@ export default function App({ projects }: AppProps) {
           >
             {watermarkText}
             <AnimatePresence>
-              {cursorVisible && !feed && (
+              {cursorVisible && (!feed || wmDeleting) && (
                 <motion.span
                   className="inline-block w-[0.045em] h-[0.66em] ml-[0.05em]"
                   initial={{ opacity: 0 }}
@@ -690,7 +710,7 @@ export default function App({ projects }: AppProps) {
             <div className="absolute inset-0 overflow-hidden">
               <div className={WM_CLASS} style={{ color: SECTIONS[feed.to].isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.13)' }}>
                 {feedText}
-                {cursorVisible && (
+                {cursorVisible && !wmDeleting && (
                   <span className="inline-block w-[0.045em] h-[0.66em] ml-[0.05em]">
                     <span className="block w-full h-full bg-[#8FC6C1] animate-blink" />
                   </span>
