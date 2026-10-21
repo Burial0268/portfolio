@@ -100,7 +100,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
         </filter>
       </svg>
       <motion.svg
-        className="absolute inset-0 w-full h-full pointer-events-none text-[#6CE5E8]/[0.08]"
+        className="absolute inset-0 w-full h-full pointer-events-none text-[#8FC6C1]/[0.08]"
         style={{ zIndex: 1, animation: booted ? 'hud-flash 0.9s linear' : undefined }}
         viewBox="0 0 160 100"
         preserveAspectRatio="xMidYMid slice"
@@ -113,7 +113,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
       </motion.svg>
       {/* Pointer lens: the same contours, brighter, revealed only around the cursor */}
       <svg
-        className="absolute inset-0 w-full h-full pointer-events-none text-[#6CE5E8]/70 transition-opacity duration-500"
+        className="absolute inset-0 w-full h-full pointer-events-none text-[#8FC6C1]/70 transition-opacity duration-500"
         style={{
           zIndex: 1,
           opacity: 'var(--lens, 0)',
@@ -129,7 +129,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
       </svg>
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: 0, background: 'radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%)' }}
+        style={{ zIndex: 0, background: 'radial-gradient(ellipse at 50% 50%, transparent 45%, color-mix(in srgb, var(--sheet) 55%, #000) 100%)' }}
       />
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 2, filter: 'url(#hero-grain)', opacity: 0.06 }} />
 
@@ -161,7 +161,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
                 </text>
               </mask>
             </defs>
-            <rect width="300" height="800" fill="#6CE5E8" fillOpacity="0.07" mask="url(#hero-cutout)" />
+            <rect width="300" height="800" fill="#8FC6C1" fillOpacity="0.07" mask="url(#hero-cutout)" />
           </svg>
         </motion.div>
       </div>
@@ -189,7 +189,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
               // SUPER::PORTFOLIO::CORE::init()
             </span>
             <span className="hidden md:block col-span-3 tracking-[0.2em] text-white/60">
-              <span className="text-[#6CE5E8]">(00)</span> / 04 — INDEX 首页
+              <span className="text-[#8FC6C1]">(00)</span> / 04 — INDEX 首页
             </span>
             <span className="hidden md:block col-span-3 tracking-[0.2em] text-white/30">
               PORTFOLIO ©{new Date().getFullYear()}
@@ -214,13 +214,13 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
           >
             <span aria-hidden="true">{NAME.slice(0, typed)}</span>
             {cursorOn && (
-              <span aria-hidden="true" className="inline-block w-[0.06em] h-[0.7em] ml-[0.05em] bg-[#6CE5E8] animate-blink" />
+              <span aria-hidden="true" className="inline-block w-[0.06em] h-[0.7em] ml-[0.05em] bg-[#8FC6C1] animate-blink" />
             )}
           </h1>
 
           <div className="overflow-hidden mt-2">
             <motion.div
-              className="text-display text-[#6CE5E8] text-[clamp(3.25rem,min(8vw,11vh),7.5rem)] leading-[0.95]"
+              className="text-display text-[#8FC6C1] text-[clamp(3.25rem,min(8vw,11vh),7.5rem)] leading-[0.95]"
               initial={{ y: '110%' }}
               animate={{ y: booted ? '0%' : '110%' }}
               transition={{ duration: 0.8, delay: 1.3, ease: EASE }}
@@ -247,7 +247,7 @@ export default function HeroSection({ isReady = true }: HeroSectionProps) {
             {heroInfo.map((item, i) => (
               <motion.div key={item.label} className={`md:col-span-3 ${i === 2 ? 'hidden md:block' : ''}`} {...show(1.55 + i * 0.07)}>
                 <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
-                  <span className="text-[#6CE5E8]/80">({String(i + 1).padStart(2, '0')})</span> {item.label}
+                  <span className="text-[#8FC6C1]/80">({String(i + 1).padStart(2, '0')})</span> {item.label}
                 </div>
                 <div className="mt-3 text-base font-bold text-white">{item.value}</div>
                 <div className="mt-0.5 text-xs text-white/40">{item.sub}</div>

@@ -10,6 +10,7 @@ interface NavigationProps {
   bgmPlaying?: boolean;
   onBGMToggle?: () => void;
   bgmAnalyser?: React.RefObject<AnalyserNode | null>;
+  sheet?: string; // current section's sheet colour — the bar is the same paper, slightly see-through
 }
 
 const sections = [
@@ -20,7 +21,7 @@ const sections = [
   { id: 'gallery', en: 'GALLERY', zh: '影集' }
 ];
 
-export default function Navigation({ currentSection = 'home', isDark: sectionIsDark = true, onNavigate, bgmPlaying, onBGMToggle, bgmAnalyser }: NavigationProps) {
+export default function Navigation({ currentSection = 'home', isDark: sectionIsDark = true, onNavigate, bgmPlaying, onBGMToggle, bgmAnalyser, sheet = '#1D1E20' }: NavigationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   // The full-screen menu is dark, so the bar sitting on top of it goes dark too
@@ -55,13 +56,10 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
     <>
       {/* Desktop Navigation */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          mounted
-            ? isDark
-              ? 'bg-black/40 backdrop-blur-md'
-              : 'bg-white/80 backdrop-blur-md shadow-sm'
-            : 'bg-transparent'
+        className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md transition-[background-color,box-shadow] duration-200 ${
+          isDark ? 'shadow-[0_1px_0_rgba(255,255,255,0.06)]' : 'shadow-[0_1px_0_rgba(0,0,0,0.08)]'
         }`}
+        style={{ backgroundColor: mounted ? `color-mix(in srgb, ${isOpen ? '#1D1E20' : sheet} 88%, transparent)` : 'transparent' }}
       >
         <div className="pl-(--mx) pr-(--mx) lg:pr-0">
           <div className="flex items-center justify-between h-(--nav-h)">
@@ -70,10 +68,10 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
               className="font-bold text-xl md:text-2xl transition-opacity hover:opacity-70"
               onClick={() => handleNavClick('home')}
             >
-              <span className={`transition-colors duration-500 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
+              <span className={`transition-colors duration-200 ${isDark ? 'text-white' : 'text-[#0A0A0A]'}`}>
                 BAESORY
               </span>
-              <span className="text-[#6CE5E8]">拜瑞</span>
+              <span className="text-[#8FC6C1]">拜瑞</span>
             </button>
 
             {/* Desktop Menu */}
@@ -82,7 +80,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                 <button
                   key={section.id}
                   onClick={() => handleNavClick(section.id)}
-                  className={`relative px-4 py-2 text-left font-bebas text-[17px] leading-none tracking-[0.04em] transition-colors duration-300 ${
+                  className={`relative px-4 py-2 text-left font-bebas text-[17px] leading-none tracking-[0.04em] transition-colors duration-200 ${
                     currentSection === section.id
                       ? isDark ? 'text-white' : 'text-[#0A0A0A]'
                       : isDark
@@ -94,7 +92,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                   <span className="block font-sans text-[10px] tracking-normal opacity-50 mt-1">{section.zh}</span>
                   {currentSection === section.id && (
                     <motion.span
-                      className="absolute bottom-0 left-0 w-full h-0.5 bg-[#6CE5E8]"
+                      className="absolute bottom-0 left-0 w-full h-0.5 bg-[#8FC6C1]"
                       layoutId="nav-indicator"
                       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     />
@@ -104,7 +102,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
             </div>
 
             <div
-              className={`flex items-center gap-1 lg:w-(--rail) lg:h-full lg:justify-center lg:border-l transition-colors duration-500 ${
+              className={`flex items-center gap-1 lg:w-(--rail) lg:h-full lg:justify-center lg:border-l transition-colors duration-200 ${
                 isDark ? 'lg:border-white/10' : 'lg:border-black/10'
               }`}
             >
@@ -122,7 +120,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
 
               {/* Mobile: current section index (AK-style) */}
             <span className={`md:hidden ml-auto mr-1 font-mono text-[10px] tracking-wider transition-colors duration-500 ${isDark ? 'text-white/50' : 'text-black/50'}`}>
-              <span className="text-[#6CE5E8]">{String(currentIndex).padStart(2, '0')}</span> / {String(sections.length - 1).padStart(2, '0')}
+              <span className="text-[#8FC6C1]">{String(currentIndex).padStart(2, '0')}</span> / {String(sections.length - 1).padStart(2, '0')}
             </span>
 
             {/* Mobile Menu Button */}
@@ -145,21 +143,21 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="fixed inset-0 z-40 md:hidden bg-[#0A0A0A] flex flex-col pt-24 pb-8 px-6 overflow-hidden"
+            className="fixed inset-0 z-40 md:hidden bg-[#1D1E20] flex flex-col pt-24 pb-8 px-6 overflow-hidden"
             initial={{ clipPath: 'inset(0 0 100% 0)' }}
             animate={{ clipPath: 'inset(0 0 0% 0)' }}
             exit={{ clipPath: 'inset(0 0 100% 0)' }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           >
             <svg
-              className="absolute inset-0 w-full h-full pointer-events-none text-[#6CE5E8]/[0.06]"
+              className="absolute inset-0 w-full h-full pointer-events-none text-[#8FC6C1]/[0.06]"
               viewBox="0 0 160 100"
               preserveAspectRatio="xMidYMid slice"
               aria-hidden="true"
             >
               <use href="#topo" />
             </svg>
-            <div className="absolute left-0 top-16 bottom-0 w-1 bg-[#6CE5E8]" />
+            <div className="absolute left-0 top-16 bottom-0 w-1 bg-[#8FC6C1]" />
 
             <div className="relative text-[10px] uppercase tracking-[0.3em] text-white/30 font-mono mb-6">
               ▼ / MENU — BURIAL0268
@@ -180,11 +178,11 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                   >
                     <span className="font-mono text-[10px] text-white/30 w-6">{String(index + 1).padStart(2, '0')}</span>
                     <span
-                      className={`inline-block w-4 h-3 -skew-x-12 transition-colors duration-300 ${
-                        active ? 'bg-[#6CE5E8]' : 'bg-white/15 group-active:bg-[#6CE5E8]'
+                      className={`inline-block w-4 h-3 -skew-x-12 transition-colors duration-200 ${
+                        active ? 'bg-[#8FC6C1]' : 'bg-white/15 group-active:bg-[#8FC6C1]'
                       }`}
                     />
-                    <span className={`text-display text-3xl tracking-wide ${active ? 'text-[#6CE5E8]' : 'text-white'}`}>
+                    <span className={`text-display text-3xl tracking-wide ${active ? 'text-[#8FC6C1]' : 'text-white'}`}>
                       {section.en}
                     </span>
                     <span className="ml-auto text-xs text-white/40">{section.zh}</span>
@@ -208,7 +206,7 @@ export default function Navigation({ currentSection = 'home', isDark: sectionIsD
                 href="https://github.com/Burial0268"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#6CE5E8]"
+                className="text-[#8FC6C1]"
               >
                 GITHUB →
               </a>

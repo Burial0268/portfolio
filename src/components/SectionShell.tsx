@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import Typed from './effects/Typed';
 
 interface SectionShellProps {
   label: string;          // condensed label after "BAESORY ://", e.g. PROFILE
@@ -47,7 +48,7 @@ export default function SectionShell({
         {/* ── Left column (3/12) ───────────────────────────────── */}
         <aside className="lg:col-span-3">
           <motion.div className={`font-bebas text-[15px] tracking-[0.1em] leading-none ${muted}`} initial={{ opacity: 0 }} animate={fade} transition={t(0.1, 0.4)}>
-            BAESORY :// <span className={text}>{label}</span>
+            BAESORY :// <Typed className={text} text={label} play={isReady} delay={200} />
           </motion.div>
 
           <div className="mt-6 overflow-hidden">
@@ -68,7 +69,9 @@ export default function SectionShell({
             </h2>
           </div>
           {/* Frosted-glass cover (RhineLabUI): sits over the ZH title + ruler and clears top→bottom with a feathered edge */}
-          <div className="relative overflow-hidden">
+          {/* The cover is padded out past the text (-mx/-mt cancel the padding) so its feathered edges fall on bare paper:
+              a hard edge shows as a lighter/darker box, because the blur only spreads the title's light up to the box */}
+          <div className="relative overflow-hidden -mx-6 px-6 -mt-4 pt-4">
             <div className="overflow-hidden">
               <motion.div
                 className={`text-[3rem] short:text-[2.5rem] font-bold leading-[1.15] ${text}`}
@@ -83,7 +86,7 @@ export default function SectionShell({
             <div className={`relative mt-4 w-40 ${text}`}>
               <div className="ruler" />
               <motion.span
-                className="absolute top-0 h-1.5 w-8 bg-[#6CE5E8] origin-left"
+                className="absolute top-0 h-1.5 w-8 bg-[#8FC6C1] origin-left"
                 style={{ left: no * 32 }}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: isReady ? 1 : 0 }}
@@ -92,7 +95,7 @@ export default function SectionShell({
             </div>
             <motion.div
               aria-hidden="true"
-              className={`pointer-events-none absolute inset-x-0 top-0 h-[130%] backdrop-blur-md ${isDark ? 'bg-[#0A0A0A]/40' : 'bg-white/40'} [mask-image:linear-gradient(to_bottom,#000_76%,transparent)]`}
+              className={`pointer-events-none absolute inset-x-0 top-0 h-[130%] backdrop-blur-md bg-[color-mix(in_srgb,var(--sheet)_45%,transparent)] [mask-image:linear-gradient(to_right,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent),linear-gradient(to_bottom,transparent,#000_1rem,#000_76%,transparent)] [mask-composite:intersect] [-webkit-mask-composite:source-in]`}
               initial={{ y: 0 }}
               animate={{ y: isReady ? '100%' : 0 }}
               transition={t(0.35, 0.9)}

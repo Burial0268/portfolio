@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import SectionShell, { pad } from '../SectionShell';
+import Typed from '../effects/Typed';
 
 interface Project {
   slug: string;
@@ -69,11 +70,12 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
               aria-label={project.title}
               title={project.title}
               aria-current={i === featuredIndex}
+              data-cursor={`CASE ${pad(i + 1)}`}
               className="group flex-1 h-4 flex items-start"
             >
               <span className="relative block w-full h-0.5 bg-white/20 group-hover:bg-white/40 transition-colors duration-300 overflow-hidden">
                 <motion.span
-                  className="absolute inset-0 bg-[#6CE5E8] origin-left"
+                  className="absolute inset-0 bg-[#8FC6C1] origin-left"
                   initial={false}
                   animate={{ scaleX: i === featuredIndex ? 1 : 0 }}
                   transition={swap}
@@ -86,7 +88,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
         {/* Case meta row */}
         <div className="flex items-center justify-between gap-6 pt-1 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/45">
           <span className="text-white shrink-0">CASE <span className="text-white/40">/ {pad(projects.length)}</span></span>
-          <span className="truncate">{featured?.tags.join(' / ')}</span>
+          <Typed className="truncate" text={featured?.tags.join(' / ') ?? ''} play={isReady} delay={400} />
         </div>
 
         {featured && (
@@ -96,7 +98,7 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
                   key={featured.slug}
-                  className="font-bebas text-[clamp(7rem,13vw,12rem)] short:text-[clamp(6rem,10vw,9rem)] leading-[0.8] text-[#6CE5E8] tabular-nums"
+                  className="font-bebas text-[clamp(7rem,13vw,12rem)] short:text-[clamp(6rem,10vw,9rem)] leading-[0.8] text-[#8FC6C1] tabular-nums"
                   initial={{ y: '100%' }}
                   animate={{ y: '0%' }}
                   exit={{ y: '-100%' }}
@@ -110,17 +112,21 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
             <div className="md:col-span-6 min-w-0 [--fs:clamp(1.75rem,3vw,3rem)]">
               {/* Reserve room for a 2-line title + longest description so the CTA row and arrows never move between projects */}
               <div className="relative min-h-[calc(var(--fs)*2.3+1rem+6.2rem)] md:min-h-[calc(var(--fs)*2.3+1rem+4.6rem)]">
+                {/* Title is retyped (backspace to the common prefix, then type) — the watermark's typewriter at heading size */}
+                <h3 className="text-(length:--fs) font-bold leading-[1.15] text-[#F0F0F0] line-clamp-2">
+                  <Typed text={featured.title} play={isReady} delay={300} />
+                </h3>
                 <AnimatePresence mode="popLayout" initial={false}>
-                  <motion.div
+                  <motion.p
                     key={featured.slug}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 text-[15px] text-white/55 leading-relaxed max-w-[32em] line-clamp-4 md:line-clamp-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     exit={{ opacity: 0, transition: { duration: 0.15 } }}
-                    transition={swap}
+                    transition={{ ...swap, delay: 0.2 }}
                   >
-                    <h3 className="text-(length:--fs) font-bold leading-[1.15] text-[#F0F0F0] line-clamp-2">{featured.title}</h3>
-                    <p className="mt-4 text-[15px] text-white/55 leading-relaxed max-w-[32em] line-clamp-4 md:line-clamp-3">{featured.description}</p>
-                  </motion.div>
+                    {featured.description}
+                  </motion.p>
                 </AnimatePresence>
               </div>
 
@@ -132,7 +138,8 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                     href={featuredHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-12 pl-4 pr-4 py-2.5 bg-[#6CE5E8] text-black hover:bg-white transition-colors duration-300"
+                    data-cursor="OPEN"
+                    className="group inline-flex items-center gap-12 pl-4 pr-4 py-2.5 bg-[#8FC6C1] text-black hover:bg-[#EDE9E2] transition-colors duration-300"
                   >
                     <span className="leading-none">
                       <span className="block font-bold text-[15px]">查看项目</span>
@@ -145,14 +152,16 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
                   <button
                     onClick={handlePrev}
                     aria-label="Previous project"
-                    className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
+                    data-cursor="PREV"
+                    className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#8FC6C1] hover:text-[#8FC6C1] transition-colors duration-300"
                   >
                     ‹
                   </button>
                   <button
                     onClick={handleNext}
                     aria-label="Next project"
-                    className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#6CE5E8] hover:text-[#6CE5E8] transition-colors duration-300"
+                    data-cursor="NEXT"
+                    className="w-[51px] h-[51px] border border-white/20 flex items-center justify-center text-white/60 hover:border-[#8FC6C1] hover:text-[#8FC6C1] transition-colors duration-300"
                   >
                     ›
                   </button>
@@ -166,7 +175,8 @@ export default function ProjectsSection({ projects, isReady = false }: ProjectsS
           href="https://github.com/Burial0268"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block mt-12 short:mt-8 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/50 hover:text-[#6CE5E8] transition-colors duration-300"
+          data-cursor="GITHUB"
+          className="inline-block mt-12 short:mt-8 font-bebas text-[15px] leading-none tracking-[0.06em] text-white/50 hover:text-[#8FC6C1] transition-colors duration-300"
         >
           GITHUB / 查看更多 ↗
         </a>
