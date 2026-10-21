@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { flushSync } from 'react-dom';
-import { motion, AnimatePresence, MotionConfig, animate, useMotionValue, useSpring, type MotionValue } from 'motion/react';
+import { motion, AnimatePresence, MotionConfig, animate, useMotionValue, useSpring, useTransform, type MotionValue } from 'motion/react';
 import Navigation from './Navigation';
 import { useBGM } from '@/hooks/useBGM';
 import HeroSection from './sections/HeroSection';
@@ -35,6 +35,16 @@ const SECTIONS = [
   { id: 'skills', name: 'SKILLS', watermark: 'SKILLS', bg: SHEET.sage, isDark: false },
   { id: 'gallery', name: 'GALLERY', watermark: 'GALLERY', bg: SHEET.charcoal, isDark: true },
 ] as const;
+
+// Each typed letter is struck onto the sheet: it lands with a hair of weight and settles (CSS `strike`, once per letter,
+// so backspacing never replays it). `still` mounts letters without it (the hand-over from the sheet's copy).
+const Letter = ({ ch, still }: { ch: string; still?: boolean }) => {
+  const quiet = useRef(still).current; // decided when the letter is mounted — flipping the class later would replay it on every letter
+  return <span className={quiet ? 'inline-block' : 'strike'}>{ch}</span>;
+};
+const Letters = ({ text, still }: { text: string; still?: boolean }) => (
+  <>{[...text].map((ch, i) => <Letter key={i} ch={ch} still={still} />)}</>
+);
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
@@ -193,6 +203,9 @@ export default function App({ projects }: AppProps) {
   const pull = useMotionValue(0);
   const pullSmooth = useSpring(pull, { stiffness: 260, damping: 28 });
   const pullTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Where there is a neighbouring sheet the pull moves the whole paper instead, and the next sheet's edge shows behind it
+  const paper = useMotionValue(0);
+  const paperSmooth = useSpring(paper, { stiffness: 260, damping: 28 });
   // Eased in-section wheel scrolling (target + rAF), instead of jumping scrollTop by the raw delta
   const scrollTarget = useRef<number | null>(null);
   const scrollRaf = useRef(0);
@@ -207,6 +220,7 @@ export default function App({ projects }: AppProps) {
   const [frameIndex, setFrameIndex] = useState(0);
   // The paper: bg + watermark + section layers move as one sheet (y); `feed` is the blank sheet riding in behind it
   const sheetY = useMotionValue(0);
+  const paperY = useTransform([sheetY, paperSmooth], ([a, b]: number[]) => a + b);
   const [feed, setFeed] = useState<{ to: number; dir: number } | null>(null);
   const [feedText, setFeedText] = useState(''); // what is typed on the incoming sheet while it is still moving
   const [wmDeleting, setWmDeleting] = useState(false); // the old word is being backspaced on the sheet that is leaving
@@ -284,6 +298,8 @@ export default function App({ projects }: AppProps) {
     lockedRef.current = true;
     cancelAnimationFrame(scrollRaf.current); scrollRaf.current = 0; scrollTarget.current = null;
     pull.set(0);
+    clearTimeout(pullTimer.current);
+    sheetY.set(paperSmooth.get()); paper.jump(0); paperSmooth.jump(0); // the roll carries on from where the paper was pulled to
     typeToken.current++; // cancel a phone-side retype that may still be running
     setTransitioning(true);
     wheelAccum.current = 0;
@@ -378,7 +394,7 @@ export default function App({ projects }: AppProps) {
     // Post-transition cooldown — absorbs trackpad momentum
     wheelAccum.current = 0;
     setTimeout(() => { lockedRef.current = false; }, 600);
-  }, [drift, driftSmooth, pull, sheetY, showWatermark]); // stable — uses refs and motion values, not state
+  }, [drift, driftSmooth, pull, paper, paperSmooth, sheetY, showWatermark]); // stable — uses refs and motion values, not state
 
   /* ── Scroll-linked watermark drift (desktop: active section's own scroll) ── */
   useEffect(() => {
@@ -489,6 +505,7 @@ export default function App({ projects }: AppProps) {
         wheelGestureInside.current = true;
         wheelAccum.current = 0;
         pull.set(0);
+        paper.set(0);
         const max = wrapper.scrollHeight - wrapper.clientHeight;
         scrollTarget.current = Math.min(max, Math.max(0, (scrollTarget.current ?? wrapper.scrollTop) + delta));
         if (!scrollRaf.current) {
@@ -514,24 +531,36 @@ export default function App({ projects }: AppProps) {
 
       // At boundary or no internal scroll — accumulate for page transition, and pull the layer against it
       wheelAccum.current += delta;
-      pull.set(Math.max(-24, Math.min(24, -wheelAccum.current * 0.3)));
+      const pulled = Math.max(-24, Math.min(24, -wheelAccum.current * 0.3));
+      const dir = Math.sign(wheelAccum.current);
+      if (dir && idx + dir >= 0 && idx + dir < SECTIONS.length) {
+        // push the paper out and let the next blank sheet's edge show where it left
+        setFeed((f) => (f && f.dir === dir ? f : { to: idx + dir, dir }));
+        paper.set(pulled);
+        pull.set(0);
+      } else {
+        pull.set(pulled);
+        paper.set(0);
+      }
       clearTimeout(pullTimer.current);
-      pullTimer.current = setTimeout(() => { wheelAccum.current = 0; pull.set(0); }, 220);
+      pullTimer.current = setTimeout(() => {
+        wheelAccum.current = 0; pull.set(0); paper.set(0);
+        // the edge goes once the paper has settled back (a page turn that started meanwhile owns `feed`)
+        setTimeout(() => { if (!lockedRef.current && wheelAccum.current === 0) setFeed(null); }, 400);
+      }, 220);
 
       if (wheelAccum.current > THRESHOLD) {
         wheelAccum.current = 0;
-        pull.set(0);
         navigateToSection(idx + 1);
       } else if (wheelAccum.current < -THRESHOLD) {
         wheelAccum.current = 0;
-        pull.set(0);
         navigateToSection(idx - 1);
       }
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
-  }, [navigateToSection, pull]);
+  }, [navigateToSection, pull, paper]);
 
   /* ── Keyboard handler ────────────────────────────────────────── */
   useEffect(() => {
@@ -629,9 +658,10 @@ export default function App({ projects }: AppProps) {
       <div className={isMobile ? 'relative' : 'fixed inset-0 overflow-hidden'}>
         {/* ── The paper ── bg, watermark and section layers are one sheet (desktop: moved by `sheetY` on a page turn).
             Phones: `contents`, so nothing changes for the native-scroll layout. */}
-        <motion.div className={isMobile ? 'contents' : 'absolute inset-0'} style={isMobile ? undefined : { y: sheetY }}>
+        <motion.div className={isMobile ? 'contents' : 'absolute inset-0'} style={isMobile ? undefined : { y: paperY }}>
         {/* Sheet colour — swaps instantly: a page turn hides the change under the incoming sheet */}
         <div className="fixed inset-0 z-0" style={{ backgroundColor: bgColor }} />
+        <div className="grain fixed inset-0 z-0 pointer-events-none" aria-hidden="true" />
 
         {/* Typewriter watermark — the design's centrepiece: half the viewport tall, behind the
             content, starting on the page margin and bled off the bottom edge */}
@@ -647,7 +677,7 @@ export default function App({ projects }: AppProps) {
             }}
             transition={{ duration: wmSnap ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            {watermarkText}
+            <Letters text={watermarkText} still={wmSnap} />
             <AnimatePresence>
               {cursorVisible && (!feed || wmDeleting) && (
                 <motion.span
@@ -706,10 +736,11 @@ export default function App({ projects }: AppProps) {
               boxShadow: `0 ${feed.dir > 0 ? -1 : 1}px 0 rgba(0,0,0,0.06), 0 ${feed.dir > 0 ? -16 : 16}px 36px -14px rgba(0,0,0,0.3)`,
             }}
           >
+            <div className="grain absolute inset-0" aria-hidden="true" />
             {/* the word being typed on this sheet as it arrives (same box as the real watermark, which takes over at the stop) */}
             <div className="absolute inset-0 overflow-hidden">
               <div className={WM_CLASS} style={{ color: SECTIONS[feed.to].isDark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.13)' }}>
-                {feedText}
+                <Letters text={feedText} />
                 {cursorVisible && !wmDeleting && (
                   <span className="inline-block w-[0.045em] h-[0.66em] ml-[0.05em]">
                     <span className="block w-full h-full bg-[#8FC6C1] animate-blink" />
