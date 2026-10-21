@@ -69,7 +69,9 @@ export default function SectionShell({
             </h2>
           </div>
           {/* Frosted-glass cover (RhineLabUI): sits over the ZH title + ruler and clears top→bottom with a feathered edge */}
-          <div className="relative overflow-hidden">
+          {/* The cover is padded out past the text (-mx/-mt cancel the padding) so its feathered edges fall on bare paper:
+              a hard edge shows as a lighter/darker box, because the blur only spreads the title's light up to the box */}
+          <div className="relative overflow-hidden -mx-6 px-6 -mt-4 pt-4">
             <div className="overflow-hidden">
               <motion.div
                 className={`text-[3rem] short:text-[2.5rem] font-bold leading-[1.15] ${text}`}
@@ -93,7 +95,7 @@ export default function SectionShell({
             </div>
             <motion.div
               aria-hidden="true"
-              className={`pointer-events-none absolute inset-x-0 top-0 h-[130%] backdrop-blur-md bg-[color-mix(in_srgb,var(--sheet)_45%,transparent)] [mask-image:linear-gradient(to_bottom,#000_76%,transparent)]`}
+              className={`pointer-events-none absolute inset-x-0 top-0 h-[130%] backdrop-blur-md bg-[color-mix(in_srgb,var(--sheet)_45%,transparent)] [mask-image:linear-gradient(to_right,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent),linear-gradient(to_bottom,transparent,#000_1rem,#000_76%,transparent)] [mask-composite:intersect] [-webkit-mask-composite:source-in]`}
               initial={{ y: 0 }}
               animate={{ y: isReady ? '100%' : 0 }}
               transition={t(0.35, 0.9)}

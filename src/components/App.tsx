@@ -448,7 +448,6 @@ export default function App({ projects }: AppProps) {
         activeIndexRef.current = i;
         setActiveIndex(i);
         setFrameIndex(i);
-        setNavIndex(i);
         setBgColor(SECTIONS[i].bg);
         setBgIsDark(SECTIONS[i].isDark);
         retypeWatermark(SECTIONS[i].watermark);
@@ -470,7 +469,12 @@ export default function App({ projects }: AppProps) {
     const onScroll = () => {
       const el = sectionRefs.current[activeIndexRef.current];
       if (el) drift.set(Math.min(0, el.getBoundingClientRect().top) * 0.3);
+      // the bar takes the colour of whichever section is under it (not the one at mid-screen)
+      let under = 0;
+      els.forEach((e, i) => { if (e.getBoundingClientRect().top <= 32) under = i; });
+      setNavIndex(under);
     };
+    onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
