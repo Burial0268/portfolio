@@ -38,10 +38,10 @@ const categories = [...new Set(skills.map((s) => s.category))];
 
 // One treatment per category, on by default: ink block, cyan block, bare ink type, grey block
 const TONE: Record<string, { bg: string; fg: string }> = {
-  FRONTEND: { bg: '#0A0A0A', fg: '#FFFFFF' },
-  'ANIMATION & 3D': { bg: '#6CE5E8', fg: '#0A0A0A' },
+  FRONTEND: { bg: '#1D1E20', fg: '#F4F2EE' },
+  'ANIMATION & 3D': { bg: '#8FC6C1', fg: '#0A0A0A' },
   STYLING: { bg: 'transparent', fg: '#0A0A0A' },
-  'TOOLS & BACKEND': { bg: '#E6E6E6', fg: '#0A0A0A' },
+  'TOOLS & BACKEND': { bg: '#D2D6CD', fg: '#0A0A0A' },
 };
 
 /*
@@ -133,7 +133,8 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
       isReady={isReady}
       description="技术是工具，创意是灵魂。我相信最好的作品源于对技术的深度理解和对用户体验的极致追求。"
     >
-      <div className="hidden md:block relative w-full aspect-[100/54] [container-type:inline-size]">
+      {/* max-w: the frame never grows taller than the page has room for (page padding + legend ≈ 72px), so a wide-but-short window doesn't scroll just to reach the bottom padding */}
+      <div className="hidden md:block relative w-full aspect-[100/54] [container-type:inline-size] max-w-[calc((100dvh-var(--nav-h)-var(--band)-96px-72px)*100/54)] short:max-w-[calc((100dvh-var(--nav-h)-var(--band)-56px-72px)*100/54)]">
         {boxes.map((b, i) => {
           const k = byName[b.name];
           const on = hover === k.category;
@@ -148,6 +149,7 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
             <div key={b.name} className={`absolute transition-opacity duration-300 ${hover && !on ? 'opacity-[0.18]' : ''}`} style={{ left: `${b.x}cqw`, top: `${b.y}cqw` }}>
               <motion.button
                 type="button"
+                data-cursor={k.category}
                 onMouseEnter={() => setHover(k.category)}
                 onMouseLeave={() => setHover(null)}
                 onFocus={() => setHover(k.category)}
@@ -160,7 +162,14 @@ export default function SkillsSection({ isReady = false }: SkillsSectionProps) {
               >
                 {b.name}
               </motion.button>
-              <span className={`pointer-events-none absolute font-bebas text-[clamp(9px,1.4cqw,14px)] leading-none tabular-nums text-black/45 ${labelPos}`}>{k.level}</span>
+              <motion.span
+                className={`pointer-events-none absolute font-bebas text-[clamp(9px,1.4cqw,14px)] leading-none tabular-nums text-black/45 ${labelPos}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isReady ? 1 : 0 }}
+                transition={t(0.3 + i * 0.05)}
+              >
+                {k.level}
+              </motion.span>
             </div>
           );
         })}

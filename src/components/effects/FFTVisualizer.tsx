@@ -11,7 +11,7 @@ const HEIGHT = 16;
 const GAP = 1;
 const BAR_WIDTH = (WIDTH - GAP * (BAR_COUNT - 1)) / BAR_COUNT;
 const MIN_HEIGHT = HEIGHT * 0.15;
-const COLOR = '#6CE5E8';
+const COLOR = '#8FC6C1';
 const DECAY = 0.92;
 
 export default function FFTVisualizer({ analyser, playing }: FFTVisualizerProps) {
